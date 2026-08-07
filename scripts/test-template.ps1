@@ -32,7 +32,10 @@ if (-not $Target) {
 # ----------------------------------------------------------------------------
 $placeholderRe = [regex]::new("\{\{([A-Z0-9_]+)\}\}")
 $names = @{}
-Get-ChildItem $template -Recurse -File | ForEach-Object {
+# -Force：pwsh 7 的 Get-ChildItem -Recurse 不递归 .github 等隐藏目录（Windows PS 5.1 会递归），
+#         否则 CI（pwsh/Linux）漏扫 ci.yml 的 {{LINT_CMD}} → 死条目误报。
+# 排除 .git：避免扫描 VCS 内部文件（无占位符，纯浪费）
+Get-ChildItem $template -Recurse -File -Force | Where-Object { $_.FullName -notmatch "[\\/]\.git([\\/]|$)" } | ForEach-Object {
     $content = Get-Content $_.FullName -Encoding UTF8 -Raw -ErrorAction SilentlyContinue
     if ($content) {
         foreach ($m in $placeholderRe.Matches($content)) { $names[$m.Groups[1].Value] = $true }

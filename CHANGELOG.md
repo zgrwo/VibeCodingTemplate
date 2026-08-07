@@ -109,6 +109,7 @@ All notable changes to {{PROJECT_NAME}}.
 - `verify-docs.py` / `verify-manual.py` / `falsy-audit.py`：stdout 强制 UTF-8（errors=replace），修复 Windows GBK 控制台中文说明乱码（L4）
 - `test-template.ps1`：临时目录改用 `[System.IO.Path]::GetTempPath()`，修复 Linux runner 上 `$env:TEMP` 为 null 导致 CI 模板自测必败
 - `security.yml`：codeql-action 由 v3 升级至 v4.37.6（v3 将于 2026-12 弃用；统一三处 SHA 避免 dependabot 部分更新导致的版本混用）
+- `test-template.ps1` / `init-project.ps1`：占位符扫描加 `-Force`（pwsh 7 的 `Get-ChildItem -Recurse` 不递归 `.github` 等隐藏目录，Windows PS 5.1 会），修复 CI（pwsh/Linux）漏扫 ci.yml 的 `{{LINT_CMD}}` 导致死条目误报与初始化后占位符残留
 
 ## [0.1.0] - {{DATE}}
 

@@ -75,7 +75,8 @@ Write-Host "    完成（已跳过 .git / logs / .claude / __pycache__ 等）" -
 # ----------------------------------------------------------------------------
 $placeholderRe = [regex]::new("\{\{([A-Z0-9_]+)\}\}")
 $found = @{}
-Get-ChildItem $Target -Recurse -File | Where-Object {
+# -Force：pwsh 7 的 Get-ChildItem -Recurse 不递归 .github 等隐藏目录，漏扫会导致 CI 下占位符未替换
+Get-ChildItem $Target -Recurse -File -Force | Where-Object {
     $_.Extension -notin @(".dll", ".exe", ".pdb")
 } | ForEach-Object {
     $content = Get-Content $_.FullName -Encoding UTF8 -Raw -ErrorAction SilentlyContinue
@@ -202,7 +203,8 @@ Write-Host "==> CHANGELOG.md 已重置为新项目初始态" -ForegroundColor Gr
 # 6. 报告未替换占位符
 # ----------------------------------------------------------------------------
 $remaining = @{}
-Get-ChildItem $Target -Recurse -File | Where-Object {
+# -Force：同上，避免漏扫隐藏目录中的未替换占位符（如 .github/workflows/*.yml）
+Get-ChildItem $Target -Recurse -File -Force | Where-Object {
     $_.Extension -notin @(".dll", ".exe", ".pdb")
 } | ForEach-Object {
     $content = Get-Content $_.FullName -Encoding UTF8 -Raw -ErrorAction SilentlyContinue
