@@ -24,6 +24,12 @@ import re
 import sys
 from pathlib import Path
 
+# Windows GBK 控制台：强制 UTF-8 输出，避免中文说明乱码（[OK]/[FAIL] 标记保持 ASCII 兼容）
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, ValueError):
+    pass
+
 ROOT = Path(__file__).resolve().parent.parent
 
 # 需要检查链接的文档（相对 ROOT）——覆盖全部含相对链接的文档
@@ -62,8 +68,9 @@ DOC_FILES = [
 
 # 顶层目录检查：从 project-structure.md 目录树解析（唯一定义处，随规模裁剪自动适配）
 # 注：logs/ 为运行时目录（.gitignore 排除、init-project 复制时跳过），不检查；
-#     .git/ 为 git 内部目录，无需声明
-EXCLUDED_DIRS = {"logs", ".git"}
+#     .git/ 为 git 内部目录，无需声明；
+#     .claude/.codegraph/.qoder/ 为 AI 工具本地目录（.gitignore 已忽略、init-project 复制时跳过）
+EXCLUDED_DIRS = {"logs", ".git", ".claude", ".codegraph", ".qoder"}
 
 
 def _parse_top_dirs() -> list[str]:

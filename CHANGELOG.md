@@ -59,6 +59,9 @@ All notable changes to {{PROJECT_NAME}}.
 - `templates/`：新增 `language/{Name}.Tests.csproj.template`（xUnit 测试项目）；修复 Udf/Foundation 模板注释损坏字符
 - `init-project.ps1`：复制后清理 `__pycache__/bin/obj` 等垃圾目录；CLAUDE.md 副本维护提示
 - `release.yml`：Build/Test 加 is_template 检测（模板仓库自身无构建系统）；release-drafter.yml 补双发布机制分工说明
+- `init-project.ps1`：交互收敛——核心键（项目名/所有者/验证命令等 11 项）逐项询问，其余内容占位符自动用占位符名占位，交互次数从 100+ 降至 ≤12（M3）
+- `README.md`：skills 语言裁剪步骤补充 tooling-pitfalls 语言索引同步清理说明（防断链）（M2）；占位符数量由"50+"修正为"100+"（L3）
+- `.github/ISSUE_TEMPLATE/bug_report.yml`：删除空 `## 环境` markdown 块（版本/平台已有独立必填字段）（L1）
 
 ### Removed
 
@@ -82,6 +85,11 @@ All notable changes to {{PROJECT_NAME}}.
 - `release.yml` 在模板仓库自身运行时占位符命令必然失败（补 is_template 检测）（P-G）
 - `init-project.ps1` 复制携带 `scripts/__pycache__` 等垃圾目录（复制后清理）（P-N）
 - `templates/NewModule/` 注释中 7 处损坏字符 `?`（修复为 `-`）（P-M）
+- `verify-all.ps1`：文档一致性块逐命令检查退出码，修复失败被最后一条命令退出码掩蔽（门禁说谎）（H1）
+- `init-project.ps1` / `verify-docs.py`：排除 `.claude/` / `.codegraph/` / `.qoder/` AI 工具本地目录（复制跳过 + EXCLUDED_DIRS 豁免），修复本地 `verify-docs --strict` 必败与 AI 设置随初始化泄漏（H2）
+- `verify-manual.py`：加载 crossval 脚本前为 `__main__` 注册 `verify_manual` 别名，修复 `from verify_manual import` ModuleNotFoundError（CrossVal 模板开箱可用）（M1）
+- `init-project.ps1`：`{{PROJECT_NAME}}` 自引用改为字符串拼接生成，避免源文件字面量被替换后二次运行 ContainsKey 查不到键（L2）
+- `verify-docs.py` / `verify-manual.py` / `falsy-audit.py`：stdout 强制 UTF-8（errors=replace），修复 Windows GBK 控制台中文说明乱码（L4）
 
 ## [0.1.0] - {{DATE}}
 

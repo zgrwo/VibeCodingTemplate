@@ -25,6 +25,12 @@ import re
 import sys
 from pathlib import Path
 
+# Windows GBK 控制台：强制 UTF-8 输出，避免中文说明乱码（[OK]/[FAIL] 标记保持 ASCII 兼容）
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, ValueError):
+    pass
+
 ROOT = Path(__file__).resolve().parent.parent
 MANUAL = ROOT / "rules" / "user-manual.md"
 CROSSVAL_DIR = ROOT / "scripts" / "crossval"
@@ -90,6 +96,9 @@ def run_crossval() -> bool:
         return True
     # CrossVal 脚本通过 `from verify_manual import check, cross_check, section` 使用辅助 API
     sys.path.insert(0, str(ROOT / "scripts"))
+    # 本脚本以 `python scripts/verify-manual.py` 运行时，模块名是 __main__ 而非 verify_manual
+    # （文件名含连字符无法直接 import）。为 __main__ 注册别名，避免 CrossVal 脚本 ModuleNotFoundError。
+    sys.modules.setdefault("verify_manual", sys.modules.get("__main__"))
     for s in scripts:
         print(f"\n>>> 执行 {s.relative_to(ROOT)}")
         try:

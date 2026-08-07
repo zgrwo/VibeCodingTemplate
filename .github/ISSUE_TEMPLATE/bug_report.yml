@@ -3,10 +3,6 @@ description: 报告可复现的问题
 title: "[BUG] 简述问题"
 labels: ["bug"]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        ## 环境
   - type: input
     id: version
     attributes:

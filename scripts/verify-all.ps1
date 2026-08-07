@@ -59,9 +59,14 @@ try {
             Write-Host "`n=== 文档一致性 ===`n  [跳过] 未检测到 python（verify-docs / verify-manual / falsy-audit 依赖，建议安装或配置代理脚本）" -ForegroundColor Yellow
         } else {
             Invoke-Step "文档一致性" {
+                # 每条命令独立检查退出码：任一失败立即抛异常（$LASTEXITCODE 只保留最后一条，
+                # 若整体一次性执行会被 verify-docs 的失败掩盖，门禁失效）
                 python "$root\scripts\verify-docs.py" --strict
+                if ($LASTEXITCODE) { throw "verify-docs.py 失败 (退出码 $LASTEXITCODE)" }
                 python "$root\scripts\verify-manual.py"
+                if ($LASTEXITCODE) { throw "verify-manual.py 失败 (退出码 $LASTEXITCODE)" }
                 python "$root\scripts\falsy-audit.py"
+                if ($LASTEXITCODE) { throw "falsy-audit.py 失败 (退出码 $LASTEXITCODE)" }
             }
         }
     }

@@ -27,6 +27,12 @@ import re
 import sys
 from pathlib import Path
 
+# Windows GBK 控制台：强制 UTF-8 输出，避免中文说明乱码（[OK]/[FAIL] 标记保持 ASCII 兼容）
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, ValueError):
+    pass
+
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_SCOPE = "src"
 

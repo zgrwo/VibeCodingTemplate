@@ -14,8 +14,8 @@
 #       -Values @{ "PROJECT_NAME" = "MyNewProject"; "VERSION" = "1.0.0" } `
 #       -GitInit -CreateCompatibilityLinks
 #
-# 注意：-Values 的 key 可带或不带 {{}}（自动归一化），如：
-#       @{ "PROJECT_NAME" = "MyNewProject" } 与 @{ "{{PROJECT_NAME}}" = ... } 等价
+# 注意：-Values 的 key 可带或不带花括号（自动归一化），如：
+#       @{ "PROJECT_NAME" = "MyNewProject" } 即可，无需手动加双花括号。
 #
 # 退出码：0 = 全部占位符已替换；1 = 存在未替换占位符（仍可继续开发，但需人工处理）
 # ============================================================================
@@ -50,12 +50,14 @@ if (-not $Force -and (Test-Path $Target) -and (Get-ChildItem $Target -Force | Se
 }
 
 # ----------------------------------------------------------------------------
-# 2. 复制 template（跳过 .git 与日志/构建产物）
+# 2. 复制 template（跳过 .git 与日志/构建产物/AI 工具本地目录）
 # ----------------------------------------------------------------------------
 Write-Host "==> 复制 template → $Target" -ForegroundColor Cyan
 if (Test-Path $Target) { Get-ChildItem $Target -Force | Remove-Item -Recurse -Force }
 New-Item -ItemType Directory -Path $Target -Force | Out-Null
-Get-ChildItem $template -Force | Where-Object { $_.Name -notin @(".git", "logs") } | ForEach-Object {
+# .claude/.codegraph/.qoder 为 AI 工具本地目录（.gitignore 已忽略，不应进入新项目，
+# 否则开发者本地 AI 设置随初始化泄漏，且 verify-docs.py --strict 会将其视为未声明目录）
+Get-ChildItem $template -Force | Where-Object { $_.Name -notin @(".git", "logs", ".claude", ".codegraph", ".qoder") } | ForEach-Object {
     Copy-Item $_.FullName $Target -Recurse -Force
 }
 # 清理被复制进来的垃圾/构建目录（__pycache__/bin/obj 等不入库，也不应进入新项目）
@@ -63,7 +65,7 @@ foreach ($junk in @("__pycache__", ".venv", "node_modules", "bin", "obj")) {
     Get-ChildItem $Target -Recurse -Force -Directory -Filter $junk -ErrorAction SilentlyContinue |
         Remove-Item -Recurse -Force
 }
-Write-Host "    完成（已跳过 .git / logs / __pycache__ 等）" -ForegroundColor Green
+Write-Host "    完成（已跳过 .git / logs / .claude / __pycache__ 等）" -ForegroundColor Green
 
 # ----------------------------------------------------------------------------
 # 3. 扫描 {{...}} 占位符
@@ -94,19 +96,35 @@ if ($found.Count -eq 0) {
     # ----------------------------------------------------------------------------
     $missing = @($found.Keys | Where-Object { -not $Values.ContainsKey("{{$_}}") } | Sort-Object)
     if ($missing.Count -gt 0) {
-        Write-Host "    提示：文档填充类占位符一路 Enter 即可（用占位符名代替，初始化后人工完善）；PROJECT_NAME / OWNER / REPO_NAME 等核心值请手动输入。" -ForegroundColor Yellow
+        Write-Host "    提示：内容填充类占位符将自动用占位符名占位（初始化后人工完善）；以下核心值请手动输入。" -ForegroundColor Yellow
     }
+    # 核心键：替换为占位符名会导致文档/CI 不可用，必须在初始化时由用户提供
+    # 其余内容占位符（用户手册/规格/FAQ 等）自动用占位符名小写占位，初始化后填写文档时一并替换
+    $coreKeys = @(
+        "PROJECT_NAME", "OWNER", "REPO_NAME", "AUTHOR",
+        "SECURITY_CONTACT", "COC_CONTACT",
+        "BUILD_CMD", "TEST_CMD", "FULL_VERIFY_CMD", "LINT_CMD", "COVERAGE_CMD"
+    )
+    $autoFilled = 0
     foreach ($name in $missing) {
+        if ($name -notin $coreKeys -and $name -notin @("VERSION", "DATE", "YEAR")) {
+            $Values["{{$name}}"] = $name.ToLowerInvariant()
+            $autoFilled++
+            continue
+        }
         $default = switch ($name) {
             "VERSION" { "1.0.0" }
             "DATE" { Get-Date -Format "yyyy-MM-dd" }
             "YEAR" { (Get-Date).Year.ToString() }
-            # 文档填充类占位符：Enter 直接用占位符名（可读，初始化后人工完善）
+            # 核心键：Enter 用占位符名小写（初始化后需人工确认替换）
             default { $name.ToLowerInvariant() }
         }
         $answer = Read-Host "    请输入 {{$name}} 的值（Enter 用默认: $default）"
         if ([string]::IsNullOrWhiteSpace($answer)) { $answer = $default }
         $Values["{{$name}}"] = $answer
+    }
+    if ($autoFilled -gt 0) {
+        Write-Host "    （$autoFilled 个内容占位符已自动用占位符名占位，初始化后在文档填写时替换）" -ForegroundColor Yellow
     }
 
     # ----------------------------------------------------------------------------
@@ -141,7 +159,10 @@ if ($found.Count -eq 0) {
 # ----------------------------------------------------------------------------
 # 5.5 重置 CHANGELOG 为新项目初始态（模板自身的变更历史不属于新项目）
 # ----------------------------------------------------------------------------
-$projName = if ($Values.ContainsKey("{{PROJECT_NAME}}")) { $Values["{{PROJECT_NAME}}"] } else { (Split-Path $Target -Leaf) }
+# 拼接生成占位符键，避免源文件内 `{{PROJECT_NAME}}` 字面量被自扫描替换为实际项目名后，
+# 该副本再次运行时 ContainsKey 查不到原键（回退目录名，通常恰好一致故低危，但应防患）
+$projectNameKey = "{{" + "PROJECT_NAME" + "}}"
+$projName = if ($Values.ContainsKey($projectNameKey)) { $Values[$projectNameKey] } else { (Split-Path $Target -Leaf) }
 $changelogInit = @"
 # Changelog
 

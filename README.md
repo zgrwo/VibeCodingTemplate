@@ -158,14 +158,16 @@ robocopy VibeCodingTemplate <PROJECT_NAME> /E /XD .git
 | `{{BUILD_CMD}}` / `{{TEST_CMD}}` / `{{FULL_VERIFY_CMD}}` | 构建/测试/验证命令 |
 | `{{AUTHOR}}` / `{{DATE}}` | 作者与日期 |
 
-> 上表为必填核心项；模板实际含 50+ 占位符（CI / 模块 / 文档 / 联系方式等），自动方式下由 init-project.ps1 一次扫描全部替换。完整占位符清单以 `scripts/test-template.ps1` 的 `$special` 映射表为权威（模板自测即按该表逐项断言替换完成）。
+> 上表为必填核心项；模板实际含 100+ 占位符（CI / 模块 / 文档 / 联系方式等），自动方式下由 init-project.ps1 一次扫描全部替换。完整占位符清单以 `scripts/test-template.ps1` 的 `$special` 映射表为权威（模板自测即按该表逐项断言替换完成）。
 
-> 用 `scripts/init-project.ps1` 自动初始化时，脚本会扫描全部 `{{...}}` 占位符并交互式询问，完成后报告遗漏项。
+> 用 `scripts/init-project.ps1` 自动初始化时，脚本会扫描全部 `{{...}}` 占位符，对核心值（项目名 / 所有者 / 验证命令等）交互式询问，其余内容占位符自动用占位符名占位，完成后报告遗漏项。
 
 ### 3. 按语言填充
 
 - **src/ 目录树**：按实际模块创建 `src/<Module>/` 结构
 - **skills/**：仅保留本项目语言对应的 SKILL.md，删除其余语言文件
+  （**必做**：删除语言技能后，同步清理 `rules/tooling-pitfalls.md` 语言索引表中
+   指向已删 SKILL 的链接，否则 `verify-docs.py --strict` 会报断链）
 - **CI**：在 `.github/workflows/ci.yml` 中替换语言 setup 与命令占位符；启用多版本矩阵/覆盖率门禁（按需）
 - **安全与协作**：`security.yml`（CodeQL）按项目语言调整 `language` 矩阵；`dependabot.yml` 按项目语言保留 pip/nuget 条目；首次推送后检查 Actions 权限
 - **AGENTS.md 生态兼容**：主文件即为 `AGENTS.md`（大写），Codex/Copilot/Windsurf 等直接读取；如使用 Claude Code，创建 `CLAUDE.md` 副本（见 AGENTS.md「AGENTS.md 生态兼容」）
