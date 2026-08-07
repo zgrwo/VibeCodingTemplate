@@ -1,0 +1,80 @@
+' ============================================================================
+' {Name}Udf.bas — VBA 模块 UDF 入口
+' 使用方式：将 {Name} 替换为模块名（PascalCase），{PREFIX} 替换为 UDF 前缀（大写，如 WEATHER）
+' 目标位置：src/{Module}/{Name}Udf.bas（VBA 无命名空间，用 {PREFIX}_ 前缀区分模块）
+' 依赖：VariantKit 模块的 NormalizeInput（见 skills/vba-SKILL.md §1.2）
+' ============================================================================
+Option Explicit
+
+' ============================================================================
+' 错误码常量（集中声明于模块顶部，见 vba-SKILL §8.5）
+' ============================================================================
+Private Const ERR_{PREFIX}_INVALID As Long = vbObjectError + 1000
+
+' ============================================================================
+' UDF 入口：Public 参数一律 As Variant（vba-SKILL §1.1）
+' 强类型参数（As String/Double）在 Range 传入时 #VALUE! —— 最高频错误
+' ============================================================================
+
+''' <summary>
+''' {函数功能}（工作表函数：返回 CVErr 而非抛异常，不中断公式）
+''' </summary>
+Public Function {PREFIX}_COMPUTE(value As Variant) As Variant
+    Dim arr As Variant
+    Dim result As Variant
+    Dim i As Long
+
+    ' 1. 输入归一化：Range 或数组统一为数组（vba-SKILL §1.2）
+    arr = VariantKit.NormalizeInput(value, flattenColumn:=True)
+
+    ' 2. 空数组守卫（vba-SKILL §3.2：UBound 对未初始化数组抛异常）
+    If IsArrayEmpty(arr) Then
+        {PREFIX}_COMPUTE = CVErr(xlErrValue)
+        Exit Function
+    End If
+
+    ' 3. 逐元素计算（vba-SKILL §3.1：始终用 LBound，不假设 1-based）
+    ReDim result(LBound(arr) To UBound(arr))
+    For i = LBound(arr) To UBound(arr)
+        ' 嵌套 If 避免 And/Or 非短路求值（vba-SKILL §4.1）
+        If Not IsEmpty(arr(i)) Then
+            If IsNumeric(arr(i)) Then
+                result(i) = arr(i) * 2
+            End If
+        End If
+    Next i
+
+    {PREFIX}_COMPUTE = result
+End Function
+
+''' <summary>
+''' {内部函数功能}（VBA 内部函数：Err.Raise 抛给调用方，带模块前缀）
+''' </summary>
+Public Function {PREFIX}_PROCESS(text As Variant) As Variant
+    On Error GoTo ErrorHandler
+
+    ' Range 与直接值双路径（vba-SKILL §1.2）
+    If TypeOf text Is Range Then
+        text = text.Value
+    End If
+
+    If VarType(text) = vbString Then
+        {PREFIX}_PROCESS = Trim(text)
+    Else
+        {PREFIX}_PROCESS = ""
+    End If
+    Exit Function
+
+ErrorHandler:
+    ' 错误三模式之内部模式：Err.Raise + 有意义的消息（vba-SKILL §2）
+    Err.Raise ERR_{PREFIX}_INVALID, "{PREFIX}_MOD", "输入无效: " & Err.Description
+End Function
+
+' ============================================================================
+' 工具：空数组守卫（vba-SKILL §3.2）
+' ============================================================================
+Private Function IsArrayEmpty(arr As Variant) As Boolean
+    On Error Resume Next
+    IsArrayEmpty = (UBound(arr) < LBound(arr)) Or (Err.Number <> 0)
+    Err.Clear
+End Function

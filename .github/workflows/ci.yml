@@ -19,6 +19,9 @@ on:
       - "rules/**"
       - ".github/**"
   workflow_dispatch:
+  # Merge Queue：配合 Settings → Branches → 开启 merge queue 使用
+  # （merge_group 事件无 paths 过滤，全部 job 运行；未开启 merge queue 时本触发不生效）
+  merge_group:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -35,12 +38,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # --- 多版本矩阵（可选，初始化时按需启用）---
+    # 何时启用：需保证跨版本兼容的库项目（如库需支持 Python 3.10-3.12 / .NET 8+9）。
+    # 启用方法：取消注释下方 strategy 块 + 对应语言的 setup 步骤（见下方 setup 注释），
+    #          quick-check 与 full-check 需同步启用矩阵。
     # strategy:
     #   matrix:
     #     python-version: ["3.10", "3.11", "3.12"]   # Python 项目
     #     dotnet-version: ["8.0.x", "9.0.x"]          # .NET 项目
     steps:
+      # fetch-depth: 0 —— 提交规范检查需要 PR 基线与完整提交历史
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
       # --- 模板仓库检测：占位符未替换（=模板仓库自身）时跳过构建 ---
       - name: 检测是否为模板仓库自身
         id: detect
@@ -50,6 +59,22 @@ jobs:
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
           fi
+      # --- 提交规范：PR 内全部 commit 必须符合 Conventional Commits（与 release-please 闭环）---
+      - name: 提交规范检查（Conventional Commits）
+        if: github.event_name == 'pull_request'
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          count=0
+          for sha in $(git rev-list --no-merges "$base..HEAD"); do
+            count=$((count + 1))
+            if ! git show -s --format=%B "$sha" | bash scripts/validate-commit-msg.sh >/dev/null 2>&1; then
+              echo "❌ 提交 ${sha:0:7} 不符合 Conventional Commits 规范："
+              git show -s --format='   %s' "$sha"
+              echo "   规则见 scripts/validate-commit-msg.sh 与 CONTRIBUTING「提交规范」"
+              exit 1
+            fi
+          done
+          echo "✅ 全部 $count 个提交符合规范"
       # --- 按语言选择 setup（二选一，固定 commit SHA）---
       # Python:
       # - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
@@ -152,6 +177,16 @@ jobs:
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
           fi
+      - name: 模板守卫（NewModule 模板禁止引入双花括号占位符）
+        if: steps.detect.outputs.is_template == 'true'
+        run: |
+          leaked=$(grep -rn "{{" templates/NewModule/ | grep -v ROOT_NAMESPACE || true)
+          if [ -n "$leaked" ]; then
+            echo "❌ 模板引入双花括号占位符（会被 init 扫描替换，应改用单花括号 {Name}）："
+            echo "$leaked"
+            exit 1
+          fi
+          echo "✅ NewModule 模板无双花括号占位符泄漏"
       - name: 模板自测（init → verify-docs/manual/falsy）
         if: steps.detect.outputs.is_template == 'true'
         run: pwsh -File scripts/test-template.ps1

@@ -98,29 +98,31 @@
 ├── src/                          # ✅ 源码
 ├── tests/                        # ✅ 测试
 ├── docs/                         # ✅ 文档（设计文档，见 docs/README.md）
-├── scripts/                      # ✅ 构建/验证脚本（verify-all / verify-docs / init-project 等）
-├── templates/                    # ✅ 模块脚手架（NewModule 五件套 + language 构建配置）
+├── scripts/                      # ✅ 构建/验证脚本（占位符 manifest / commit 校验 / init / verify 等）
+├── templates/                    # ✅ 模块脚手架（NewModule 多语言模板 + language 构建配置）
 ├── skills/                       # ✅ Skill 定义
 ├── rules/                        # ✅ 规范文档（含 ADR 决策记录）
 ├── tools/                        # ✅ 辅助工具
 ├── build/                        # ✅ 构建配置
 ├── .github/                      # ✅ CI 工作流 + Issue/PR 模板
-│   ├── workflows/ci.yml          # CI 质量门禁（quick/full/quality）
+│   ├── workflows/ci.yml          # CI 质量门禁（quick/full/quality + commit 规范检查）
 │   ├── workflows/security.yml    # CodeQL 安全扫描（定时 + PR）
-│   ├── workflows/release-drafter.yml  # 自动生成 Release 草稿
-│   ├── workflows/release.yml     # tag 自动发布（v* tag 触发）
+│   ├── workflows/release.yml     # release-please 自动发版（Conventional Commits 驱动）
 │   ├── workflows/stale.yml       # 僵尸 Issue/PR 自动关闭
 │   ├── dependabot.yml            # 依赖自动更新
+│   ├── release-please/           # release-please 配置（config.json）
 │   ├── ISSUE_TEMPLATE/           # Bug/功能/文档/重构四类模板
 │   └── PULL_REQUEST_TEMPLATE.md  # PR 模板
 ├── logs/                         # ✅ 日志（.gitignore 排除）
 ├── AGENTS.md                     # ✅ 项目宪法（本文件）
 ├── README.md                     # ✅ 用户向功能指南
 ├── CONTRIBUTING.md               # ✅ 贡献指南（开发/PR/发版流程）
-├── CHANGELOG.md                  # ✅ 版本变更记录（keepachangelog）
+├── CHANGELOG.md                  # ✅ 版本变更记录（release-please 自动维护）
 ├── SECURITY.md                   # ✅ 安全政策与漏洞报告
 ├── CODE_OF_CONDUCT.md            # ✅ 行为准则
+├── FUNDING.yml                   # ✅ 资助信息（社区健康文件）
 ├── LICENSE                       # ✅ 开源许可证（MIT）
+├── .release-please-manifest.json # ✅ release-please 版本基线
 ├── .editorconfig                 # ✅ 编辑器统一风格
 ├── .gitignore                    # ✅ 排除规则
 ├── .gitattributes                # ✅ 换行符/二进制标记

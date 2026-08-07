@@ -13,6 +13,12 @@
 *.sh text eol=lf
 *.bash text eol=lf
 
+# 脚手架模板文件（源码级占位符，复制到 src/ 使用）→ LF
+*.template text eol=lf
+
+# git hooks（无扩展名，POSIX 脚本，core.hooksPath）→ LF
+scripts/git-hooks/* text eol=lf
+
 # PowerShell 脚本 → CRLF（Windows 惯例，配合 UTF-8 with BOM）
 *.ps1 text eol=crlf
 

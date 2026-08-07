@@ -1,82 +1,30 @@
 # ============================================================================
-# release.yml — Tag 自动发布
-# 触发：推送 v* tag（如 v1.2.3）
-# 流程：构建 → 测试 → 生成 Release（内容取自 CHANGELOG 对应版本段落）
+# release.yml — release-please 自动发版
+# 触发：main 分支推送
+# 机制：从 Conventional Commits 自动推导版本号、生成 CHANGELOG.md、
+#       打开 release PR → 合并后自动打 tag + 建 GitHub Release
 # 前置：
-#   1. release-drafter.yml 生成草稿（PR 合并后自动更新）
-#   2. 发布者创建 tag：git tag v1.2.3 && git push origin v1.2.3
-#   3. 首次需仓库 Settings → Actions → Workflow permissions 允许写权限
-# 说明：模板仓库自身无构建系统，初始化后按语言补 setup 步骤（见 ci.yml 注释）。
+#   1. 仓库 Settings → Actions → Workflow permissions 允许写权限
+#   2. commit 必须符合 Conventional Commits（见 ci.yml「提交规范检查」，
+#      scripts/validate-commit-msg.sh）——commit 规范 → 版本推导的闭环前提
+# 手动覆盖：在 release PR 的 commit body 加 `Release-As: x.y.z` 强制指定版本
 # ============================================================================
 name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
-  release:
-    name: Build & Release
+  release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-
-      # --- 模板仓库检测：模板仓库自身无构建系统，跳过 Build/Test ---
-      - name: 检测是否为模板仓库自身
-        id: detect
-        run: |
-          if grep -rq "{{PROJECT_NAME}}" AGENTS.md 2>/dev/null; then
-            echo "is_template=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "is_template=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      # --- 按语言选择 setup（二选一，初始化时启用，固定 commit SHA）---
-      # Python:
-      # - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-      #   with: { python-version: "3.12" }
-      # - run: pip install -e ".[dev]"
-      # .NET:
-      # - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
-      #   with: { dotnet-version: "9.0.x" }
-
-      - name: Build
-        if: steps.detect.outputs.is_template != 'true'
-        run: "{{BUILD_CMD}}"
-
-      - name: Test
-        if: steps.detect.outputs.is_template != 'true'
-        run: "{{TEST_CMD}}"
-
-      - name: 生成 Release（正文取 CHANGELOG 对应段落）
-        id: changelog
-        shell: bash
-        run: |
-          TAG="${GITHUB_REF#refs/tags/}"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          BODY="$(awk -v tag="$TAG" '
-            BEGIN { found = 0; printed = 0 }
-            /^## \[/ {
-              if (found) { exit }
-              ver = $0
-              sub(/^## \[/, "", ver)
-              sub(/\].*/, "", ver)
-              if (ver == tag || "v" ver == tag) { found = 1; next }
-            }
-            found && !printed { print; if (/^## /) printed = 1 }
-          ' CHANGELOG.md)"
-          echo "body<<EOF" >> "$GITHUB_OUTPUT"
-          echo "${BODY:-*此版本无 CHANGELOG 条目，请人工补充。*}" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-
-      - name: Publish Release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+      # manifest 模式下不得在 with 中设置 release-type（会覆盖 config.json）
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         with:
-          tag_name: ${{ steps.changelog.outputs.tag }}
-          name: ${{ steps.changelog.outputs.tag }}
-          body: ${{ steps.changelog.outputs.body }}
-          generate_release_notes: true
+          config-file: .github/release-please/config.json
+          manifest-file: .release-please-manifest.json

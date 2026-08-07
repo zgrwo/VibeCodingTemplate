@@ -1,0 +1,498 @@
+{
+  "schema_version": 1,
+  "placeholders": {
+    "ARCHITECTURE_NOTES": {
+      "category": "content",
+      "prompt": ""
+    },
+    "AUTHOR": {
+      "category": "core",
+      "prompt": "作者姓名",
+      "test": "Test Author"
+    },
+    "BUILD_CMD": {
+      "category": "core",
+      "prompt": "构建命令",
+      "test": "python -m compileall -q src"
+    },
+    "BUILD_COMMANDS": {
+      "category": "content",
+      "prompt": "",
+      "test": "python -m build"
+    },
+    "CALLING_CONVENTION_NOTES": {
+      "category": "content",
+      "prompt": ""
+    },
+    "CAVEAT_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "CAVEAT_2": {
+      "category": "content",
+      "prompt": ""
+    },
+    "CHANGE_SUMMARY": {
+      "category": "content",
+      "prompt": ""
+    },
+    "COC_CONTACT": {
+      "category": "core",
+      "prompt": "行为准则联系邮箱",
+      "test": "conduct@example.com"
+    },
+    "COMMIT_COUNT": {
+      "category": "content",
+      "prompt": "",
+      "test": "120"
+    },
+    "COMPATIBILITY_MATRIX": {
+      "category": "content",
+      "prompt": ""
+    },
+    "COUNT_1": {
+      "category": "content",
+      "prompt": "",
+      "test": "3"
+    },
+    "COUNT_2": {
+      "category": "content",
+      "prompt": "",
+      "test": "2"
+    },
+    "COVERAGE_CMD": {
+      "category": "core",
+      "prompt": "覆盖率命令",
+      "test": "python -m pytest --cov=src --cov-fail-under=0"
+    },
+    "CRITICAL_PATH_CMD": {
+      "category": "content",
+      "prompt": "",
+      "test": "python scripts/verify-manual.py"
+    },
+    "DATE": {
+      "category": "auto",
+      "rule": "today",
+      "prompt": "日期",
+      "test": "2026-01-01"
+    },
+    "DEFAULT_2": {
+      "category": "content",
+      "prompt": ""
+    },
+    "DEFINITION_1": {
+      "category": "content",
+      "prompt": "",
+      "test": "不可转换值的类型零值"
+    },
+    "DEFINITION_2": {
+      "category": "content",
+      "prompt": "",
+      "test": "独立实现比对"
+    },
+    "DESCRIPTION_1": {
+      "category": "content",
+      "prompt": "",
+      "test": "C# 编码陷阱与规范"
+    },
+    "DESCRIPTION_2": {
+      "category": "content",
+      "prompt": "",
+      "test": "Python 编码陷阱与规范"
+    },
+    "DESC_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "DESC_2": {
+      "category": "content",
+      "prompt": ""
+    },
+    "EDGE_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "EMPTY_ERROR": {
+      "category": "content",
+      "prompt": ""
+    },
+    "ERROR_CONDITION_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "ERROR_FIXABLE_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "ERROR_HANDLING_DESCRIPTION": {
+      "category": "content",
+      "prompt": ""
+    },
+    "ERROR_MEANING_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "ERROR_POLICY": {
+      "category": "content",
+      "prompt": ""
+    },
+    "ERROR_VALUE_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "EXAMPLE_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "EXAMPLE_2": {
+      "category": "content",
+      "prompt": ""
+    },
+    "FAQ_CAUSE1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "FAQ_FIX1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "FAQ_Q1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "FORMULA": {
+      "category": "content",
+      "prompt": ""
+    },
+    "FULL_VERIFY_CMD": {
+      "category": "core",
+      "prompt": "全量验证命令",
+      "test": "./scripts/verify-all.ps1"
+    },
+    "FUNCTION_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "FUNCTION_NAME": {
+      "category": "content",
+      "prompt": ""
+    },
+    "FUNCTION_SIGNATURE": {
+      "category": "content",
+      "prompt": ""
+    },
+    "INPUT_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "INPUT_DATA": {
+      "category": "content",
+      "prompt": ""
+    },
+    "INSTALL_COMMANDS": {
+      "category": "content",
+      "prompt": "",
+      "test": "pip install -e .[dev]"
+    },
+    "INSTALL_INSTRUCTIONS": {
+      "category": "content",
+      "prompt": "",
+      "test": "pip install -e .[dev]"
+    },
+    "INTERPRETATION_GUIDE": {
+      "category": "content",
+      "prompt": ""
+    },
+    "ISSUE_NUMBER": {
+      "category": "content",
+      "prompt": ""
+    },
+    "KEYWORD_1": {
+      "category": "content",
+      "prompt": "",
+      "test": "template"
+    },
+    "KEYWORD_2": {
+      "category": "content",
+      "prompt": "",
+      "test": "self-test"
+    },
+    "KNOWN_LIMITATIONS": {
+      "category": "content",
+      "prompt": ""
+    },
+    "LAYER_DEPENDENCY_DIAGRAM": {
+      "category": "content",
+      "prompt": "",
+      "test": "UI -> Service -> Engine -> Data"
+    },
+    "LAYER_DIAGRAM": {
+      "category": "content",
+      "prompt": "",
+      "test": "UDF -> Core -> Foundation"
+    },
+    "LINT_CMD": {
+      "category": "core",
+      "prompt": "代码风格检查命令",
+      "test": "python -m ruff check src/ scripts/"
+    },
+    "MODULE_1": {
+      "category": "content",
+      "prompt": "",
+      "test": "Stats"
+    },
+    "MODULE_1_DESC": {
+      "category": "content",
+      "prompt": "",
+      "test": "统计计算模块"
+    },
+    "MODULE_2": {
+      "category": "content",
+      "prompt": "",
+      "test": "Text"
+    },
+    "MODULE_2_DESC": {
+      "category": "content",
+      "prompt": "",
+      "test": "文本处理模块"
+    },
+    "N": {
+      "category": "content",
+      "prompt": ""
+    },
+    "ONE_LINE_DESCRIPTION": {
+      "category": "content",
+      "prompt": "",
+      "test": "模板自测生成项目（验证后删除）"
+    },
+    "OUTPUT_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "OUTPUT_RESULT": {
+      "category": "content",
+      "prompt": ""
+    },
+    "OWNER": {
+      "category": "core",
+      "prompt": "GitHub 用户名/组织",
+      "test": "example"
+    },
+    "PACKAGE_NAME": {
+      "category": "content",
+      "prompt": "",
+      "test": "template_self_test"
+    },
+    "PARAM_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "PARAM_2": {
+      "category": "content",
+      "prompt": ""
+    },
+    "PARAM_DESC_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "PARAM_DESC_2": {
+      "category": "content",
+      "prompt": ""
+    },
+    "PARAM_EXAMPLE_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "PATTERN_1": {
+      "category": "content",
+      "prompt": "",
+      "test": "注册/同步遗漏"
+    },
+    "PATTERN_2": {
+      "category": "content",
+      "prompt": "",
+      "test": "文档数字漂移"
+    },
+    "PERFORMANCE_BUDGET": {
+      "category": "content",
+      "prompt": ""
+    },
+    "PREFIX_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "PREFIX_2": {
+      "category": "content",
+      "prompt": ""
+    },
+    "PRIVATE_PACKAGE_PREFIX": {
+      "category": "content",
+      "prompt": "",
+      "test": "company."
+    },
+    "PRODUCT_NAME": {
+      "category": "content",
+      "prompt": "",
+      "test": "TemplateSelfTest"
+    },
+    "PROJECT_1": {
+      "category": "content",
+      "prompt": "",
+      "test": "TemplateSelfTest"
+    },
+    "PROJECT_2": {
+      "category": "content",
+      "prompt": "",
+      "test": "TemplateSelfTest"
+    },
+    "PROJECT_NAME": {
+      "category": "core",
+      "prompt": "项目名（目录名与文档一致）",
+      "test": "TemplateSelfTest"
+    },
+    "QUALITY_ASSURANCE": {
+      "category": "content",
+      "prompt": ""
+    },
+    "QUICK_START_GUIDE": {
+      "category": "content",
+      "prompt": ""
+    },
+    "REPO_NAME": {
+      "category": "core",
+      "prompt": "仓库名",
+      "test": "template-self-test"
+    },
+    "REPO_URL": {
+      "category": "content",
+      "prompt": "",
+      "test": "https://github.com/example/template-self-test"
+    },
+    "RETURN_DESC": {
+      "category": "content",
+      "prompt": ""
+    },
+    "RETURN_TYPE": {
+      "category": "content",
+      "prompt": ""
+    },
+    "ROOT_CAUSE_1": {
+      "category": "content",
+      "prompt": "",
+      "test": "新增功能后忘记更新关联位置"
+    },
+    "ROOT_CAUSE_2": {
+      "category": "content",
+      "prompt": "",
+      "test": "数字多处硬编码"
+    },
+    "ROOT_NAMESPACE": {
+      "category": "content",
+      "prompt": "",
+      "test": "TemplateSelfTest"
+    },
+    "SCOPE_1": {
+      "category": "content",
+      "prompt": "",
+      "test": "C# 代码"
+    },
+    "SCOPE_2": {
+      "category": "content",
+      "prompt": "",
+      "test": "Python 代码"
+    },
+    "SECURITY_CONTACT": {
+      "category": "core",
+      "prompt": "安全漏洞联系邮箱",
+      "test": "security@example.com"
+    },
+    "SECURITY_NOTES": {
+      "category": "content",
+      "prompt": ""
+    },
+    "SKILL_1": {
+      "category": "content",
+      "prompt": "",
+      "test": "csharp-SKILL.md"
+    },
+    "SKILL_2": {
+      "category": "content",
+      "prompt": "",
+      "test": "python-SKILL.md"
+    },
+    "SYNTAX": {
+      "category": "content",
+      "prompt": ""
+    },
+    "TABLE_OF_CONTENTS": {
+      "category": "content",
+      "prompt": ""
+    },
+    "TARGET_FRAMEWORK": {
+      "category": "content",
+      "prompt": "",
+      "test": "net9.0"
+    },
+    "TERM_1": {
+      "category": "content",
+      "prompt": "",
+      "test": "哨兵值"
+    },
+    "TERM_2": {
+      "category": "content",
+      "prompt": "",
+      "test": "交叉验证"
+    },
+    "TEST_CMD": {
+      "category": "core",
+      "prompt": "测试命令",
+      "test": "python -m pytest tests/ -x -q"
+    },
+    "TOLERANCE": {
+      "category": "content",
+      "prompt": ""
+    },
+    "TOTAL": {
+      "category": "content",
+      "prompt": "",
+      "test": "5"
+    },
+    "TROUBLESHOOTING_GUIDE": {
+      "category": "content",
+      "prompt": ""
+    },
+    "TYPE_1": {
+      "category": "content",
+      "prompt": ""
+    },
+    "TYPE_2": {
+      "category": "content",
+      "prompt": ""
+    },
+    "USAGE_PATTERNS": {
+      "category": "content",
+      "prompt": ""
+    },
+    "VERIFY_INSTALL": {
+      "category": "content",
+      "prompt": "",
+      "test": "python -c \"import template_self_test\""
+    },
+    "VERSION": {
+      "category": "core",
+      "prompt": "初始版本号",
+      "default": "1.0.0",
+      "test": "0.1.0"
+    },
+    "WHEN_TO_USE": {
+      "category": "content",
+      "prompt": ""
+    },
+    "YEAR": {
+      "category": "auto",
+      "rule": "year",
+      "prompt": "年份",
+      "test": "2026"
+    }
+  }
+}

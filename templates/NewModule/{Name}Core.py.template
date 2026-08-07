@@ -1,0 +1,65 @@
+# ============================================================================
+# {Name}Core.py — Python 核心模块
+# 使用方式：将 {Name} 替换为模块名（PascalCase，如 Weather、Finance），
+#           {Module} 替换为所在目录
+# 目标位置：src/{Module}/{Name}Core.py
+# 注意：核心层为纯逻辑实现，零外部框架依赖（可在无依赖环境独立单元测试）
+# ============================================================================
+"""核心层模块：纯函数实现，零外部依赖。
+
+设计原则（见 skills/python-SKILL.md）：
+- Falsy 陷阱：0/空串是有效值时用 `is not None`，不用 `if x`
+- 无裸 except：只捕获具体异常，日志留痕
+- 类型注解：全函数签名带类型（mypy 可检）
+- 静默传播阻断：无效输入返回 NaN，不抛异常不中断（哨兵契约）
+"""
+
+from __future__ import annotations
+
+from typing import Optional
+
+
+def compute(value: Optional[float]) -> float:
+    """{函数功能}。
+
+    Args:
+        value: 输入值；None 表示未提供（0 是有效值）。
+
+    Returns:
+        计算结果；无效输入返回 NaN。
+
+    Raises:
+        ValueError: 领域约束前置验证失败（如 value < 0）。
+    """
+    # 1. 静默传播阻断：None 显式守卫（Falsy 陷阱：0 是有效值，勿用 if value）
+    if value is None:
+        return float("nan")
+
+    # 2. 防御完整性：领域约束前置验证
+    # if value < 0:
+    #     raise ValueError("value 不能为负")
+
+    # 3. 核心逻辑
+    result = value * 2.0  # TODO: 替换为实际计算
+
+    # 4. 结果守卫：防止中间步骤产生 Inf
+    if result == float("inf") or result == float("-inf"):
+        return float("nan")
+
+    return result
+
+
+def process(text: Optional[str]) -> str:
+    """{字符串处理功能}。
+
+    Args:
+        text: 输入文本；None/空串返回空串（哨兵契约）。
+
+    Returns:
+        处理结果。
+    """
+    # 哨兵契约：None → 空串（勿用 if text，空串也是有效输入）
+    if text is None:
+        return ""
+
+    return text.strip()

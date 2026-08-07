@@ -31,6 +31,9 @@ param(
 $ErrorActionPreference = "Stop"
 $template = Split-Path -Parent $PSScriptRoot   # template 根目录（scripts/ 的上一级）
 
+# 占位符清单（唯一真相源：scripts/placeholders.json，见 placeholder-utils.ps1）
+. (Join-Path $PSScriptRoot "placeholder-utils.ps1")
+
 # ----------------------------------------------------------------------------
 # 0. 归一化 -Values：key 统一为 {{键名}} 形式（兼容带/不带大括号两种写法）
 # ----------------------------------------------------------------------------
@@ -92,36 +95,54 @@ if ($found.Count -eq 0) {
     $found.Keys | Sort-Object | ForEach-Object { Write-Host "    {{$_}}  ($($found[$_].Count) 处)" }
 
     # ----------------------------------------------------------------------------
-    # 4. 交互式填充缺失的占位符
+    # 4. 按 manifest 分派填充缺失的占位符（唯一真相源：scripts/placeholders.json）
+    #    core    → 交互询问（缺之项目/CI 不可用）
+    #    auto    → 自动计算（DATE/YEAR，不询问）
+    #    content → 占位符名小写自动占位（开发期填写文档时替换）
+    #    未登记   → 按 content 处理 + 告警（双向漂移守护）
     # ----------------------------------------------------------------------------
+    $manifest = Get-PlaceholderManifest
     $missing = @($found.Keys | Where-Object { -not $Values.ContainsKey("{{$_}}") } | Sort-Object)
     if ($missing.Count -gt 0) {
-        Write-Host "    提示：内容填充类占位符将自动用占位符名占位（初始化后人工完善）；以下核心值请手动输入。" -ForegroundColor Yellow
+        Write-Host "    提示：内容类占位符自动用占位符名占位（初始化后人工完善）；以下核心值请手动输入。" -ForegroundColor Yellow
     }
-    # 核心键：替换为占位符名会导致文档/CI 不可用，必须在初始化时由用户提供
-    # 其余内容占位符（用户手册/规格/FAQ 等）自动用占位符名小写占位，初始化后填写文档时一并替换
-    $coreKeys = @(
-        "PROJECT_NAME", "OWNER", "REPO_NAME", "AUTHOR",
-        "SECURITY_CONTACT", "COC_CONTACT",
-        "BUILD_CMD", "TEST_CMD", "FULL_VERIFY_CMD", "LINT_CMD", "COVERAGE_CMD"
-    )
     $autoFilled = 0
+    $warnUndeclared = @()
     foreach ($name in $missing) {
-        if ($name -notin $coreKeys -and $name -notin @("VERSION", "DATE", "YEAR")) {
+        $meta = $manifest[$name]
+        if (-not $meta) {
+            # 未在 manifest 登记：按 content 处理并告警（新增占位符需补充 placeholders.json）
             $Values["{{$name}}"] = $name.ToLowerInvariant()
+            $warnUndeclared += $name
             $autoFilled++
             continue
         }
-        $default = switch ($name) {
-            "VERSION" { "1.0.0" }
-            "DATE" { Get-Date -Format "yyyy-MM-dd" }
-            "YEAR" { (Get-Date).Year.ToString() }
-            # 核心键：Enter 用占位符名小写（初始化后需人工确认替换）
-            default { $name.ToLowerInvariant() }
+        switch ($meta.category) {
+            "auto" {
+                switch ($meta.rule) {
+                    "today" { $Values["{{$name}}"] = Get-Date -Format "yyyy-MM-dd" }
+                    "year"  { $Values["{{$name}}"] = (Get-Date).Year.ToString() }
+                    default { $Values["{{$name}}"] = $name.ToLowerInvariant() }
+                }
+                break
+            }
+            "content" {
+                $Values["{{$name}}"] = $name.ToLowerInvariant()
+                $autoFilled++
+                break
+            }
+            "core" {
+                $default = if ($meta.default) { $meta.default } else { $name.ToLowerInvariant() }
+                $prompt  = if ($meta.prompt) { $meta.prompt } else { "请输入 $name" }
+                $answer = Read-Host "    $prompt（Enter 用默认: $default）"
+                if ([string]::IsNullOrWhiteSpace($answer)) { $answer = $default }
+                $Values["{{$name}}"] = $answer
+                break
+            }
         }
-        $answer = Read-Host "    请输入 {{$name}} 的值（Enter 用默认: $default）"
-        if ([string]::IsNullOrWhiteSpace($answer)) { $answer = $default }
-        $Values["{{$name}}"] = $answer
+    }
+    if ($warnUndeclared.Count -gt 0) {
+        Write-Host "    [WARN] 以下占位符未在 placeholders.json 登记（已按内容类占位，请补充 manifest）：$($warnUndeclared -join ', ')" -ForegroundColor Yellow
     }
     if ($autoFilled -gt 0) {
         Write-Host "    （$autoFilled 个内容占位符已自动用占位符名占位，初始化后在文档填写时替换）" -ForegroundColor Yellow
@@ -204,8 +225,10 @@ if ($remaining.Count -gt 0) {
 if ($GitInit) {
     Push-Location $Target
     git init 2>$null | Out-Null
+    # commit-msg 校验 hook：scripts/git-hooks/commit-msg（见 CONTRIBUTING「提交规范」）
+    git config core.hooksPath scripts/git-hooks 2>$null | Out-Null
     Pop-Location
-    Write-Host "==> 已执行 git init（请按需添加首次 commit）" -ForegroundColor Green
+    Write-Host "==> 已执行 git init（commit-msg 校验 hook 已启用）" -ForegroundColor Green
 }
 
 if ($CreateCompatibilityLinks) {

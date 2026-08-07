@@ -171,5 +171,5 @@ Phase 0 审计结果 → 决策：
 | 防御编程（哨兵契约/异常过滤器/NaN 守卫） | [AGENTS.md 防错三原则](../AGENTS.md) + [skills/csharp-SKILL.md](../skills/csharp-SKILL.md) |
 | 文档职责体系 | [documentation.md](documentation.md)（唯一权威） |
 | 会话管理（5 文件/20 轮/跨会话接力） | [AGENTS.md 会话管理](../AGENTS.md) |
-| 版本管理（SemVer + 发版流程） | [CONTRIBUTING.md 发版规范](../CONTRIBUTING.md) + [release.yml](../.github/workflows/release.yml) |
+| 版本管理（SemVer + 发版流程） | [CONTRIBUTING.md 发版规范](../CONTRIBUTING.md) + [release.yml](../.github/workflows/release.yml)（release-please 自动） |
 | 工程化基础设施优先级 | [CONTRIBUTING.md](../CONTRIBUTING.md)（CI/模板/徽章清单已并入） |

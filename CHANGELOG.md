@@ -10,7 +10,12 @@ All notable changes to {{PROJECT_NAME}}.
 
 ### Added
 
-- 新增 `.github/workflows/release.yml`：tag 推送自动构建/测试/生成 Release（正文取自 CHANGELOG 对应段落）
+- **占位符清单 SSOT**：新增 `scripts/placeholders.json`（109 项，含分类/默认值/测试值）与 `scripts/placeholder-utils.ps1`（共享读取，损坏时回退默认表）——消除占位符真相散落 init-project.ps1 / test-template.ps1 / README 三处的漂移
+- **commit 规范强制**：新增 `scripts/validate-commit-msg.sh`（Conventional Commits 校验，零依赖 POSIX sh）+ `scripts/git-hooks/commit-msg`（core.hooksPath 安装）+ CI 提交规范检查 step——与 release-please 发版闭环
+- **release-please 自动发版**：重写 `.github/workflows/release.yml`，新增 `.github/release-please/config.json` 与 `.release-please-manifest.json`——从 Conventional Commits 自动推导版本/CHANGELOG/tag/Release
+- **跨语言脚手架**：新增 `templates/NewModule/{Name}Core.py.template`、`test_{Name}Core.py.template`（falsy 守卫 + pytest 四路径）、`{Name}Udf.bas.template`（As Variant + 错误三模式）——消除 C# 重心
+- 新增根级 `FUNDING.yml`（GitHub 社区健康文件）
+- `ci.yml`：新增 `merge_group` 触发（Merge Queue）与模板守卫 step（NewModule 模板禁止双花括号占位符）
 - 新增 `scripts/test-template.ps1`：模板完整性自测（init → verify-docs/manual/falsy）
 - 新增 `templates/NewModule/{Name}Foundation.cs.template`：补齐 UDF 模板的 Foundation 依赖
 - 新增 `.github/CODEOWNERS` 与 `.github/ISSUE_TEMPLATE/config.yml`
@@ -18,6 +23,13 @@ All notable changes to {{PROJECT_NAME}}.
 
 ### Changed
 
+- `init-project.ps1` / `test-template.ps1`：占位符处理改为从 placeholders.json 读取（init 按 core/content/auto 分派，auto 的 DATE/YEAR 不再询问；test-template 读 test 值 + 死条目硬校验）
+- `init-project.ps1`：`-GitInit` 自动配置 `git config core.hooksPath scripts/git-hooks`
+- `CONTRIBUTING.md`：重写信息架构——新增 TOC、新手指引（good first issue）、Conventional Commits 类型枚举表、代码审查期望、release-please 发版流程、本地 hook 安装说明
+- `ci.yml`：checkout 补 `fetch-depth: 0`（提交规范检查需要完整历史）；多版本矩阵注释补启用指引
+- `AGENTS.md` / `rules/project-structure.md`：目录树同步（scripts 新文件、release-please、FUNDING、.release-please-manifest、NewModule 多语言）
+- `rules/documentation.md`：发版维护规则改为 release-please 自动维护（不再手工编辑 CHANGELOG/三处版本号/tag）
+- `README.md`：占位符清单权威改指 placeholders.json
 - `agents.md` → `AGENTS.md`、`readme.md` → `README.md`：文件名大小写对齐 2026 年跨工具惯例（AGENTS.md 为大写事实标准；README 惯例大写），全部内部引用同步更新
 - `scripts/init-project.ps1`：-CreateCompatibilityLinks 仅创建 CLAUDE.md 副本（AGENTS.md 即主文件，Codex/Copilot/Windsurf 等直接读取）
 - `verify-docs.py`：REQUIRED_DIRS 移除 logs（运行时目录）、DOC_FILES 补全、占位符链接跳过、--strict 未声明文件检查
@@ -65,6 +77,7 @@ All notable changes to {{PROJECT_NAME}}.
 
 ### Removed
 
+- `.github/workflows/release-drafter.yml` 与 `.github/release-drafter.yml`：双发版机制收敛为 release-please 单一信源
 - `.github/ISSUE_TEMPLATE/*.md`：四个手写 Issue 模板移除（被 .yml Issue Forms 替代）（L10）
 
 ### Fixed

@@ -1,0 +1,73 @@
+# ============================================================================
+# test_{Name}Core.py — Python 核心层单元测试
+# 使用方式：将 {Name} 替换为模块名，{Module} 替换为所在目录
+# 目标位置：tests/test_{Name}Core.py（或 tests/{Module}/）
+# 发现规则：test_ 前缀保证 pytest 自动发现（pyproject.toml: python_files=["test_*.py"]）
+# ============================================================================
+"""核心层单元测试：正常路径 / 边界值 / Falsy 陷阱 / 异常路径。
+
+原则（闭环验证，见 AGENTS.md）：
+- 正常路径必须断言具体结果
+- Falsy 陷阱：0/None 分别测试（0 是有效值，None 才是"未提供"）
+- 异常路径：断言抛出的异常类型与信息
+"""
+
+import math
+
+import pytest
+
+# 导入被测实现（按实际包结构调整 import 路径：
+# src/{Module}/{Name}Core.py → from src.{Module}.{Name}Core import ...）
+from src.{Module}.{Name}Core import compute, process
+
+
+# ============================================================================
+# 正常路径
+# ============================================================================
+
+def test_compute_normal():
+    assert compute(1.0) == 2.0
+
+
+def test_process_normal():
+    assert process("  hello  ") == "hello"
+
+
+# ============================================================================
+# Falsy 陷阱（python-SKILL 最高频错误）
+# ============================================================================
+
+def test_compute_zero_is_valid():
+    # 0 是有效值，不应被当作"未提供"
+    assert compute(0.0) == 0.0
+
+
+def test_compute_none_returns_nan():
+    # None 才是"未提供"信号
+    assert math.isnan(compute(None))
+
+
+def test_process_empty_returns_empty():
+    assert process("") == ""
+
+
+def test_process_none_returns_empty():
+    assert process(None) == ""
+
+
+# ============================================================================
+# 边界值
+# ============================================================================
+
+def test_compute_negative():
+    assert compute(-1.0) == -2.0
+
+
+# ============================================================================
+# 异常路径
+# ============================================================================
+
+# def test_compute_negative_raises():
+#     """若 Core 前置验证启用（value < 0 抛 ValueError）。"""
+#     with pytest.raises(ValueError):
+#         compute(-1.0)

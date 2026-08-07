@@ -54,10 +54,10 @@
 新踩工具/脚本坑位
   → rules/tooling-pitfalls.md（附真实案例）
 
-发版
-  → CHANGELOG.md（keepachangelog 格式）
-  → 版本号三处一致（代码/配置/CHANGELOG）
-  → git tag vMAJOR.MINOR.PATCH
+发版（release-please 自动）
+  → 提交遵循 Conventional Commits（scripts/validate-commit-msg.sh 强制）
+  → release-please 自动维护 CHANGELOG.md + 版本号 + tag + Release
+  → 人工无需编辑 CHANGELOG / 三处版本号 / push tag（见 CONTRIBUTING「发版流程」）
 ```
 
 ### 数字一致性

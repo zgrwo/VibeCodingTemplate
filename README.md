@@ -158,7 +158,7 @@ robocopy VibeCodingTemplate <PROJECT_NAME> /E /XD .git
 | `{{BUILD_CMD}}` / `{{TEST_CMD}}` / `{{FULL_VERIFY_CMD}}` | 构建/测试/验证命令 |
 | `{{AUTHOR}}` / `{{DATE}}` | 作者与日期 |
 
-> 上表为必填核心项；模板实际含 100+ 占位符（CI / 模块 / 文档 / 联系方式等），自动方式下由 init-project.ps1 一次扫描全部替换。完整占位符清单以 `scripts/test-template.ps1` 的 `$special` 映射表为权威（模板自测即按该表逐项断言替换完成）。
+> 上表为必填核心项；模板实际含 100+ 占位符（CI / 模块 / 文档 / 联系方式等），自动方式下由 init-project.ps1 一次扫描全部替换。完整占位符清单（分类/默认值/测试值）以 `scripts/placeholders.json` 为**唯一权威**（init-project.ps1 与 test-template.ps1 均从该文件读取）。
 
 > 用 `scripts/init-project.ps1` 自动初始化时，脚本会扫描全部 `{{...}}` 占位符，对核心值（项目名 / 所有者 / 验证命令等）交互式询问，其余内容占位符自动用占位符名占位，完成后报告遗漏项。
 

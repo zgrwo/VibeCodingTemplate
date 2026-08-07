@@ -1,0 +1,20 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "include-component-in-tag": false,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-sections": [
+        { "type": "feat",     "section": "✨ 新功能" },
+        { "type": "fix",      "section": "🐛 Bug 修复" },
+        { "type": "docs",     "section": "📄 文档" },
+        { "type": "refactor", "section": "🔧 重构" },
+        { "type": "test",     "section": "✅ 测试" },
+        { "type": "build",    "section": "🏗 构建" },
+        { "type": "ci",       "section": "⚙️ CI" },
+        { "type": "perf",     "section": "🚀 性能" },
+        { "type": "chore",    "section": "🧹 维护" }
+      ]
+    }
+  }
+}

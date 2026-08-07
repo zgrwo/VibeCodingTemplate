@@ -41,6 +41,10 @@
 │   └── project-plan-review.md    # 规划评审专家
 │
 ├── scripts/                      # 构建/验证脚本
+│   ├── placeholders.json         # 占位符清单（唯一真相源：分类/默认值/测试值）
+│   ├── placeholder-utils.ps1     # 占位符 manifest 读取工具（init/test 共用）
+│   ├── validate-commit-msg.sh    # Conventional Commits 校验（commit hook 与 CI 共用）
+│   ├── git-hooks/                # git hooks（commit-msg → core.hooksPath）
 │   ├── verify-all.ps1            # 全量验证入口（构建+测试+文档一致性）
 │   ├── verify-docs.py            # 文档链接/目录树一致性验证
 │   ├── verify-manual.py          # 手册示例一致性验证（禁自校验）
@@ -50,17 +54,17 @@
 │   └── ...
 │
 ├── templates/                    # 模块脚手架
-│   ├── README.md                 # 脚手架使用说明（占位符约定）
-│   ├── NewModule/                # 新增模块五件套（Core/Foundation/Udf/Tests/CrossVal）
+│   ├── README.md                 # 脚手架使用说明（占位符约定 + 多语言流程）
+│   ├── NewModule/                # 新增模块多语言模板（C# 五件套 + Python/VBA 三件）
 │   └── language/                 # 构建配置模板（pyproject/Build.props/nuget/Tests.csproj）
 │
 ├── .github/                      # GitHub 协作
-│   ├── workflows/ci.yml          # CI 质量门禁（quick/full/quality）
+│   ├── workflows/ci.yml          # CI 质量门禁（quick/full/quality + commit 规范检查）
 │   ├── workflows/security.yml    # CodeQL 安全扫描
-│   ├── workflows/release-drafter.yml  # 自动 Release 草稿
-│   ├── workflows/release.yml     # tag 自动发布（v* tag 触发）
+│   ├── workflows/release.yml     # release-please 自动发版（Conventional Commits 驱动）
 │   ├── workflows/stale.yml       # 僵尸 Issue/PR 关闭
 │   ├── dependabot.yml            # 依赖自动更新
+│   ├── release-please/           # release-please 配置（config.json）
 │   ├── ISSUE_TEMPLATE/           # Bug/功能/文档/重构模板
 │   └── PULL_REQUEST_TEMPLATE.md  # PR 模板
 │
@@ -78,10 +82,12 @@
 ├── AGENTS.md                     # 项目宪法（AI 约束）
 ├── README.md                     # 用户入口
 ├── CONTRIBUTING.md               # 贡献指南
-├── CHANGELOG.md                  # 版本变更记录
+├── CHANGELOG.md                  # 版本变更记录（release-please 自动维护）
 ├── SECURITY.md                   # 安全政策
 ├── CODE_OF_CONDUCT.md            # 行为准则
+├── FUNDING.yml                   # 资助信息（社区健康文件）
 ├── LICENSE                       # 开源许可证
+├── .release-please-manifest.json # release-please 版本基线
 ├── .editorconfig                 # 编辑器统一风格
 ├── .gitignore                    # 排除规则
 ├── .gitattributes                # 换行符/二进制标记
