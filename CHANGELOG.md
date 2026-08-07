@@ -14,16 +14,35 @@ All notable changes to {{PROJECT_NAME}}.
 - 新增 `scripts/test-template.ps1`：模板完整性自测（init → verify-docs/manual/falsy）
 - 新增 `templates/NewModule/{Name}Foundation.cs.template`：补齐 UDF 模板的 Foundation 依赖
 - 新增 `.github/CODEOWNERS` 与 `.github/ISSUE_TEMPLATE/config.yml`
+- 新增 `.github/ISSUE_TEMPLATE/{feature_request,docs_request,refactor_request}.yml`：Issue 模板升级为 GitHub Issue Forms（结构化字段 + 必填校验）
 
 ### Changed
 
-- `scripts/verify-docs.py`：REQUIRED_DIRS 移除 logs（运行时目录）、DOC_FILES 补全、占位符链接跳过、--strict 未声明文件检查
+- `agents.md` → `AGENTS.md`、`readme.md` → `README.md`：文件名大小写对齐 2026 年跨工具惯例（AGENTS.md 为大写事实标准；README 惯例大写），全部内部引用同步更新
+- `scripts/init-project.ps1`：-CreateCompatibilityLinks 仅创建 CLAUDE.md 副本（AGENTS.md 即主文件，Codex/Copilot/Windsurf 等直接读取）
+- `verify-docs.py`：REQUIRED_DIRS 移除 logs（运行时目录）、DOC_FILES 补全、占位符链接跳过、--strict 未声明文件检查
 - `scripts/verify-manual.py`：重写为静态检查 + CrossVal 执行器（cross_check/check/section 辅助 API，crossval 缺失时 SKIP 不假装通过）
 - `scripts/falsy-audit.py`：支持 `if not x` / `while x` / `x or default` 变体，实现 LOW 级别输出
 - `scripts/verify-all.ps1`：自动探测构建系统（dotnet/Python），未检测到时显式跳过
 - `scripts/init-project.ps1`：修复 -Values 无大括号 key 静默不替换 bug，新增 -GitInit / -CreateCompatibilityLinks / YEAR
 - `.github/workflows/ci.yml`：quality-gate 去除 continue-on-error（硬门禁），paths 补 .github/templates/rules，新增 template-self-test job
-- `rules/cross-project-synthesis.md`：SSOT 收敛为案例库 + 索引（删除与 agents.md 重复内容）
+- `.github/workflows/ci.yml`：三 job 加 `detect` 步骤检测模板仓库自身（`{{PROJECT_NAME}}` 未替换即跳过占位符命令，模板仓库 CI 自举可用）；paths 去重；新增 concurrency 并发取消 + timeout-minutes（H1/M2/L1/L8）
+- `scripts/verify-docs.py`：顶层目录检查改为从 project-structure.md 目录树解析（目录树即契约，规模裁剪自动适配，替代硬编码 REQUIRED_DIRS）（H2）
+- `scripts/init-project.ps1`：占位符机制说明文字 `{{...}}` 化（不再被自扫描替换）；交互询问 Enter 用占位符名默认值（输入量 90+ 降至核心几项）；初始化完成后 CHANGELOG 重置为新项目初始态（H3/M3/M8）
+- `.github/ISSUE_TEMPLATE/bug_report.md`：VERSION 由占位符改为填写式（H3）
+- `AGENTS.md` / `rules/project-structure.md`：目录树补 release.yml 条目（M1）
+- `.github/dependabot.yml`：pip/nuget 条目注释化（初始化后按需取消注释，避免无清单报错）（M4）
+- `scripts/verify-manual.py`：自校验扫描扩展至 crossval/（独立实现比对一并检查）（M5）
+- `skills/project-plan-review.md`：YAGNI 四问收敛为链接引用（唯一权威：architecture-reviewer.md）（M6）
+- `README.md` / `AGENTS.md`：文档职责表加唯一权威注（documentation.md 为 SSOT，表格仅导航）（M7）
+- `.github/ISSUE_TEMPLATE/config.yml`：链接改用 `{{REPO_NAME}}`（M9）
+- `scripts/test-template.ps1`：Invoke-Expression 改为 scriptblock 执行；移除 RELEASE_ASSETS 死条目（L2/L3）
+- `.gitattributes`：`*.ps1` 固定 eol=crlf（Windows 脚本跨平台一致性）（L4）
+- `README.md`：徽章启用说明（取消注释 + 替换 OWNER/REPO_NAME）（L5）
+- `scripts/falsy-audit.py`：覆盖属性访问（`x.y`）与 `return x or` 变体（L6）
+- `AGENTS.md` / `rules/refactoring-plan.md`：`{{N}}` 归位为 `{N}`（源码级待填标记，不参与 init 替换）（L7）
+- `scripts/verify-all.ps1`：`$LASTEXITCODE` 判断简化（L9）
+- `rules/cross-project-synthesis.md`：SSOT 收敛为案例库 + 索引（删除与 AGENTS.md 重复内容）
 - `rules/api-reference.md`：示例段职责收敛至 user-manual，错误值占位符化
 - `rules/specification.md`：模块清单去除函数数列（数字唯一信源在 api-reference）
 - `rules/falsy-pitfalls.md` / `skills/python-SKILL.md`：falsy 内容 SSOT 收敛（唯一权威声明）
@@ -32,6 +51,10 @@ All notable changes to {{PROJECT_NAME}}.
 - `templates/`：Core/Udf 模板命名空间统一为 `{{ROOT_NAMESPACE}}`，CrossVal 模板对接 verify-manual 执行器
 - `.pre-commit-config.yaml`：补齐 pre-commit-hooks 基础 hooks
 - 根目录：LICENSE 年份占位符化，readme 文档索引补全，CONTRIBUTING 补行为准则/安全互链与分支策略
+
+### Removed
+
+- `.github/ISSUE_TEMPLATE/*.md`：四个手写 Issue 模板移除（被 .yml Issue Forms 替代）（L10）
 
 ### Fixed
 
@@ -42,6 +65,9 @@ All notable changes to {{PROJECT_NAME}}.
 - `test-template.ps1` 无 BOM 导致 PowerShell 5.1 中文解析失败
 - `verify-docs.py` 在模板自身状态下必然失败（logs 目录声明冲突 + 占位符断链）
 - PR 模板 `{{ISSUE_NUMBER}}` 误用占位符体系（改为填写式）
+- `ci.yml` 在模板仓库自身运行时占位符命令必然失败（三 job 加 is_template 检测跳过，模板仓库 CI 全绿）（H1）
+- `verify-docs.py` REQUIRED_DIRS 硬编码 10 目录，与规模裁剪冲突（改为从 project-structure.md 目录树解析）（H2）
+- `init-project.ps1` 元占位符污染：描述占位符机制的注释文字被自扫描替换（统一 `{{...}}` 形式排除）（H3）
 
 ## [0.1.0] - {{DATE}}
 

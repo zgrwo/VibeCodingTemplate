@@ -2,15 +2,15 @@
 
 > 从 5 个项目（ExcelFormulaLabs / Excel-VBA-Libraries / EngSmartSuite / costsuite / DocAudit）的全量 commit 历史中提炼的共性经验。
 >
-> **定位（SSOT 声明）**：本文件只承载**真实案例库**与**方法论索引**。设计原则、红线规则、流程类内容一律不在此重复——它们在 agents.md / skills/ / rules/ 有唯一权威定义，本文件仅链接引用。
+> **定位（SSOT 声明）**：本文件只承载**真实案例库**与**方法论索引**。设计原则、红线规则、流程类内容一律不在此重复——它们在 AGENTS.md / skills/ / rules/ 有唯一权威定义，本文件仅链接引用。
 >
-> 维护规则：新增条目必须附真实案例（出现次数 + 根因），禁止臆造；发现本文件与 agents.md / skills/ 重复时，以权威文件为准，本文件只留链接。
+> 维护规则：新增条目必须附真实案例（出现次数 + 根因），禁止臆造；发现本文件与 AGENTS.md / skills/ 重复时，以权威文件为准，本文件只留链接。
 
 ---
 
 ## 一、反模式案例库（唯一权威内容）
 
-> 以下 8 类问题在 5 个项目中反复出现。**出现次数与根因是本文件独有的验证数据**，对策则已固化为 agents.md 红线或验证脚本，链接引用。
+> 以下 8 类问题在 5 个项目中反复出现。**出现次数与根因是本文件独有的验证数据**，对策则已固化为 AGENTS.md 红线或验证脚本，链接引用。
 
 ### 1. 注册/同步遗漏
 
@@ -19,7 +19,7 @@
 - DocAudit：新增 check_type 忘注册 _DISPATCH（3 次）
 - VBA：新增函数忘更新 6 处文档（多次）
 - EngSmartSuite：新增方法忘注册 TASK_REGISTRY
-**对策**：→ 见 [agents.md 开发流程](../agents.md)（提交前必检）与 [CONTRIBUTING.md](../CONTRIBUTING.md)（文档同步步骤）
+**对策**：→ 见 [AGENTS.md 开发流程](../AGENTS.md)（提交前必检）与 [CONTRIBUTING.md](../CONTRIBUTING.md)（文档同步步骤）
 
 ### 2. 文档数字漂移
 
@@ -29,7 +29,7 @@
 ### 3. 交叉验证自校验
 
 **现象**：`check(name, X, X)` 永远 PASS，3 处 Bug 因此漏过。
-**对策**：→ 已固化为 [agents.md 闭环验证强制](../agents.md) + [verify-manual.py](../scripts/verify-manual.py) 静态检测（自校验模式正则拦截）。
+**对策**：→ 已固化为 [AGENTS.md 闭环验证强制](../AGENTS.md) + [verify-manual.py](../scripts/verify-manual.py) 静态检测（自校验模式正则拦截）。
 
 ### 4. 配置流断裂（声明了但未生效）
 
@@ -54,7 +54,7 @@
 
 **现象**：每个项目都经历了 5-15 轮代码审查修复。
 **根因**：初始实现只考虑正常路径，未系统性考虑退化输入。
-**对策**：→ 已固化为 [agents.md 防错三原则](../agents.md) 与 [code-review-prompt.md](code-review-prompt.md)（Standard 级别自查）。
+**对策**：→ 已固化为 [AGENTS.md 防错三原则](../AGENTS.md) 与 [code-review-prompt.md](code-review-prompt.md)（Standard 级别自查）。
 
 ### 7. 框架/版本兼容性
 
@@ -62,7 +62,7 @@
 - IntelliSense net8.0 反复尝试 8 次才确认不可行
 - scipy 新版 API 变更导致 kstest 失败
 - winreg 在 Linux 上 ImportError
-**对策**：→ 已固化为 [agents.md 红线](../agents.md)（依赖跨平台确认）+ [tooling-pitfalls.md](tooling-pitfalls.md)（平台 API 条件导入）。
+**对策**：→ 已固化为 [AGENTS.md 红线](../AGENTS.md)（依赖跨平台确认）+ [tooling-pitfalls.md](tooling-pitfalls.md)（平台 API 条件导入）。
 
 ### 8. 类型/封送问题
 
@@ -165,11 +165,11 @@ Phase 0 审计结果 → 决策：
 
 | 主题 | 权威定义处 |
 |------|-----------|
-| 设计原则（SSOT/配置驱动/YAGNI/优雅降级） | [agents.md 核心准则](../agents.md) + [specification.md](specification.md) |
+| 设计原则（SSOT/配置驱动/YAGNI/优雅降级） | [AGENTS.md 核心准则](../AGENTS.md) + [specification.md](specification.md) |
 | 架构层级与单向依赖 | [project-structure.md](project-structure.md) |
-| 闭环验证体系（交叉验证/黄金测试/差分测试） | [agents.md 闭环验证强制](../agents.md) + [verify-manual.py](../scripts/verify-manual.py) |
-| 防御编程（哨兵契约/异常过滤器/NaN 守卫） | [agents.md 防错三原则](../agents.md) + [skills/csharp-SKILL.md](../skills/csharp-SKILL.md) |
+| 闭环验证体系（交叉验证/黄金测试/差分测试） | [AGENTS.md 闭环验证强制](../AGENTS.md) + [verify-manual.py](../scripts/verify-manual.py) |
+| 防御编程（哨兵契约/异常过滤器/NaN 守卫） | [AGENTS.md 防错三原则](../AGENTS.md) + [skills/csharp-SKILL.md](../skills/csharp-SKILL.md) |
 | 文档职责体系 | [documentation.md](documentation.md)（唯一权威） |
-| 会话管理（5 文件/20 轮/跨会话接力） | [agents.md 会话管理](../agents.md) |
+| 会话管理（5 文件/20 轮/跨会话接力） | [AGENTS.md 会话管理](../AGENTS.md) |
 | 版本管理（SemVer + 发版流程） | [CONTRIBUTING.md 发版规范](../CONTRIBUTING.md) + [release.yml](../.github/workflows/release.yml) |
 | 工程化基础设施优先级 | [CONTRIBUTING.md](../CONTRIBUTING.md)（CI/模板/徽章清单已并入） |

@@ -11,6 +11,7 @@ falsy-audit.py — Falsy 陷阱静态审计
   - `if not x:`      —— 取反真值判断（数值 0 时同样误判）
   - `while x:`       —— 循环条件
   - `x or <default>` —— or 回退模式（threshold=0 时被默认值覆盖）
+  - 变量名支持属性访问（`self.count` / `obj.offset`）与 `return x or <default>`
 
 输出 HIGH（疑似 falsy 误判，必须修复）与 LOW（需人工确认）两级警告。
 
@@ -43,10 +44,10 @@ LOW_RISK_PATTERNS = [
     r"\b(?:ratio|rate|score|score_value)\b",
 ]
 
-# 真值判断变体（排除 is None / is not None）
-IF_TRUTHY_RE = re.compile(r"^\s*if\s+(not\s+)?(\w+)\s*:")
-WHILE_TRUTHY_RE = re.compile(r"^\s*while\s+(not\s+)?(\w+)\s*:")
-OR_FALLBACK_RE = re.compile(r"=\s*(\w+)\s+or\s+")
+# 真值判断变体（排除 is None / is not None）；变量名支持 self.x / obj.attr
+IF_TRUTHY_RE = re.compile(r"^\s*if\s+(not\s+)?([\w.]+)\s*:")
+WHILE_TRUTHY_RE = re.compile(r"^\s*while\s+(not\s+)?([\w.]+)\s*:")
+OR_FALLBACK_RE = re.compile(r"(?:=\s*|return\s+)([\w.]+)\s+or\s+")
 
 HIGH_RISK_RE = [re.compile(p) for p in HIGH_RISK_PATTERNS]
 LOW_RISK_RE = [re.compile(p) for p in LOW_RISK_PATTERNS]

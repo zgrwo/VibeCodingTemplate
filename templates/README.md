@@ -25,7 +25,7 @@
 | `{PREFIX}` | UDF 前缀（大写） | `WEATHER` |
 | `{{ROOT_NAMESPACE}}` | 项目根命名空间（初始化时确定） | `Acme.Stats` |
 
-> 与根目录文档使用的 `{{PLACEHOLDER}}`（大括号双写）不同——`templates/` 内的文件被复制到 `src/` 使用，`{Name}` 是源码级占位符；`{{ROOT_NAMESPACE}}` 与根目录占位符同体系（init-project.ps1 统一替换）。
+> 与根目录文档使用的 `{{...}}`（大括号双写）不同——`templates/` 内的文件被复制到 `src/` 使用，`{Name}` 是源码级占位符；`{{ROOT_NAMESPACE}}` 与根目录占位符同体系（init-project.ps1 统一替换）。
 
 ## 新增模块流程（C# 示例）
 

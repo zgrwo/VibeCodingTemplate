@@ -3,8 +3,9 @@
 # 用法：
 #   - PR 自动触发（按路径过滤，节省资源）
 #   - workflow_dispatch 手动触发全量
-#   - quality 门禁：手册数值一致性 / 陷阱审计 / 架构约束 / 代码风格（硬门禁，失败即红）
+#   - quality 门禁：手册数值一致性 / 陷阱审计 / 文档一致性 / 代码风格（硬门禁，失败即红）
 # 初始化时按项目语言替换命令占位符 {{*}}。
+# 模板仓库自举：占位符未替换时（即模板仓库自身），含 {{*}} 命令的步骤被 detect 步骤跳过。
 
 name: CI
 
@@ -17,15 +18,18 @@ on:
       - "templates/**"
       - "rules/**"
       - ".github/**"
-      - "rules/api-reference.md"
-      - "rules/user-manual.md"
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # ============ quick：PR 级快速验证 ============
   quick-check:
     name: Quick Check (PR)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # --- 多版本矩阵（可选，初始化时按需启用）---
     # strategy:
     #   matrix:
@@ -33,6 +37,15 @@ jobs:
     #     dotnet-version: ["8.0.x", "9.0.x"]          # .NET 项目
     steps:
       - uses: actions/checkout@v6
+      # --- 模板仓库检测：占位符未替换（=模板仓库自身）时跳过构建 ---
+      - name: 检测是否为模板仓库自身
+        id: detect
+        run: |
+          if grep -rq "{{PROJECT_NAME}}" AGENTS.md 2>/dev/null; then
+            echo "is_template=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_template=false" >> "$GITHUB_OUTPUT"
+          fi
       # --- 按语言选择 setup（二选一）---
       # Python:
       # - uses: actions/setup-python@v5
@@ -42,8 +55,10 @@ jobs:
       # - uses: actions/setup-dotnet@v4
       #   with: { dotnet-version: ${{ matrix.dotnet-version }} }
       - name: Build
+        if: steps.detect.outputs.is_template != 'true'
         run: {{BUILD_CMD}}
       - name: Test
+        if: steps.detect.outputs.is_template != 'true'
         run: {{TEST_CMD}}
       - name: 提交前自检（无裸 catch / bare except）
         run: |
@@ -54,44 +69,68 @@ jobs:
   full-check:
     name: Full Verify (manual)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v6
+      # --- 模板仓库检测：占位符未替换（=模板仓库自身）时跳过 ---
+      - name: 检测是否为模板仓库自身
+        id: detect
+        run: |
+          if grep -rq "{{PROJECT_NAME}}" AGENTS.md 2>/dev/null; then
+            echo "is_template=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_template=false" >> "$GITHUB_OUTPUT"
+          fi
       # --- setup 同上 ---
       - name: Full verify
+        if: steps.detect.outputs.is_template != 'true'
         run: {{FULL_VERIFY_CMD}}
 
   # ============ quality：质量门禁（硬门禁，不设 continue-on-error）============
   quality-gate:
     name: Quality Gate
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: quick-check
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      # --- 模板仓库检测：占位符未替换时跳过 LINT/COVERAGE（命令占位符在模板仓库不可执行）---
+      - name: 检测是否为模板仓库自身
+        id: detect
+        run: |
+          if grep -rq "{{PROJECT_NAME}}" AGENTS.md 2>/dev/null; then
+            echo "is_template=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_template=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: 手册数值一致性
         run: python scripts/verify-manual.py
       - name: 陷阱审计（falsy / 结构）
         run: python scripts/falsy-audit.py
-      - name: 架构约束检查
+      - name: 文档与结构一致性（断链/目录树/未声明文件）
         run: python scripts/verify-docs.py --strict
       - name: 代码风格
         # Python: ruff check src/ scripts/
         # C#:    dotnet format --verify-no-changes
+        if: steps.detect.outputs.is_template != 'true'
         run: {{LINT_CMD}}
       - name: 覆盖率门禁
         # Python: pytest --cov=src --cov-fail-under=80（需 dev 依赖 pytest-cov）
         # C#:    dotnet test --collect:"XPlat Code Coverage"（需 coverlet.collector）
+        if: steps.detect.outputs.is_template != 'true'
         run: {{COVERAGE_CMD}}
 
   # ============ template-self-test：模板仓库自测 ============
-  # 仅模板仓库运行（检测到 agents.md 中未替换的 {{PROJECT_NAME}} 占位符即视为模板）。
+  # 仅模板仓库运行（检测到 AGENTS.md 中未替换的 {{PROJECT_NAME}} 占位符即视为模板）。
   # 新项目初始化替换占位符后自动跳过，无需删除。
   template-self-test:
     name: Template Self-Test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v5
@@ -100,7 +139,7 @@ jobs:
       - name: 检测是否为模板仓库自身（存在未替换占位符）
         id: detect
         run: |
-          if grep -rq "{{PROJECT_NAME}}" agents.md 2>/dev/null; then
+          if grep -rq "{{PROJECT_NAME}}" AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"

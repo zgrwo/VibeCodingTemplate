@@ -47,6 +47,7 @@
 │   ├── verify-manual.py          # 手册示例一致性验证（禁自校验）
 │   ├── falsy-audit.py            # Falsy 陷阱静态审计
 │   ├── init-project.ps1          # 从模板初始化新项目（占位符替换）
+│   # 注：crossval/ 为可选运行时目录（verify-manual.py 自动发现，缺失时显式 SKIP）
 │   └── ...
 │
 ├── templates/                    # 模块脚手架
@@ -58,6 +59,7 @@
 │   ├── workflows/ci.yml          # CI 质量门禁（quick/full/quality）
 │   ├── workflows/security.yml    # CodeQL 安全扫描
 │   ├── workflows/release-drafter.yml  # 自动 Release 草稿
+│   ├── workflows/release.yml     # tag 自动发布（v* tag 触发）
 │   ├── workflows/stale.yml       # 僵尸 Issue/PR 关闭
 │   ├── dependabot.yml            # 依赖自动更新
 │   ├── ISSUE_TEMPLATE/           # Bug/功能/文档/重构模板
@@ -71,8 +73,8 @@
 ├── tools/                        # 辅助工具/脚本
 │   └── ...
 │
-├── agents.md                     # 项目宪法（AI 约束）
-├── readme.md                     # 用户入口
+├── AGENTS.md                     # 项目宪法（AI 约束）
+├── README.md                     # 用户入口
 ├── CONTRIBUTING.md               # 贡献指南
 ├── CHANGELOG.md                  # 版本变更记录
 ├── SECURITY.md                   # 安全政策
@@ -104,8 +106,8 @@
 | 中型项目（5-15 模块） | 本目录树全量 |
 | 大型/多仓 | 全量 + 子目录级 `AGENTS.md`（Monorepo） |
 
-- **YAGNI**：不需要的目录不要建，需要时再补（遵循 agents.md「简洁至上」）
-- **目录即契约**：一旦建目录并入库，删除/移动必须同步更新本文件与 agents.md
+- **YAGNI**：不需要的目录不要建，需要时再补（遵循 AGENTS.md「简洁至上」）
+- **目录即契约**：一旦建目录并入库，删除/移动必须同步更新本文件与 AGENTS.md
 
 ## 文件命名规范
 
@@ -123,4 +125,4 @@
 - [ ] 文件放置于正确的层级目录
 - [ ] 命名符合上述规范
 - [ ] 如为 Public 接口，已同步 api-reference.md
-- [ ] agents.md 目录树已同步（如为顶层变更）
+- [ ] AGENTS.md 目录树已同步（如为顶层变更）

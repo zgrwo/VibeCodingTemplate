@@ -4,7 +4,7 @@
 verify-docs.py — 文档一致性验证
 
 功能（新项目初始化后按需扩展）：
-  1. 检查 readme.md / agents.md / CONTRIBUTING.md / rules/*.md 中相对链接指向的文件是否存在
+  1. 检查 README.md / AGENTS.md / CONTRIBUTING.md / rules/*.md 中相对链接指向的文件是否存在
   2. 检查 project-structure.md 目录树中声明的顶层目录是否真实存在
   3. 检查目录树中未声明的新增文件（可选，--strict）
 
@@ -28,8 +28,8 @@ ROOT = Path(__file__).resolve().parent.parent
 # 需要检查链接的文档（相对 ROOT）——覆盖全部含相对链接的文档
 DOC_FILES = [
     # 根目录治理文件
-    "readme.md",
-    "agents.md",
+    "README.md",
+    "AGENTS.md",
     "CONTRIBUTING.md",
     "CHANGELOG.md",
     "SECURITY.md",
@@ -49,12 +49,44 @@ DOC_FILES = [
     "rules/tooling-pitfalls.md",
 ]
 
-# project-structure.md 中声明的顶层目录（缺失则报错）
+# 顶层目录检查：从 project-structure.md 目录树解析（唯一定义处，随规模裁剪自动适配）
 # 注：logs/ 为运行时目录（.gitignore 排除、init-project 复制时跳过），不检查
-REQUIRED_DIRS = [
-    "src", "tests", "rules", "skills", "tools",
-    "build", "docs", "scripts", "templates", ".github",
-]
+EXCLUDED_DIRS = {"logs"}
+
+
+def _parse_top_dirs() -> list[str]:
+    """从 project-structure.md 目录树解析顶层目录（目录树即契约）。"""
+    path = ROOT / "rules" / "project-structure.md"
+    if not path.exists():
+        return []
+    dirs: list[str] = []
+    in_block = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        s = line.strip()
+        if s.startswith("```"):
+            in_block = not in_block
+            continue
+        if not in_block:
+            continue
+        m = re.match(r"^[├└]──\s+([^/#\s]+)/", s)
+        if m:
+            dirs.append(m.group(1))
+    return dirs
+
+
+def check_dirs() -> list[str]:
+    """检查目录树声明的顶层目录是否存在（裁剪后同步裁剪目录树即自动适配）。"""
+    problems: list[str] = []
+    declared = _parse_top_dirs()
+    if not declared:
+        problems.append("[配置错误] 无法从 project-structure.md 目录树解析顶层目录（目录树格式异常？）")
+        return problems
+    for d in declared:
+        if d in EXCLUDED_DIRS:
+            continue
+        if not (ROOT / d).exists():
+            problems.append(f"[缺失目录] {d}/（project-structure.md 已声明）")
+    return problems
 
 
 def check_links() -> list[str]:
@@ -83,22 +115,13 @@ def check_links() -> list[str]:
     return problems
 
 
-def check_dirs() -> list[str]:
-    """检查目录树声明的顶层目录是否存在。"""
-    problems: list[str] = []
-    for d in REQUIRED_DIRS:
-        if not (ROOT / d).exists():
-            problems.append(f"[缺失目录] {d}/（project-structure.md 已声明）")
-    return problems
-
-
 def check_undeclared(strict: bool) -> list[str]:
     """（可选）检查 ROOT 下是否有目录树未声明的新文件。"""
     if not strict:
         return []
     problems: list[str] = []
     declared = {
-        "agents.md", "readme.md", "CONTRIBUTING.md", "CHANGELOG.md",
+        "AGENTS.md", "README.md", "CONTRIBUTING.md", "CHANGELOG.md",
         "SECURITY.md", "CODE_OF_CONDUCT.md", "LICENSE", ".gitignore",
         ".gitattributes", ".editorconfig", ".pre-commit-config.yaml",
     }

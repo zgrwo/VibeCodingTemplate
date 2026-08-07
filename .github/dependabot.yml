@@ -1,29 +1,30 @@
 # ============================================================================
 # dependabot.yml — 依赖自动更新
-# 使用方式：直接启用（GitHub 自动读取），按项目语言增删生态条目
+# 使用方式：直接启用（GitHub 自动读取），按项目语言取消注释对应条目
 # 注意：package-ecosystem 必须与仓库实际文件匹配，否则 GitHub 报错
 #   - pip:   需要 pyproject.toml / requirements*.txt
 #   - nuget: 需要 *.sln / *.csproj / packages.config
+# 模板仓库自身无语言清单文件，故仅启用 github-actions（workflow 文件存在）。
 # ============================================================================
 version: 2
 updates:
-  # --- Python 项目（按需保留）---
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    labels: ["dependencies"]
+  # --- Python 项目：初始化后按需取消注释 ---
+  # - package-ecosystem: "pip"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #   open-pull-requests-limit: 5
+  #   labels: ["dependencies"]
 
-  # --- .NET 项目（按需保留）---
-  - package-ecosystem: "nuget"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    labels: ["dependencies"]
+  # --- .NET 项目：初始化后按需取消注释 ---
+  # - package-ecosystem: "nuget"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #   open-pull-requests-limit: 5
+  #   labels: ["dependencies"]
 
-  # --- GitHub Actions 自身（建议保留）---
+  # --- GitHub Actions 自身（模板仓库唯一实际生效条目）---
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

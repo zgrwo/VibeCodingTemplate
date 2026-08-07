@@ -1,0 +1,71 @@
+name: Bug 报告
+description: 报告可复现的问题
+title: "[BUG] 简述问题"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 环境
+  - type: input
+    id: version
+    attributes:
+      label: 版本号
+      placeholder: 如 1.2.0
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: 运行平台
+      placeholder: 如 OS / Excel 版本 / Python 版本
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 期望行为与实际行为的差异
+      placeholder: 清晰描述期望行为与实际行为的差异
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: 最小复现步骤
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+      placeholder: 期望结果
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+      description: 附错误信息 / 截图 / 日志片段
+      placeholder: 实际结果，附错误信息/截图/日志片段
+    validations:
+      required: true
+  - type: dropdown
+    id: latest
+    attributes:
+      label: 是否已在最新版本复现
+      options:
+        - 是
+        - 否
+        - 未测试
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: 相关代码位置（如已知）
+      placeholder: 文件:行号

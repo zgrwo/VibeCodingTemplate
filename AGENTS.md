@@ -1,8 +1,8 @@
-# agents.md — 项目宪法
+# AGENTS.md — 项目宪法
 
 > 全局架构、绝对红线与核心流程。编码细节按需加载 Skill。术语见 [context.md](rules/context.md)。
 > 本文件面向 AI 编程助手（QoderCN / Claude Code / Codex / Copilot），是项目唯一宪法文件。
-> 兼容性：多数 AI 工具默认读取 `AGENTS.md`（大写）或 `CLAUDE.md`，初始化时按需创建软链接/副本（见下方「AGENTS.md 生态兼容」）。
+> 兼容性：本文件即 `AGENTS.md`（大写）——2026 年跨工具事实标准，多数 AI 工具可直接读取；Claude Code 按需创建 `CLAUDE.md` 副本（见下方「AGENTS.md 生态兼容」）。
 
 ## 元数据
 
@@ -68,7 +68,7 @@
 
 > **执行方式**：直接 Read skill 文件。
 >
-> **AGENTS.md 兼容**：多数 AI 工具（Codex/Copilot/Windsurf 等）默认读取 `AGENTS.md`（大写）或 `CLAUDE.md`，初始化时按需创建软链接/副本——见下方「AGENTS.md 生态兼容」。
+> **AGENTS.md 生态兼容**：本文件即 `AGENTS.md`（大写），Codex/Copilot/Windsurf/JetBrains/Gemini 可直接读取；Claude Code 需 `CLAUDE.md` 副本——见下方「AGENTS.md 生态兼容」。
 
 ### 专家 Skill（重构生命周期）
 
@@ -106,13 +106,14 @@
 │   ├── workflows/ci.yml          # CI 质量门禁（quick/full/quality）
 │   ├── workflows/security.yml    # CodeQL 安全扫描（定时 + PR）
 │   ├── workflows/release-drafter.yml  # 自动生成 Release 草稿
+│   ├── workflows/release.yml     # tag 自动发布（v* tag 触发）
 │   ├── workflows/stale.yml       # 僵尸 Issue/PR 自动关闭
 │   ├── dependabot.yml            # 依赖自动更新
 │   ├── ISSUE_TEMPLATE/           # Bug/功能/文档/重构四类模板
 │   └── PULL_REQUEST_TEMPLATE.md  # PR 模板
 ├── logs/                         # ✅ 日志（.gitignore 排除）
-├── agents.md                     # ✅ 项目宪法（本文件）
-├── readme.md                     # ✅ 用户向功能指南
+├── AGENTS.md                     # ✅ 项目宪法（本文件）
+├── README.md                     # ✅ 用户向功能指南
 ├── CONTRIBUTING.md               # ✅ 贡献指南（开发/PR/发版流程）
 ├── CHANGELOG.md                  # ✅ 版本变更记录（keepachangelog）
 ├── SECURITY.md                   # ✅ 安全政策与漏洞报告
@@ -218,8 +219,8 @@
 
 | 模式 | 出现次数 | 根因 |
 |------|----------|------|
-| `{{PATTERN_1}}` | `{{N}}`+ | `{{ROOT_CAUSE_1}}` |
-| `{{PATTERN_2}}` | `{{N}}`+ | `{{ROOT_CAUSE_2}}` |
+| `{{PATTERN_1}}` | `{N}`+ | `{{ROOT_CAUSE_1}}` |
+| `{{PATTERN_2}}` | `{N}`+ | `{{ROOT_CAUSE_2}}` |
 
 > 初始化时从项目历史审查记录填充前 3-5 条；后续每次审查发现新高频模式即追加。
 
@@ -268,15 +269,15 @@
 
 ## AGENTS.md 生态兼容
 
-> 2026 年 AGENTS.md 已成为跨工具事实标准（OpenAI Codex / Claude Code / GitHub Copilot / Windsurf / JetBrains AI / Gemini 均支持）。本文件即 AGENTS.md 格式的变体，按以下规则对齐生态：
+> 2026 年 AGENTS.md 已成为跨工具事实标准（OpenAI Codex / Claude Code / GitHub Copilot / Windsurf / JetBrains AI / Gemini 均支持）。本文件即 AGENTS.md（大写）标准形态，按以下规则对齐生态：
 
 ### 1. 文件命名与兼容
 
 | 工具 | 读取文件 | 处理方式 |
 |------|----------|----------|
-| Codex / Copilot / Windsurf / JetBrains / Gemini | `AGENTS.md` | 初始化时重命名或软链接 |
-| Claude Code | `CLAUDE.md` | 创建副本/软链接：`ln -s agents.md CLAUDE.md`（Windows：复制一份） |
-| QoderCN | `agents.md` / `AGENTS.md` | 模板默认小写 `agents.md` 即可 |
+| Codex / Copilot / Windsurf / JetBrains / Gemini | `AGENTS.md` | 直接读取，无需处理 |
+| Claude Code | `CLAUDE.md` | 创建副本：`Copy-Item AGENTS.md CLAUDE.md`（Linux：`ln -s AGENTS.md CLAUDE.md`） |
+| QoderCN | `AGENTS.md`（兼容小写 `agents.md`） | 模板默认大写 `AGENTS.md` 即可 |
 
 ### 2. 子目录级 AGENTS.md（Monorepo）
 
@@ -286,7 +287,7 @@
 
 ### 3. 「Agent 看不出来的事实」最小清单
 
-> 原则：Agent 能从代码看出来的内容不写；只写它**看不出来又容易猜错**的事实（参考 GitHub agents.md 开放格式与 Phodal Better Harness）：
+> 原则：Agent 能从代码看出来的内容不写；只写它**看不出来又容易猜错**的事实（参考 GitHub AGENTS.md 开放格式与 Phodal Better Harness）：
 
 - [ ] 包管理器/构建工具选择（仓库同时存在多种痕迹时，写明用哪个）
 - [ ] 生成文件目录（长得像源码、实际由工具生成的目录，禁止直接修改）
@@ -298,9 +299,11 @@
 
 ## 参考
 
+> 各文档职责矩阵与维护规则（唯一权威）：[documentation.md](rules/documentation.md)。本表仅作快速索引。
+
 | 文档 | 角色 | 内容 |
 | :--- | :--- | :--- |
-| [readme.md](readme.md) | 用户入口 | 安装、模块速览、使用模式 |
+| [README.md](README.md) | 用户入口 | 安装、模块速览、使用模式 |
 | [context.md](rules/context.md) | 术语表 | 所有术语唯一定义 |
 | [specification.md](rules/specification.md) | 业务信源 | 项目概述、模块清单、功能规格 |
 | [api-reference.md](rules/api-reference.md) | 数字唯一信源 | 函数签名、参数、错误行为 |

@@ -106,13 +106,17 @@ def run_crossval() -> bool:
 # 静态检查
 # ============================================================================
 def check_self_validation() -> list[str]:
-    """检查手册/脚本中是否存在自校验模式。"""
+    """检查手册与 CrossVal 脚本中是否存在自校验模式。"""
     problems: list[str] = []
-    if not MANUAL.exists():
-        return problems
-    for i, line in enumerate(MANUAL.read_text(encoding="utf-8").splitlines(), 1):
-        if SELF_CHECK_RE.search(line):
-            problems.append(f"[自校验] {MANUAL.name}:{i} check(X, X) 永远 PASS")
+    targets: list[Path] = []
+    if MANUAL.exists():
+        targets.append(MANUAL)
+    if CROSSVAL_DIR.exists():
+        targets.extend(sorted(CROSSVAL_DIR.glob("*.py")))
+    for path in targets:
+        for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if SELF_CHECK_RE.search(line):
+                problems.append(f"[自校验] {path.name}:{i} check(X, X) 永远 PASS")
     return problems
 
 

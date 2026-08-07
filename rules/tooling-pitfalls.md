@@ -17,7 +17,7 @@
 |---|------|----------|
 | 5 | **`git add` 无法暂存未跟踪文件的"删除"**（文件从未提交过，删除后无 stage 记录） | 删除未跟踪文件无需 git 操作；提交过则用 `git rm` 或 `git add -A` |
 | 6 | **`git fetch --unshallow` 仅适用于浅克隆仓库** → 普通仓库报错 | 先 `git rev-parse --is-shallow-repository` 确认，或用 `git fetch --unshallow` 前的 fallback |
-| 7 | **push 前未确认测试全绿** | agents.md Git 红线：未经用户明确同意不 push |
+| 7 | **push 前未确认测试全绿** | AGENTS.md Git 红线：未经用户明确同意不 push |
 
 ## Windows 工具陷阱
 
@@ -49,4 +49,4 @@ grep -rn "foreach \$\|Join-Path [^)]*$\|&&" scripts/ --include="*.ps1" || echo "
 
 - 新踩坑并验证修复后，**立即追加到本表**（附真实案例与正确做法）
 - 语言级陷阱**只在** `skills/` 语言文件维护（本表只留链接索引，禁止双写）
-- 项目专属坑位（非通用）写入该项目 agents.md「历史经验」章节，不放本文件
+- 项目专属坑位（非通用）写入该项目 AGENTS.md「历史经验」章节，不放本文件

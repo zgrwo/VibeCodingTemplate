@@ -3,15 +3,15 @@
 #
 # 职责：
 #   1. 复制 template 到目标目录（跳过 .git / logs）
-#   2. 扫描文档中的 {{PLACEHOLDER}} 占位符
+#   2. 扫描文档中的 {{...}} 占位符
 #   3. 交互式（默认）或 -Values 参数式替换占位符
 #   4. 输出未替换占位符清单（防止遗漏导致文档断链）
-#   5. 可选：git init / 创建 AGENTS.md + CLAUDE.md 兼容副本
+#   5. 可选：git init / 创建 CLAUDE.md 兼容副本（AGENTS.md 即主文件）
 #
 # 用法：
 #   .\scripts\init-project.ps1 -Target d:\Workspace\zgrwo\MyNewProject
 #   .\scripts\init-project.ps1 -Target d:\...\MyNewProject `
-#       -Values @{ "{{PROJECT_NAME}}" = "MyNewProject"; "{{VERSION}}" = "1.0.0" } `
+#       -Values @{ "PROJECT_NAME" = "MyNewProject"; "VERSION" = "1.0.0" } `
 #       -GitInit -CreateCompatibilityLinks
 #
 # 注意：-Values 的 key 可带或不带 {{}}（自动归一化），如：
@@ -32,7 +32,7 @@ $ErrorActionPreference = "Stop"
 $template = Split-Path -Parent $PSScriptRoot   # template 根目录（scripts/ 的上一级）
 
 # ----------------------------------------------------------------------------
-# 0. 归一化 -Values：key 统一为 {{NAME}} 形式（兼容带/不带大括号两种写法）
+# 0. 归一化 -Values：key 统一为 {{键名}} 形式（兼容带/不带大括号两种写法）
 # ----------------------------------------------------------------------------
 $normalized = @{}
 foreach ($k in $Values.Keys) {
@@ -61,7 +61,7 @@ Get-ChildItem $template -Force | Where-Object { $_.Name -notin @(".git", "logs")
 Write-Host "    完成（已跳过 .git / logs）" -ForegroundColor Green
 
 # ----------------------------------------------------------------------------
-# 3. 扫描 {{PLACEHOLDER}} 占位符
+# 3. 扫描 {{...}} 占位符
 # ----------------------------------------------------------------------------
 $placeholderRe = [regex]::new("\{\{([A-Z0-9_]+)\}\}")
 $found = @{}
@@ -88,16 +88,20 @@ if ($found.Count -eq 0) {
     # 4. 交互式填充缺失的占位符
     # ----------------------------------------------------------------------------
     $missing = @($found.Keys | Where-Object { -not $Values.ContainsKey("{{$_}}") } | Sort-Object)
+    if ($missing.Count -gt 0) {
+        Write-Host "    提示：文档填充类占位符一路 Enter 即可（用占位符名代替，初始化后人工完善）；PROJECT_NAME / OWNER / REPO_NAME 等核心值请手动输入。" -ForegroundColor Yellow
+    }
     foreach ($name in $missing) {
         $default = switch ($name) {
             "VERSION" { "1.0.0" }
             "DATE" { Get-Date -Format "yyyy-MM-dd" }
             "YEAR" { (Get-Date).Year.ToString() }
-            default { "" }
+            # 文档填充类占位符：Enter 直接用占位符名（可读，初始化后人工完善）
+            default { $name.ToLowerInvariant() }
         }
-        $answer = Read-Host "    请输入 {{$name}} 的值（默认: $default）"
+        $answer = Read-Host "    请输入 {{$name}} 的值（Enter 用默认: $default）"
         if ([string]::IsNullOrWhiteSpace($answer)) { $answer = $default }
-        if (-not [string]::IsNullOrWhiteSpace($answer)) { $Values["{{$name}}"] = $answer }
+        $Values["{{$name}}"] = $answer
     }
 
     # ----------------------------------------------------------------------------
@@ -130,6 +134,24 @@ if ($found.Count -eq 0) {
 }
 
 # ----------------------------------------------------------------------------
+# 5.5 重置 CHANGELOG 为新项目初始态（模板自身的变更历史不属于新项目）
+# ----------------------------------------------------------------------------
+$projName = if ($Values.ContainsKey("{{PROJECT_NAME}}")) { $Values["{{PROJECT_NAME}}"] } else { (Split-Path $Target -Leaf) }
+$changelogInit = @"
+# Changelog
+
+All notable changes to $projName.
+
+格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
+
+## [Unreleased]
+
+> 新项目初始状态：首个功能落地后在此登记变更。
+"@
+[System.IO.File]::WriteAllText("$Target\CHANGELOG.md", $changelogInit, (New-Object System.Text.UTF8Encoding $true))
+Write-Host "==> CHANGELOG.md 已重置为新项目初始态" -ForegroundColor Green
+
+# ----------------------------------------------------------------------------
 # 6. 报告未替换占位符
 # ----------------------------------------------------------------------------
 $remaining = @{}
@@ -151,7 +173,7 @@ if ($remaining.Count -gt 0) {
 }
 
 # ----------------------------------------------------------------------------
-# 7. 可选收尾：git init / AGENTS.md + CLAUDE.md 兼容副本
+# 7. 可选收尾：git init / CLAUDE.md 兼容副本
 # ----------------------------------------------------------------------------
 if ($GitInit) {
     Push-Location $Target
@@ -161,9 +183,9 @@ if ($GitInit) {
 }
 
 if ($CreateCompatibilityLinks) {
-    Copy-Item "$Target\agents.md" "$Target\AGENTS.md" -Force
-    Copy-Item "$Target\agents.md" "$Target\CLAUDE.md" -Force
-    Write-Host "==> 已创建 AGENTS.md / CLAUDE.md（agents.md 副本，供 Codex/Copilot/Claude Code 读取）" -ForegroundColor Green
+    # 主文件为 AGENTS.md（大写，Codex/Copilot/Windsurf 等直接读取）；仅为 Claude Code 创建副本
+    Copy-Item "$Target\AGENTS.md" "$Target\CLAUDE.md" -Force
+    Write-Host "==> 已创建 CLAUDE.md（AGENTS.md 副本，供 Claude Code 读取）" -ForegroundColor Green
 }
 
 Write-Host "`n==> 初始化完成，全部占位符已替换 ✔" -ForegroundColor Green

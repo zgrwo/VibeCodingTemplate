@@ -14,7 +14,7 @@ cd {{PROJECT_NAME}}
 
 ## 修改流程（强制）
 
-> 完整流程见 [agents.md](agents.md)「开发流程」章节。核心：**Skill-first + 闭环验证 + 文档同步**。
+> 完整流程见 [AGENTS.md](AGENTS.md)「开发流程」章节。核心：**Skill-first + 闭环验证 + 文档同步**。
 
 1. **Read** 对应 Skill 文件（`skills/{{SKILL_1}}` 等），不凭记忆编造实现方式
 2. 检查调用者与影响范围（Grep 调用链）
@@ -22,7 +22,7 @@ cd {{PROJECT_NAME}}
 4. 运行全量验证（{{FULL_VERIFY_CMD}}）
 5. 执行深度审查（`rules/code-review-prompt.md`，按变更范围选 Min/Standard/Max）
 6. 同步文档（api-reference / user-manual / project-structure）
-7. 提交前必检清单（见 [agents.md](agents.md#提交前必检)）
+7. 提交前必检清单（见 [AGENTS.md](AGENTS.md#提交前必检)）
 
 ## 代码规范
 

@@ -27,7 +27,7 @@ if (-not $Target) {
 }
 
 # ----------------------------------------------------------------------------
-# 1. 扫描模板中的全部 {{PLACEHOLDER}} 占位符
+# 1. 扫描模板中的全部 {{...}} 占位符
 # ----------------------------------------------------------------------------
 $placeholderRe = [regex]::new("\{\{([A-Z0-9_]+)\}\}")
 $names = @{}
@@ -64,7 +64,6 @@ $special = @{
     "LINT_CMD" = "python -m ruff check src/ scripts/"
     "COVERAGE_CMD" = "python -m pytest --cov=src --cov-fail-under=0"
     "PACKAGE_CMD" = "python -m build"
-    "RELEASE_ASSETS" = "dist/*"
     "ROOT_NAMESPACE" = "TemplateSelfTest"
     "PACKAGE_NAME" = "template_self_test"
     "REPO_URL" = "https://github.com/example/template-self-test"
@@ -120,13 +119,13 @@ if ($LASTEXITCODE -ne 0) {
 Push-Location $Target
 try {
     $steps = @(
-        @{ Name = "verify-docs.py --strict"; Cmd = "python scripts/verify-docs.py --strict" },
-        @{ Name = "verify-manual.py";        Cmd = "python scripts/verify-manual.py" },
-        @{ Name = "falsy-audit.py";          Cmd = "python scripts/falsy-audit.py" }
+        @{ Name = "verify-docs.py --strict"; Cmd = { python scripts/verify-docs.py --strict } },
+        @{ Name = "verify-manual.py";        Cmd = { python scripts/verify-manual.py } },
+        @{ Name = "falsy-audit.py";          Cmd = { python scripts/falsy-audit.py } }
     )
     foreach ($s in $steps) {
         Write-Host "`n=== $($s.Name) ===" -ForegroundColor Cyan
-        Invoke-Expression $s.Cmd
+        & $s.Cmd
         if ($LASTEXITCODE -ne 0) { throw "$($s.Name) 失败 (退出码 $LASTEXITCODE)" }
     }
     Write-Host "`n✅ 模板自测通过：占位符替换完整 + 文档一致性验证通过" -ForegroundColor Green

@@ -7,5 +7,5 @@ blank_issues_enabled: false
 
 contact_links:
   - name: 项目讨论区
-    url: https://github.com/{{OWNER}}/{{PROJECT_NAME}}/discussions
+    url: https://github.com/{{OWNER}}/{{REPO_NAME}}/discussions
     about: 提问、想法交流请走 Discussions（非缺陷/改进的讨论勿开 Issue）

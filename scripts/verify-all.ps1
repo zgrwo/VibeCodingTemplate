@@ -2,7 +2,7 @@
 # verify-all.ps1 — 全量验证入口
 #
 # 职责：一个命令完成「构建 + 测试 + 文档一致性」全量验证，
-#       对应 agents.md 中的 {{FULL_VERIFY_CMD}}。
+#       对应 AGENTS.md 中的 {{FULL_VERIFY_CMD}}。
 #
 # 设计：
 #   - 构建/测试自动探测（*.sln → dotnet；pyproject.toml → Python）
@@ -27,7 +27,7 @@ function Invoke-Step {
     param([string]$Name, [scriptblock]$Body)
     Write-Host "`n=== $Name ===" -ForegroundColor Cyan
     & $Body
-    if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne $null) {
+    if ($LASTEXITCODE) {
         throw "步骤失败: $Name (退出码 $LASTEXITCODE)"
     }
 }
