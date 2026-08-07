@@ -10,7 +10,7 @@
 #       缺失回退占位符名小写；死条目硬校验（manifest 声明但实际文件无此占位符 → 失败）。
 #
 # 用法：
-#   .\scripts\test-template.ps1            # 默认 $env:TEMP 下生成
+#   .\scripts\test-template.ps1            # 默认系统临时目录下生成（跨平台）
 #   .\scripts\test-template.ps1 -Target <dir> -Keep   # 指定目录并保留产物
 #
 # 退出码：0 = 自测通过；1 = 失败（CI 硬门禁）
@@ -23,7 +23,8 @@ param(
 $ErrorActionPreference = "Stop"
 $template = Split-Path -Parent $PSScriptRoot
 if (-not $Target) {
-    $Target = Join-Path $env:TEMP ("template-self-test-" + [guid]::NewGuid().ToString("N"))
+    # 跨平台临时目录：Windows 的 $env:TEMP 在 Linux runner 上为 null，用 .NET API 获取
+    $Target = Join-Path ([System.IO.Path]::GetTempPath()) ("template-self-test-" + [guid]::NewGuid().ToString("N"))
 }
 
 # ----------------------------------------------------------------------------
@@ -99,7 +100,7 @@ try {
     }
     Write-Host "`n✅ 模板自测通过：占位符替换完整 + 文档一致性验证通过" -ForegroundColor Green
     if (-not $Keep) {
-        Set-Location $env:TEMP
+        Set-Location ([System.IO.Path]::GetTempPath())
         Remove-Item $Target -Recurse -Force
     }
     exit 0

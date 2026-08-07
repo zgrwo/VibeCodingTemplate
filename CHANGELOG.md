@@ -107,6 +107,8 @@ All notable changes to {{PROJECT_NAME}}.
 - `verify-manual.py`：加载 crossval 脚本前为 `__main__` 注册 `verify_manual` 别名，修复 `from verify_manual import` ModuleNotFoundError（CrossVal 模板开箱可用）（M1）
 - `init-project.ps1`：`{{PROJECT_NAME}}` 自引用改为字符串拼接生成，避免源文件字面量被替换后二次运行 ContainsKey 查不到键（L2）
 - `verify-docs.py` / `verify-manual.py` / `falsy-audit.py`：stdout 强制 UTF-8（errors=replace），修复 Windows GBK 控制台中文说明乱码（L4）
+- `test-template.ps1`：临时目录改用 `[System.IO.Path]::GetTempPath()`，修复 Linux runner 上 `$env:TEMP` 为 null 导致 CI 模板自测必败
+- `security.yml`：codeql-action 由 v3 升级至 v4.37.6（v3 将于 2026-12 弃用；统一三处 SHA 避免 dependabot 部分更新导致的版本混用）
 
 ## [0.1.0] - {{DATE}}
 
