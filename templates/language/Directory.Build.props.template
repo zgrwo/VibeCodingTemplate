@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ============================================================================
+  Directory.Build.props.template — .NET 统一构建属性
+  使用方式：复制到解决方案根目录（或 src/），替换 {{...}} 占位符
+  作用：所有子项目自动继承版本号/作者/许可证，避免各 csproj 重复维护
+  参考：ExcelAddin 函数库 src/Directory.Build.props（已验证有效）
+============================================================================ -->
+<Project>
+  <PropertyGroup>
+    <Version>{{VERSION}}</Version>
+    <AssemblyVersion>{{VERSION}}.0</AssemblyVersion>
+    <FileVersion>{{VERSION}}.0</FileVersion>
+    <Authors>{{AUTHOR}}</Authors>
+    <Product>{{PRODUCT_NAME}}</Product>
+    <RepositoryUrl>{{REPO_URL}}</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>{{REPO_URL}}</PackageProjectUrl>
+
+    <!-- 常见全局编译设置（按需调整） -->
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn> <!-- 缺少 XML 注释警告（如不强制注释可删除） -->
+  </PropertyGroup>
+</Project>

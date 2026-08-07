@@ -1,0 +1,49 @@
+# ============================================================================
+# release-drafter.yml — 自动生成发布说明
+# 与 CHANGELOG.md 的关系：CHANGELOG 是人工维护的权威记录（keepachangelog），
+# release-drafter 生成的是 GitHub Release 草稿，两者并行不冲突。
+# 使用方式：合并 release-drafter 生成的 PR 后，点击 Draft 发布即可。
+# ============================================================================
+name-template: "v$RESOLVED_VERSION 🌈"
+tag-template: "v$RESOLVED_VERSION"
+change-template: "- $TITLE (@$AUTHOR)"
+categories:
+  - title: "🚀 新功能"
+    labels:
+      - "enhancement"
+      - "feature"
+  - title: "🐛 Bug 修复"
+    labels:
+      - "bug"
+      - "fix"
+  - title: "📄 文档"
+    labels:
+      - "documentation"
+      - "docs"
+  - title: "🧹 维护"
+    labels:
+      - "refactor"
+      - "dependencies"
+      - "chore"
+version-resolver:
+  major:
+    labels:
+      - "major"
+  minor:
+    labels:
+      - "enhancement"
+      - "feature"
+  patch:
+    labels:
+      - "bug"
+      - "fix"
+      - "documentation"
+      - "refactor"
+      - "dependencies"
+      - "chore"
+template: |
+  ## 变更内容
+
+  $CHANGES
+
+  **完整变更记录**: $COMPARE_URL

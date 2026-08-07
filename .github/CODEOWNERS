@@ -1,0 +1,17 @@
+# ============================================================================
+# CODEOWNERS — 默认代码所有者
+# 说明：初始化时把 {{OWNER}} 替换为个人/团队名（如 @username 或 @org/team）。
+#       未配置所有者时该文件无实际效果，可安全删除。
+# 参考：https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# ============================================================================
+
+# 全局兜底：所有文件默认归项目所有者审查
+* @{{OWNER}}
+
+# 文档/规范变更必须由文档负责人审查（按需调整）
+rules/ @{{OWNER}}
+docs/ @{{OWNER}}
+
+# CI/脚本变更建议由基础设施负责人审查（按需调整）
+.github/ @{{OWNER}}
+scripts/ @{{OWNER}}

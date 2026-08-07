@@ -1,0 +1,90 @@
+// ============================================================================
+// {Name}Foundation.cs — Foundation 层最小基础设施
+// 使用方式：首次使用 UDF 模板时复制到 Foundation 层（如 src/Foundation/），
+//          将 {Name} 替换为基础设施名（如 ExcelFormulaLabs、Foundation），
+//          将 {{ROOT_NAMESPACE}} 替换为项目根命名空间。
+// 职责边界：
+//   ? 仅提供「参数归一化 / 逐元素映射 / 错误包装」三类无状态工具
+//   ? 不含业务逻辑（业务逻辑在各模块 Core）
+//   ? 不引用 Excel-DNA 以外的框架依赖
+// 说明：各组件命名空间/签名按项目实际调整，模板提供最小可用实现。
+// ============================================================================
+using System;
+using ExcelDna.Integration;
+
+namespace {{ROOT_NAMESPACE}}.Foundation
+{
+    /// <summary>
+    /// 输入归一化：把 Excel 传入的 object 转换为强类型值。
+    /// 哨兵契约：无法转换时返回类型零值（不抛异常，交给 WrapError 统一处理）。
+    /// </summary>
+    internal static class InputNormalizer
+    {
+        public static double ToDouble(object value) => value switch
+        {
+            double d => d,
+            int i => i,
+            long l => l,
+            string s when double.TryParse(s, out var d) => d,
+            _ => double.NaN,
+        };
+
+        public static string ToString(object value) => value switch
+        {
+            null => "",
+            string s => s,
+            double d => d.ToString(),
+            _ => Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? "",
+        };
+    }
+
+    /// <summary>
+    /// 逐元素映射：数组/单值统一展开，元素级执行 Func，输出同形结构。
+    /// </summary>
+    internal static class ElementWiseMapper
+    {
+        public static object MapOver<TIn, TOut>(object value, Func<TIn, TOut> func)
+        {
+            if (value is object[,] arr)
+            {
+                var result = new object[arr.GetLength(0), arr.GetLength(1)];
+                for (int r = 0; r < arr.GetLength(0); r++)
+                for (int c = 0; c < arr.GetLength(1); c++)
+                    result[r, c] = func(ToT<TIn>(arr[r, c]));
+                return result;
+            }
+            if (value is object[] oneDim)
+            {
+                var result = new object[oneDim.Length];
+                for (int i = 0; i < oneDim.Length; i++)
+                    result[i] = func(ToT<TIn>(oneDim[i]));
+                return result;
+            }
+            return func(ToT<TIn>(value));
+        }
+
+        private static T ToT<T>(object v) =>
+            v is T t ? t : default!;
+    }
+
+    /// <summary>
+    /// 错误包装：UDF 内部异常统一转为 #VALUE!（不抛异常，不中断公式）。
+    /// 与防错三原则配合：异常过滤器排除不可恢复异常（OOM / StackOverflow / AccessViolation）。
+    /// </summary>
+    internal static class OutputWrapper
+    {
+        public static object WrapError(Func<object> func)
+        {
+            try
+            {
+                return func();
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException
+                                       and not StackOverflowException
+                                       and not AccessViolationException)
+            {
+                return ExcelError.ExcelErrorValue;
+            }
+        }
+    }
+}

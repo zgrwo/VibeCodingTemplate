@@ -1,0 +1,45 @@
+// ============================================================================
+// {Name}Udf.cs — 模块 UDF 入口
+// 使用方式：将 {Name} 替换为模块名，{PREFIX} 替换为 UDF 前缀（大写，如 WEATHER）
+// 目标位置：src/{Module}/{Name}Udf.cs
+// 依赖：Foundation 组件（OutputWrapper / ElementWiseMapper / InputNormalizer）
+//        见 {Name}Foundation.cs.template（首次使用时复制到 Foundation 层）
+// ============================================================================
+using ExcelDna.Integration;
+using {{ROOT_NAMESPACE}}.Foundation;  // 若 Foundation 层已存在则保持其命名空间
+
+namespace {{ROOT_NAMESPACE}}.{Module}
+{
+    public static class {Name}Udf
+    {
+        // ====================================================================
+        // UDF 职责边界：
+        //   ? 仅做参数分发（MapOver / V() / S()）
+        //   ? 用 WrapError 包装错误（返回 #VALUE! 而非抛异常）
+        //   ? 不含业务逻辑（业务逻辑在 {Name}Core）
+        //   ? 不直接操作工作表（访问单元格须经 ExcelDnaUtil）
+        // ====================================================================
+
+        /// <summary>
+        /// 数值 UDF，自动 MapOver 展开
+        /// </summary>
+        [ExcelFunction(Name = "{PREFIX}.COMPUTE", Description = "{一句话功能说明}")]
+        public static object UDF_{PREFIX}_COMPUTE(
+            [ExcelArgument(Name = "value", Description = "{参数说明}")] object value)
+            => OutputWrapper.WrapError(() =>
+                ElementWiseMapper.MapOver<double, double>(value, {Name}Core.Compute));
+
+        /// <summary>
+        /// 字符串 UDF
+        /// </summary>
+        [ExcelFunction(Name = "{PREFIX}.PROCESS", Description = "{一句话功能说明}")]
+        public static object UDF_{PREFIX}_PROCESS(
+            [ExcelArgument(Name = "text", Description = "{参数说明}")] object text)
+            => OutputWrapper.WrapError(() =>
+                ElementWiseMapper.MapOver<string, string>(text, {Name}Core.Process));
+
+        // 便捷适配（按项目基础设施调整）
+        // private static string S(object o) => InputNormalizer.ToString(o);
+        // private static double D(object o) => InputNormalizer.ToDouble(o);
+    }
+}

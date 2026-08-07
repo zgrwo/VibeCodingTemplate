@@ -1,0 +1,73 @@
+# === 构建产物 ===
+bin/
+obj/
+dist/
+build/output/
+*.xll
+*.dll
+*.exe
+*.pyd
+*.so
+*.egg-info/
+*.egg
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.whl
+
+# === .NET ===
+*.deps.json
+*.runtimeconfig.json
+*.nupkg
+packages/
+TestResults/
+BenchmarkDotNet.Artifacts/
+
+# === Node.js ===
+node_modules/
+npm-debug.log*
+
+# === IDE / 编辑器 ===
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+*.swo
+*~
+
+# === 文档工具 ===
+.vale/
+.streamlit/
+.storybook/
+
+# === 操作系统 ===
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# === AI 会话产物 ===
+.claude/
+.codegraph/
+.qoder/
+
+# === 日志与临时文件 ===
+logs/
+*.log
+*.tmp
+*.bak
+
+# === 文档审查报告（运行时产物）===
+reports/
+output/

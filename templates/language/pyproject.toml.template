@@ -1,0 +1,79 @@
+# ============================================================================
+# pyproject.toml.template — Python 项目构建配置模板
+# 使用方式：复制到项目根目录，替换 {{...}} 占位符
+# 参考：工程分析套件 pyproject.toml（已验证有效）
+# ============================================================================
+
+[build-system]
+requires = ["setuptools>=83.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "{{PACKAGE_NAME}}"
+version = "{{VERSION}}"
+description = "{{ONE_LINE_DESCRIPTION}}"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "{{AUTHOR}}" }
+]
+keywords = ["{{KEYWORD_1}}", "{{KEYWORD_2}}"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "pandas>=2.0",
+    "pydantic>=2.0",   # Pydantic v2：模型实例化必须关键字参数
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",       # 覆盖率门禁：pytest --cov=src --cov-fail-under=80
+    "ruff==0.15.20",   # 锁定版本，避免规则漂移
+    "mypy>=1.10",      # 类型检查：mypy src/
+    "setuptools>=83.0",
+]
+web = []  # 按需补充（flask/streamlit 等）
+report = []  # 按需补充（reportlab/openpyxl 等）
+
+[project.scripts]
+{{PACKAGE_NAME}} = "{{PACKAGE_NAME}}.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["{{PACKAGE_NAME}}*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
+ignore = ["E501", "N806"]
+# E501 → line length handled by formatter
+# N806 → uppercase vars are deliberate (SPC constants, stats symbols)
+
+[tool.mypy]
+python_version = "3.10"
+warn_unused_ignores = true
+warn_redundant_casts = true
+# 新项目建议从非严格模式起步，随覆盖率提升逐步开启：
+# strict = true
+# exclude = ["tests/"]
+
+# 按需逐文件豁免（见工程分析套件实践）：
+# [tool.ruff.lint.per-file-ignores]
+# "src/{{PACKAGE_NAME}}/engine/__init__.py" = ["E402", "I001"]  # matplotlib config before imports
+# "tests/*" = ["N806", "E501"]  # test fixtures

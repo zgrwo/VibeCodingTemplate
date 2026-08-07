@@ -1,0 +1,37 @@
+# ============================================================================
+# security.yml — CodeQL 安全扫描
+# 触发：main 推送 / PR / 每周一凌晨 2 点定时
+# 前置：仓库 Settings → Code security → CodeQL 默认设置关闭（避免重复），
+#       或保持默认设置启用并删除本文件（二选一）
+# ============================================================================
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 2 * * 1"
+
+permissions:
+  security-events: write
+
+jobs:
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 按项目语言调整：python / csharp / javascript / go / java ...
+        language: [python]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # 按需配置查询集：
+          # queries: security-and-quality
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3

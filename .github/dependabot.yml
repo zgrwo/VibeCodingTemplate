@@ -1,0 +1,32 @@
+# ============================================================================
+# dependabot.yml — 依赖自动更新
+# 使用方式：直接启用（GitHub 自动读取），按项目语言增删生态条目
+# 注意：package-ecosystem 必须与仓库实际文件匹配，否则 GitHub 报错
+#   - pip:   需要 pyproject.toml / requirements*.txt
+#   - nuget: 需要 *.sln / *.csproj / packages.config
+# ============================================================================
+version: 2
+updates:
+  # --- Python 项目（按需保留）---
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies"]
+
+  # --- .NET 项目（按需保留）---
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies"]
+
+  # --- GitHub Actions 自身（建议保留）---
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    labels: ["dependencies"]

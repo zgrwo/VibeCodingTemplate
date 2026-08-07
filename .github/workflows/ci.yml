@@ -1,0 +1,110 @@
+# CI — 分层质量门禁（quick / full / quality / template-self-test）
+#
+# 用法：
+#   - PR 自动触发（按路径过滤，节省资源）
+#   - workflow_dispatch 手动触发全量
+#   - quality 门禁：手册数值一致性 / 陷阱审计 / 架构约束 / 代码风格（硬门禁，失败即红）
+# 初始化时按项目语言替换命令占位符 {{*}}。
+
+name: CI
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "tests/**"
+      - "templates/**"
+      - "rules/**"
+      - ".github/**"
+      - "rules/api-reference.md"
+      - "rules/user-manual.md"
+  workflow_dispatch:
+
+jobs:
+  # ============ quick：PR 级快速验证 ============
+  quick-check:
+    name: Quick Check (PR)
+    runs-on: ubuntu-latest
+    # --- 多版本矩阵（可选，初始化时按需启用）---
+    # strategy:
+    #   matrix:
+    #     python-version: ["3.10", "3.11", "3.12"]   # Python 项目
+    #     dotnet-version: ["8.0.x", "9.0.x"]          # .NET 项目
+    steps:
+      - uses: actions/checkout@v6
+      # --- 按语言选择 setup（二选一）---
+      # Python:
+      # - uses: actions/setup-python@v5
+      #   with: { python-version: ${{ matrix.python-version }} }
+      # - run: pip install -e ".[dev]"
+      # .NET:
+      # - uses: actions/setup-dotnet@v4
+      #   with: { dotnet-version: ${{ matrix.dotnet-version }} }
+      - name: Build
+        run: {{BUILD_CMD}}
+      - name: Test
+        run: {{TEST_CMD}}
+      - name: 提交前自检（无裸 catch / bare except）
+        run: |
+          grep -rn "catch\s*{" src/ --include="*.cs" && exit 1 || true
+          grep -rn "except:" src/ && exit 1 || true
+
+  # ============ full：手动全量验证 ============
+  full-check:
+    name: Full Verify (manual)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v6
+      # --- setup 同上 ---
+      - name: Full verify
+        run: {{FULL_VERIFY_CMD}}
+
+  # ============ quality：质量门禁（硬门禁，不设 continue-on-error）============
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: quick-check
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 手册数值一致性
+        run: python scripts/verify-manual.py
+      - name: 陷阱审计（falsy / 结构）
+        run: python scripts/falsy-audit.py
+      - name: 架构约束检查
+        run: python scripts/verify-docs.py --strict
+      - name: 代码风格
+        # Python: ruff check src/ scripts/
+        # C#:    dotnet format --verify-no-changes
+        run: {{LINT_CMD}}
+      - name: 覆盖率门禁
+        # Python: pytest --cov=src --cov-fail-under=80（需 dev 依赖 pytest-cov）
+        # C#:    dotnet test --collect:"XPlat Code Coverage"（需 coverlet.collector）
+        run: {{COVERAGE_CMD}}
+
+  # ============ template-self-test：模板仓库自测 ============
+  # 仅模板仓库运行（检测到 agents.md 中未替换的 {{PROJECT_NAME}} 占位符即视为模板）。
+  # 新项目初始化替换占位符后自动跳过，无需删除。
+  template-self-test:
+    name: Template Self-Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 检测是否为模板仓库自身（存在未替换占位符）
+        id: detect
+        run: |
+          if grep -rq "{{PROJECT_NAME}}" agents.md 2>/dev/null; then
+            echo "is_template=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_template=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: 模板自测（init → verify-docs/manual/falsy）
+        if: steps.detect.outputs.is_template == 'true'
+        run: pwsh -File scripts/test-template.ps1
