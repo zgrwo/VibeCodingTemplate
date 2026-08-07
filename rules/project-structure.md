@@ -55,7 +55,7 @@
 │
 ├── templates/                    # 模块脚手架
 │   ├── README.md                 # 脚手架使用说明（占位符约定 + 多语言流程）
-│   ├── NewModule/                # 新增模块多语言模板（C# 五件套 + Python/VBA 三件）
+│   ├── NewModule/                # 新增模块多语言模板（C# 五件套 + Python/VBA 三件 + VariantKit）
 │   └── language/                 # 构建配置模板（pyproject/Build.props/nuget/Tests.csproj）
 │
 ├── .github/                      # GitHub 协作

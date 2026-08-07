@@ -79,6 +79,7 @@ cd {{PROJECT_NAME}}
 | `perf` | 性能优化 | 无 |
 | `revert` | 回滚 | 无 |
 | `chore` | 维护（依赖/杂务） | 无 |
+| `release` | 发版（release-please 自动提交） | 无 |
 
 示例：`fix(engine): 修复 anova 效应量计算`、`feat!(api): 移除已废弃的导出参数`、`docs(用户手册): 补充阈值参数说明`。
 

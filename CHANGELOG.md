@@ -7,10 +7,13 @@ All notable changes to {{PROJECT_NAME}}.
 ## [Unreleased]
 
 > 本模板自身的变更记录（新项目初始化时请重置为项目自己的变更历史）。
+> release-please 首次运行时将接管本段与 `[0.1.0]` 段——从 Conventional Commits 重新生成 CHANGELOG 格式，属预期行为，无需手工干预。
 
 ### Added
 
 - **占位符清单 SSOT**：新增 `scripts/placeholders.json`（109 项，含分类/默认值/测试值）与 `scripts/placeholder-utils.ps1`（共享读取，损坏时回退默认表）——消除占位符真相散落 init-project.ps1 / test-template.ps1 / README 三处的漂移
+- **反引号路径检查**：`verify-docs.py` 新增 `check_backtick_paths()`——拦截技能表/占位符约定表中反引号包裹的相对路径失效（如占位符替换成 `skills/skill_1` 死链），补齐 markdown 链接检查的盲区
+- **VBA 基础层模板**：新增 `templates/NewModule/{Name}VariantKit.bas.template`（Range/数组统一归一化 NormalizeInput），VBA 脚手架不再依赖外部模块移植
 - **commit 规范强制**：新增 `scripts/validate-commit-msg.sh`（Conventional Commits 校验，零依赖 POSIX sh）+ `scripts/git-hooks/commit-msg`（core.hooksPath 安装）+ CI 提交规范检查 step——与 release-please 发版闭环
 - **release-please 自动发版**：重写 `.github/workflows/release.yml`，新增 `.github/release-please/config.json` 与 `.release-please-manifest.json`——从 Conventional Commits 自动推导版本/CHANGELOG/tag/Release
 - **跨语言脚手架**：新增 `templates/NewModule/{Name}Core.py.template`、`test_{Name}Core.py.template`（falsy 守卫 + pytest 四路径）、`{Name}Udf.bas.template`（As Variant + 错误三模式）——消除 C# 重心
@@ -23,6 +26,7 @@ All notable changes to {{PROJECT_NAME}}.
 
 ### Changed
 
+- `placeholders.json` / `placeholder-utils.ps1`：ROOT_NAMESPACE / TARGET_FRAMEWORK / PACKAGE_NAME / SKILL / SCOPE / DESCRIPTION / LAYER 等 11 个语义键由 content 提升为 core（替换错=构建/文档不可用），初始化交互式询问并带默认值，避免被静默填充为无意义占位名
 - `init-project.ps1` / `test-template.ps1`：占位符处理改为从 placeholders.json 读取（init 按 core/content/auto 分派，auto 的 DATE/YEAR 不再询问；test-template 读 test 值 + 死条目硬校验）
 - `init-project.ps1`：`-GitInit` 自动配置 `git config core.hooksPath scripts/git-hooks`
 - `CONTRIBUTING.md`：重写信息架构——新增 TOC、新手指引（good first issue）、Conventional Commits 类型枚举表、代码审查期望、release-please 发版流程、本地 hook 安装说明

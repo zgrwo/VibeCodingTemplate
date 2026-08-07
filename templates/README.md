@@ -15,6 +15,7 @@
 | `NewModule/{Name}Core.py.template` | 核心逻辑（纯函数 + 类型注解 + falsy 守卫） | Python |
 | `NewModule/test_{Name}Core.py.template` | 单元测试（正常/边界/falsy/异常） | Python (pytest) |
 | `NewModule/{Name}Udf.bas.template` | UDF 入口（Variant 参数 + 错误三模式） | VBA |
+| `NewModule/{Name}VariantKit.bas.template` | Variant 输入归一化基础层（Range/数组统一入口） | VBA |
 | `language/pyproject.toml.template` | Python 项目构建配置 | Python |
 | `language/Directory.Build.props.template` | .NET 统一构建属性 | .NET |
 | `language/nuget.config.template` | NuGet 源配置 | .NET |
@@ -54,8 +55,9 @@
 
 **VBA（无构建系统，模块复制进 VBE）**
 ```
-1. 复制 {Name}Udf.bas.template 到 src/{Module}/，导入 VBE（文件 → 导入文件）
-2. 替换 {Name}/{PREFIX}；确认依赖 VariantKit 模块已导入
+1. 复制 {Name}Udf.bas + {Name}VariantKit.bas 到 src/{Module}/，导入 VBE（文件 → 导入文件）
+2. 替换 {Name}/{PREFIX}；VariantKit 提供 NormalizeInput（Range/数组统一入口），
+   首次使用即复制，后续模块共用
 3. Public 参数一律 As Variant；错误三模式（CVErr / Err.Raise / Cleanup）
 4. 测试：在测试工作簿或 Rubberduck 中调用 {PREFIX}_ 函数（VBA 无自动化测试框架）
 5. 同步规则文档（api-reference / user-manual）

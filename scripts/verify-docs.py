@@ -174,6 +174,57 @@ def check_links() -> list[str]:
     return problems
 
 
+# 反引号内相对路径检查：捕获 `skills/xxx.md` 这类非 markdown 链接的失效引用
+# （技能表 / 占位符约定表多用反引号包路径，markdown link_re 不覆盖）
+#
+# 为控制误报，仅检查"以已知根目录前缀开头"的引用（语义明确指向仓库内路径），
+# 并跳过：CHANGELOG（历史记录，引用已删文件属正常）、占位符/模式串、AI 工具本地目录。
+_KNOWN_ROOT_PREFIXES = (
+    "scripts/", "rules/", "skills/", "templates/", ".github/",
+    "docs/", "tests/", "src/", "tools/", "build/",
+)
+_BACKTICK_SKIP_MARKERS = (
+    "xxx", "nnn", "{{", "{", "}", "<", ">", "*", "...",  # 占位符 / 模式串
+)
+_BACKTICK_SKIP_PREFIXES = (".claude/", ".codegraph/", ".qoder/")  # AI 工具本地目录
+# CHANGELOG 为历史记录，引用已删除/重建文件属正常，不做反引号路径校验
+_BACKTICK_SKIP_DOCS = {"CHANGELOG.md"}
+
+
+def _is_pattern_like(s: str) -> bool:
+    """识别占位符/模式串（如 {{X}}、{Name}、<Module>、0001-xxx.md）——非真实路径，跳过。"""
+    low = s.lower()
+    return any(mk in low for mk in _BACKTICK_SKIP_MARKERS)
+
+
+def check_backtick_paths() -> list[str]:
+    """检查反引号内以已知根目录前缀开头的相对路径引用是否存在（防占位符替换成死路径后漏检）。"""
+    problems: list[str] = []
+    code_re = re.compile(r"`([^`\s]+)`")
+    for doc in DOC_FILES:
+        if doc in _BACKTICK_SKIP_DOCS:
+            continue
+        path = ROOT / doc
+        if not path.exists():
+            continue
+        for m in code_re.finditer(path.read_text(encoding="utf-8")):
+            raw = m.group(1)
+            # 规范化 Windows 反斜杠路径 → 正斜杠（如 .\scripts\init-project.ps1）
+            target = raw.replace("\\", "/").lstrip("./")
+            if not target.startswith(_KNOWN_ROOT_PREFIXES):
+                continue  # 非根目录路径：可能是示例文件名/命名规范，不校验
+            if target.startswith(_BACKTICK_SKIP_PREFIXES):
+                continue  # AI 工具本地目录（不入库）
+            if _is_pattern_like(target):
+                continue  # 占位符/模式串，替换前无法验证
+            probe = target.rstrip("/")
+            # 目录前缀路径按仓库根解析（如 `scripts/verify-docs.py` 指根下文件）
+            resolved = (ROOT / probe).resolve()
+            if not resolved.exists():
+                problems.append(f"[反引号路径失效] {doc} -> `{raw}`（指向不存在的文件？）")
+    return problems
+
+
 def check_agents_tree() -> list[str]:
     """校验 AGENTS.md 与 project-structure.md 顶层目录集合一致（双目录树防漂移）。
 
@@ -220,7 +271,7 @@ def main() -> int:
     parser.add_argument("--strict", action="store_true", help="含未声明文件检查")
     args = parser.parse_args()
 
-    problems = check_links() + check_dirs() + check_agents_tree() + check_undeclared(args.strict)
+    problems = check_links() + check_backtick_paths() + check_dirs() + check_agents_tree() + check_undeclared(args.strict)
     if problems:
         print("[FAIL] 发现以下问题：")
         for p in problems:

@@ -91,13 +91,15 @@
       "test": "独立实现比对"
     },
     "DESCRIPTION_1": {
-      "category": "content",
-      "prompt": "",
+      "category": "core",
+      "default": "C# 编码陷阱与规范",
+      "prompt": "技能 1 内容说明",
       "test": "C# 编码陷阱与规范"
     },
     "DESCRIPTION_2": {
-      "category": "content",
-      "prompt": "",
+      "category": "core",
+      "default": "Python 编码陷阱与规范",
+      "prompt": "技能 2 内容说明",
       "test": "Python 编码陷阱与规范"
     },
     "DESC_1": {
@@ -222,13 +224,15 @@
       "prompt": ""
     },
     "LAYER_DEPENDENCY_DIAGRAM": {
-      "category": "content",
-      "prompt": "",
+      "category": "core",
+      "default": "UI -> Service -> Engine -> Data",
+      "prompt": "层级依赖图（单行箭头式）",
       "test": "UI -> Service -> Engine -> Data"
     },
     "LAYER_DIAGRAM": {
-      "category": "content",
-      "prompt": "",
+      "category": "core",
+      "default": "UDF -> Core -> Foundation",
+      "prompt": "架构分层图（单行箭头式）",
       "test": "UDF -> Core -> Foundation"
     },
     "LINT_CMD": {
@@ -279,8 +283,9 @@
       "test": "example"
     },
     "PACKAGE_NAME": {
-      "category": "content",
-      "prompt": "",
+      "category": "core",
+      "default": "my_project",
+      "prompt": "Python 包名（pyproject.toml 使用，如 my_project）",
       "test": "template_self_test"
     },
     "PARAM_1": {
@@ -387,18 +392,21 @@
       "test": "数字多处硬编码"
     },
     "ROOT_NAMESPACE": {
-      "category": "content",
-      "prompt": "",
+      "category": "core",
+      "default": "Acme.Project",
+      "prompt": "项目根命名空间（C# 模板使用，如 Acme.Stats）",
       "test": "TemplateSelfTest"
     },
     "SCOPE_1": {
-      "category": "content",
-      "prompt": "",
+      "category": "core",
+      "default": "C# 代码",
+      "prompt": "技能 1 适用范围（如 C# 代码）",
       "test": "C# 代码"
     },
     "SCOPE_2": {
-      "category": "content",
-      "prompt": "",
+      "category": "core",
+      "default": "Python 代码",
+      "prompt": "技能 2 适用范围（如 Python 代码）",
       "test": "Python 代码"
     },
     "SECURITY_CONTACT": {
@@ -411,13 +419,15 @@
       "prompt": ""
     },
     "SKILL_1": {
-      "category": "content",
-      "prompt": "",
+      "category": "core",
+      "default": "csharp-SKILL.md",
+      "prompt": "主技能文件（skills/ 下，如 csharp-SKILL.md）",
       "test": "csharp-SKILL.md"
     },
     "SKILL_2": {
-      "category": "content",
-      "prompt": "",
+      "category": "core",
+      "default": "python-SKILL.md",
+      "prompt": "次技能文件（skills/ 下，如 python-SKILL.md）",
       "test": "python-SKILL.md"
     },
     "SYNTAX": {
@@ -429,8 +439,9 @@
       "prompt": ""
     },
     "TARGET_FRAMEWORK": {
-      "category": "content",
-      "prompt": "",
+      "category": "core",
+      "default": "net8.0",
+      "prompt": "目标框架（C# 项目，如 net8.0 / net9.0；其他语言 Enter 跳过）",
       "test": "net9.0"
     },
     "TERM_1": {

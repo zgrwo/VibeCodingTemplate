@@ -25,16 +25,31 @@
 # 内置回退表：仅覆盖 core 键 + 动态键（manifest 损坏时的兜底）
 function Get-PlaceholderManifestFallback {
     return @{
-        "PROJECT_NAME" = @{ category = "core"; prompt = "项目名（目录名与文档一致）" }
-        "OWNER"        = @{ category = "core"; prompt = "GitHub 用户名/组织" }
-        "REPO_NAME"    = @{ category = "core"; prompt = "仓库名" }
-        "AUTHOR"       = @{ category = "core"; prompt = "作者姓名" }
-        "VERSION"      = @{ category = "core"; prompt = "初始版本号"; default = "1.0.0" }
-        "BUILD_CMD"    = @{ category = "core"; prompt = "构建命令" }
-        "TEST_CMD"     = @{ category = "core"; prompt = "测试命令" }
-        "FULL_VERIFY_CMD" = @{ category = "core"; prompt = "全量验证命令" }
-        "DATE"         = @{ category = "auto"; rule = "today"; prompt = "日期" }
-        "YEAR"         = @{ category = "auto"; rule = "year";  prompt = "年份" }
+        "PROJECT_NAME"          = @{ category = "core"; prompt = "项目名（目录名与文档一致）" }
+        "OWNER"                 = @{ category = "core"; prompt = "GitHub 用户名/组织" }
+        "REPO_NAME"             = @{ category = "core"; prompt = "仓库名" }
+        "AUTHOR"                = @{ category = "core"; prompt = "作者姓名" }
+        "VERSION"               = @{ category = "core"; prompt = "初始版本号"; default = "1.0.0" }
+        "BUILD_CMD"             = @{ category = "core"; prompt = "构建命令" }
+        "TEST_CMD"              = @{ category = "core"; prompt = "测试命令" }
+        "FULL_VERIFY_CMD"       = @{ category = "core"; prompt = "全量验证命令" }
+        "LINT_CMD"              = @{ category = "core"; prompt = "代码风格检查命令" }
+        "COVERAGE_CMD"          = @{ category = "core"; prompt = "覆盖率命令" }
+        "SECURITY_CONTACT"      = @{ category = "core"; prompt = "安全漏洞联系邮箱" }
+        "COC_CONTACT"           = @{ category = "core"; prompt = "行为准则联系邮箱" }
+        "ROOT_NAMESPACE"        = @{ category = "core"; prompt = "项目根命名空间"; default = "Acme.Project" }
+        "TARGET_FRAMEWORK"      = @{ category = "core"; prompt = "目标框架"; default = "net8.0" }
+        "PACKAGE_NAME"          = @{ category = "core"; prompt = "Python 包名"; default = "my_project" }
+        "SKILL_1"               = @{ category = "core"; prompt = "主技能文件"; default = "csharp-SKILL.md" }
+        "SKILL_2"               = @{ category = "core"; prompt = "次技能文件"; default = "python-SKILL.md" }
+        "SCOPE_1"               = @{ category = "core"; prompt = "技能 1 适用范围"; default = "C# 代码" }
+        "SCOPE_2"               = @{ category = "core"; prompt = "技能 2 适用范围"; default = "Python 代码" }
+        "DESCRIPTION_1"         = @{ category = "core"; prompt = "技能 1 内容说明"; default = "C# 编码陷阱与规范" }
+        "DESCRIPTION_2"         = @{ category = "core"; prompt = "技能 2 内容说明"; default = "Python 编码陷阱与规范" }
+        "LAYER_DIAGRAM"         = @{ category = "core"; prompt = "架构分层图"; default = "UDF -> Core -> Foundation" }
+        "LAYER_DEPENDENCY_DIAGRAM" = @{ category = "core"; prompt = "层级依赖图"; default = "UI -> Service -> Engine -> Data" }
+        "DATE"                  = @{ category = "auto"; rule = "today"; prompt = "日期" }
+        "YEAR"                  = @{ category = "auto"; rule = "year";  prompt = "年份" }
     }
 }
 

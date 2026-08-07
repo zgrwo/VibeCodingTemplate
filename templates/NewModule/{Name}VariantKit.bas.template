@@ -1,0 +1,71 @@
+' ============================================================================
+' {Name}VariantKit.bas — Variant 输入归一化基础层（最小实现）
+' 使用方式：将 {Name} 替换为基础设施名（如 VariantKit、ExcelKit）
+' 目标位置：src/{Module}/{Name}VariantKit.bas（导入 VBE 后，供各模块 UDF 引用）
+' 职责：Range 对象与 Variant 数组/单值的统一入口（vba-SKILL §1.2）
+'       仅提供无状态工具，不含业务逻辑
+' ============================================================================
+Option Explicit
+
+''' <summary>
+''' 归一化输入：Range → 数组，数组/单值 → 数组。
+''' 哨兵契约：无法转换时返回空数组（不抛异常，交给调用方守卫）。
+''' </summary>
+''' <param name="v">Excel 传入的 Variant（Range / 数组 / 单值）</param>
+''' <param name="flattenColumn">单列 Range 是否展平为一维数组（默认 True）</param>
+''' <returns>Variant 数组；调用方用 IsArrayEmpty 守卫后再遍历（vba-SKILL §3.2）</returns>
+Public Function NormalizeInput(v As Variant, Optional flattenColumn As Boolean = True) As Variant
+    Dim arr As Variant
+    Dim i As Long
+
+    ' 1. Range → 二维数组（v.Value 按单元格矩阵返回）
+    If TypeOf v Is Range Then
+        arr = v.Value
+        ' 2. 单列/单行展平（UDF 逐元素计算时用一维更自然）
+        If flattenColumn Then
+            If IsArray(arr) Then
+                ' 注意 LBound/UBound：Range.Value 固定 1-based（vba-SKILL §3.1）
+                If UBound(arr, 1) = 1 And UBound(arr, 2) > 1 Then
+                    arr = TransposeRow(arr)
+                ElseIf UBound(arr, 2) = 1 And UBound(arr, 1) > 1 Then
+                    arr = TransposeColumn(arr)
+                End If
+            End If
+        End If
+    ElseIf IsArray(v) Then
+        arr = v
+    Else
+        ' 3. 单值 → 单元素数组（统一为数组，调用方无需分支）
+        Dim singleVal(0 To 0) As Variant
+        singleVal(0) = v
+        arr = singleVal
+    End If
+
+    NormalizeInput = arr
+End Function
+
+''' <summary>
+''' 单行数组转一维（Range.Value 单行时为 1×N 二维数组）
+''' </summary>
+Private Function TransposeRow(arr As Variant) As Variant
+    Dim result() As Variant
+    Dim c As Long
+    ReDim result(1 To UBound(arr, 2))
+    For c = 1 To UBound(arr, 2)
+        result(c) = arr(1, c)
+    Next c
+    TransposeRow = result
+End Function
+
+''' <summary>
+''' 单列数组转一维（Range.Value 单列时为 N×1 二维数组）
+''' </summary>
+Private Function TransposeColumn(arr As Variant) As Variant
+    Dim result() As Variant
+    Dim r As Long
+    ReDim result(1 To UBound(arr, 1))
+    For r = 1 To UBound(arr, 1)
+        result(r) = arr(r, 1)
+    Next r
+    TransposeColumn = result
+End Function
