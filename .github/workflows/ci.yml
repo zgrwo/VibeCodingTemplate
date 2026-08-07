@@ -139,7 +139,7 @@ jobs:
       - name: 依赖变更审查（PR）
         # 需依赖清单文件（pyproject.toml / *.csproj / package-lock.json 等）；无清单的项目删除此步骤
         if: steps.detect.outputs.is_template != 'true' && github.event_name == 'pull_request'
-        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
       - name: 手册数值一致性
         run: python scripts/verify-manual.py
       - name: 陷阱审计（falsy / 结构）
