@@ -23,22 +23,34 @@ jobs:
     name: Build & Release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
-      # --- 按语言选择 setup（二选一，初始化时启用）---
+      # --- 模板仓库检测：模板仓库自身无构建系统，跳过 Build/Test ---
+      - name: 检测是否为模板仓库自身
+        id: detect
+        run: |
+          if grep -rq "{{PROJECT_NAME}}" AGENTS.md 2>/dev/null; then
+            echo "is_template=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_template=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # --- 按语言选择 setup（二选一，初始化时启用，固定 commit SHA）---
       # Python:
-      # - uses: actions/setup-python@v5
+      # - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
       #   with: { python-version: "3.12" }
       # - run: pip install -e ".[dev]"
       # .NET:
-      # - uses: actions/setup-dotnet@v4
+      # - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
       #   with: { dotnet-version: "9.0.x" }
 
       - name: Build
-        run: {{BUILD_CMD}}
+        if: steps.detect.outputs.is_template != 'true'
+        run: "{{BUILD_CMD}}"
 
       - name: Test
-        run: {{TEST_CMD}}
+        if: steps.detect.outputs.is_template != 'true'
+        run: "{{TEST_CMD}}"
 
       - name: 生成 Release（正文取 CHANGELOG 对应段落）
         id: changelog
@@ -62,7 +74,7 @@ jobs:
           echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: Publish Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           tag_name: ${{ steps.changelog.outputs.tag }}
           name: ${{ steps.changelog.outputs.tag }}

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ============================================================================
+  {Name}.Tests.csproj.template — .NET 单元测试项目（xUnit）
+  使用方式：复制到 tests/{Module}.Tests/ 并重命名为 {Module}.Tests.csproj，
+           替换 {Name}/{Module}/{{ROOT_NAMESPACE}}/{{TARGET_FRAMEWORK}} 占位符
+  要求：与 src/{Module}/{Module}.csproj 配合（Directory.Build.props 提供全局属性）
+  参考：ExcelAddin 函数库 tests/*.Tests/*.csproj（已验证有效）
+============================================================================ -->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>{{TARGET_FRAMEWORK}}</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <!-- 覆盖率（质量门禁 {{COVERAGE_CMD}} 使用，按需启用）：
+    <PackageReference Include="coverlet.collector" Version="6.0.2" /> -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 引用被测项目（示例路径，按实际调整） -->
+    <ProjectReference Include="../../src/{Module}/{Module}.csproj" />
+  </ItemGroup>
+
+</Project>

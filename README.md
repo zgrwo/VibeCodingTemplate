@@ -27,7 +27,6 @@
 |------|------|-------|
 | `{{MODULE_1}}` | {{DESC_1}} | `{{EXAMPLE_1}}` |
 | `{{MODULE_2}}` | {{DESC_2}} | `{{EXAMPLE_2}}` |
-| `{{MODULE_3}}` | {{DESC_3}} | `{{EXAMPLE_3}}` |
 
 ---
 
@@ -159,6 +158,8 @@ robocopy VibeCodingTemplate <PROJECT_NAME> /E /XD .git
 | `{{BUILD_CMD}}` / `{{TEST_CMD}}` / `{{FULL_VERIFY_CMD}}` | 构建/测试/验证命令 |
 | `{{AUTHOR}}` / `{{DATE}}` | 作者与日期 |
 
+> 上表为必填核心项；模板实际含 50+ 占位符（CI / 模块 / 文档 / 联系方式等），自动方式下由 init-project.ps1 一次扫描全部替换。完整占位符清单以 `scripts/test-template.ps1` 的 `$special` 映射表为权威（模板自测即按该表逐项断言替换完成）。
+
 > 用 `scripts/init-project.ps1` 自动初始化时，脚本会扫描全部 `{{...}}` 占位符并交互式询问，完成后报告遗漏项。
 
 ### 3. 按语言填充
@@ -173,6 +174,7 @@ robocopy VibeCodingTemplate <PROJECT_NAME> /E /XD .git
 ### 4. 初始化收尾（质量门禁）
 
 - [ ] 全量验证脚本可运行（{{FULL_VERIFY_CMD}}）
+- [ ] 徽章区启用：README.md 顶部取消注释，替换 `{{OWNER}}` / `{{REPO_NAME}}`
 - [ ] 首个 ADR（`rules/adr/0001-xxx.md`）记录初始架构决策
 - [ ] AGENTS.md「历史经验」填充项目已知高频模式
 - [ ] CHANGELOG.md 标记 v0.1.0 初始化版本

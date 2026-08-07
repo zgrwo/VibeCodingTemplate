@@ -15,7 +15,6 @@
 ├── tests/                        # 测试
 │   ├── unit/                     # 单元测试
 │   ├── integration/              # 集成测试
-│   ├── crossval/                 # 交叉验证（与独立参考实现比对）
 │   └── fixtures/                 # 测试数据/黄金文件
 │
 ├── rules/                        # 规范文档（本目录）
@@ -47,13 +46,13 @@
 │   ├── verify-manual.py          # 手册示例一致性验证（禁自校验）
 │   ├── falsy-audit.py            # Falsy 陷阱静态审计
 │   ├── init-project.ps1          # 从模板初始化新项目（占位符替换）
-│   # 注：crossval/ 为可选运行时目录（verify-manual.py 自动发现，缺失时显式 SKIP）
+│   ├── crossval/                 # 交叉验证（与独立参考实现比对，verify-manual.py 自动发现）
 │   └── ...
 │
 ├── templates/                    # 模块脚手架
 │   ├── README.md                 # 脚手架使用说明（占位符约定）
-│   ├── NewModule/                # 新增模块四件套（Core/Udf/Tests/CrossVal）
-│   └── language/                 # 构建配置模板（pyproject/Build.props/nuget）
+│   ├── NewModule/                # 新增模块五件套（Core/Foundation/Udf/Tests/CrossVal）
+│   └── language/                 # 构建配置模板（pyproject/Build.props/nuget/Tests.csproj）
 │
 ├── .github/                      # GitHub 协作
 │   ├── workflows/ci.yml          # CI 质量门禁（quick/full/quality）
@@ -68,6 +67,9 @@
 ├── docs/                         # 用户文档（补充材料）
 │   └── README.md                 # 文档目录说明（与 rules/ 的分工）
 │
+├── build/                        # 构建配置（按需裁剪）
+│   └── ...
+│
 ├── logs/                         # 运行日志（.gitignore 排除）
 │
 ├── tools/                        # 辅助工具/脚本
@@ -80,9 +82,11 @@
 ├── SECURITY.md                   # 安全政策
 ├── CODE_OF_CONDUCT.md            # 行为准则
 ├── LICENSE                       # 开源许可证
+├── .editorconfig                 # 编辑器统一风格
 ├── .gitignore                    # 排除规则
 ├── .gitattributes                # 换行符/二进制标记
-└── .pre-commit-config.yaml       # 提交前 lint（可选启用）
+├── .pre-commit-config.yaml       # 提交前 lint（可选启用）
+└── CLAUDE.md                     # Claude Code 兼容副本（AGENTS.md 副本，可选创建）
 ```
 
 ## 层级依赖规则

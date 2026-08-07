@@ -51,6 +51,14 @@ All notable changes to {{PROJECT_NAME}}.
 - `templates/`：Core/Udf 模板命名空间统一为 `{{ROOT_NAMESPACE}}`，CrossVal 模板对接 verify-manual 执行器
 - `.pre-commit-config.yaml`：补齐 pre-commit-hooks 基础 hooks
 - 根目录：LICENSE 年份占位符化，readme 文档索引补全，CONTRIBUTING 补行为准则/安全互链与分支策略
+- 安全加固：全部 workflow 第三方 actions 固定 commit SHA（供应链安全）；ci.yml 顶层加 `permissions: contents: read` 最小化；quality-gate 新增 dependency-review（PR 依赖审查）
+- `verify-docs.py`：--strict 未声明检查改为从 project-structure.md 目录树解析（文件+目录，自动收录 CLAUDE.md）；DOC_FILES 补 skills/、templates/、docs/；新增 AGENTS.md 与 project-structure.md 顶层目录一致性校验
+- 结构一致性：crossval 目录统一至 `scripts/crossval/`（删除 tests/crossval 死条目）；project-structure.md 补 build/、.editorconfig、CLAUDE.md 条目；AGENTS.md 五件套与技能表占位符说明、CLAUDE.md 副本维护提示
+- `README.md`：模块速览表统一为 MODULE_1/2；必填占位符清单以 test-template.ps1 为权威；收尾清单补徽章启用步骤
+- `CODE_OF_CONDUCT.md` 新增 `{{COC_CONTACT}}` 占位符；`SECURITY.md` 新增披露响应时间表
+- `templates/`：新增 `language/{Name}.Tests.csproj.template`（xUnit 测试项目）；修复 Udf/Foundation 模板注释损坏字符
+- `init-project.ps1`：复制后清理 `__pycache__/bin/obj` 等垃圾目录；CLAUDE.md 副本维护提示
+- `release.yml`：Build/Test 加 is_template 检测（模板仓库自身无构建系统）；release-drafter.yml 补双发布机制分工说明
 
 ### Removed
 
@@ -68,6 +76,12 @@ All notable changes to {{PROJECT_NAME}}.
 - `ci.yml` 在模板仓库自身运行时占位符命令必然失败（三 job 加 is_template 检测跳过，模板仓库 CI 全绿）（H1）
 - `verify-docs.py` REQUIRED_DIRS 硬编码 10 目录，与规模裁剪冲突（改为从 project-structure.md 目录树解析）（H2）
 - `init-project.ps1` 元占位符污染：描述占位符机制的注释文字被自扫描替换（统一 `{{...}}` 形式排除）（H3）
+- `verify-docs.py` 初始化后 `--strict` 必报 CLAUDE.md 未声明（白名单改为从目录树解析，CLAUDE.md 已登记）（P-A）
+- `project-structure.md` 声明 `tests/crossval/` 与 `scripts/crossval/` 双目录冲突（SSOT 统一至 scripts/）（P-D）
+- `ci.yml` 无 permissions 声明、第三方 actions 用 tag 引用（最小化权限 + 固定 commit SHA）（P-B/P-C）
+- `release.yml` 在模板仓库自身运行时占位符命令必然失败（补 is_template 检测）（P-G）
+- `init-project.ps1` 复制携带 `scripts/__pycache__` 等垃圾目录（复制后清理）（P-N）
+- `templates/NewModule/` 注释中 7 处损坏字符 `?`（修复为 `-`）（P-M）
 
 ## [0.1.0] - {{DATE}}
 

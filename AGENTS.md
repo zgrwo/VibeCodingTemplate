@@ -68,6 +68,8 @@
 
 > **执行方式**：直接 Read skill 文件。
 >
+> **占位符说明**：`{{SCOPE_1/2}}`、`{{SKILL_1/2}}`、`{{DESCRIPTION_1/2}}` 为初始化占位符，由 init-project.ps1 替换为项目实际技能；模板自带技能（语言陷阱 / 工具陷阱 / 三个审查专家）见本表与 skills/ 目录。
+>
 > **AGENTS.md 生态兼容**：本文件即 `AGENTS.md`（大写），Codex/Copilot/Windsurf/JetBrains/Gemini 可直接读取；Claude Code 需 `CLAUDE.md` 副本——见下方「AGENTS.md 生态兼容」。
 
 ### 专家 Skill（重构生命周期）
@@ -97,7 +99,7 @@
 ├── tests/                        # ✅ 测试
 ├── docs/                         # ✅ 文档（设计文档，见 docs/README.md）
 ├── scripts/                      # ✅ 构建/验证脚本（verify-all / verify-docs / init-project 等）
-├── templates/                    # ✅ 模块脚手架（NewModule 四件套 + language 构建配置）
+├── templates/                    # ✅ 模块脚手架（NewModule 五件套 + language 构建配置）
 ├── skills/                       # ✅ Skill 定义
 ├── rules/                        # ✅ 规范文档（含 ADR 决策记录）
 ├── tools/                        # ✅ 辅助工具
@@ -119,6 +121,7 @@
 ├── SECURITY.md                   # ✅ 安全政策与漏洞报告
 ├── CODE_OF_CONDUCT.md            # ✅ 行为准则
 ├── LICENSE                       # ✅ 开源许可证（MIT）
+├── .editorconfig                 # ✅ 编辑器统一风格
 ├── .gitignore                    # ✅ 排除规则
 ├── .gitattributes                # ✅ 换行符/二进制标记
 └── .pre-commit-config.yaml       # ✅ 提交前 lint（可选启用）
@@ -278,6 +281,8 @@
 | Codex / Copilot / Windsurf / JetBrains / Gemini | `AGENTS.md` | 直接读取，无需处理 |
 | Claude Code | `CLAUDE.md` | 创建副本：`Copy-Item AGENTS.md CLAUDE.md`（Linux：`ln -s AGENTS.md CLAUDE.md`） |
 | QoderCN | `AGENTS.md`（兼容小写 `agents.md`） | 模板默认大写 `AGENTS.md` 即可 |
+
+> **副本维护**：`CLAUDE.md` 是 `AGENTS.md` 的静态副本——每次修改 `AGENTS.md` 后需重新创建副本（PowerShell：`Copy-Item AGENTS.md CLAUDE.md`；Linux：`ln -s AGENTS.md CLAUDE.md`）。初始化时可运行 `init-project.ps1 -CreateCompatibilityLinks` 创建；CLAUDE.md 已登记在 project-structure.md 目录树，不会触发 verify-docs --strict 未声明检查。
 
 ### 2. 子目录级 AGENTS.md（Monorepo）
 

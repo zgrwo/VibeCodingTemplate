@@ -24,6 +24,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# 最小权限：本工作流只读仓库内容（Security hardening 最佳实践）
+permissions:
+  contents: read
+
 jobs:
   # ============ quick：PR 级快速验证 ============
   quick-check:
@@ -36,7 +40,7 @@ jobs:
     #     python-version: ["3.10", "3.11", "3.12"]   # Python 项目
     #     dotnet-version: ["8.0.x", "9.0.x"]          # .NET 项目
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       # --- 模板仓库检测：占位符未替换（=模板仓库自身）时跳过构建 ---
       - name: 检测是否为模板仓库自身
         id: detect
@@ -46,20 +50,20 @@ jobs:
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
           fi
-      # --- 按语言选择 setup（二选一）---
+      # --- 按语言选择 setup（二选一，固定 commit SHA）---
       # Python:
-      # - uses: actions/setup-python@v5
+      # - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
       #   with: { python-version: ${{ matrix.python-version }} }
       # - run: pip install -e ".[dev]"
       # .NET:
-      # - uses: actions/setup-dotnet@v4
+      # - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
       #   with: { dotnet-version: ${{ matrix.dotnet-version }} }
       - name: Build
         if: steps.detect.outputs.is_template != 'true'
-        run: {{BUILD_CMD}}
+        run: "{{BUILD_CMD}}"
       - name: Test
         if: steps.detect.outputs.is_template != 'true'
-        run: {{TEST_CMD}}
+        run: "{{TEST_CMD}}"
       - name: 提交前自检（无裸 catch / bare except）
         run: |
           grep -rn "catch\s*{" src/ --include="*.cs" && exit 1 || true
@@ -72,7 +76,7 @@ jobs:
     timeout-minutes: 30
     if: github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       # --- 模板仓库检测：占位符未替换（=模板仓库自身）时跳过 ---
       - name: 检测是否为模板仓库自身
         id: detect
@@ -85,7 +89,7 @@ jobs:
       # --- setup 同上 ---
       - name: Full verify
         if: steps.detect.outputs.is_template != 'true'
-        run: {{FULL_VERIFY_CMD}}
+        run: "{{FULL_VERIFY_CMD}}"
 
   # ============ quality：质量门禁（硬门禁，不设 continue-on-error）============
   quality-gate:
@@ -94,8 +98,8 @@ jobs:
     timeout-minutes: 15
     needs: quick-check
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
       # --- 模板仓库检测：占位符未替换时跳过 LINT/COVERAGE（命令占位符在模板仓库不可执行）---
@@ -107,6 +111,10 @@ jobs:
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
           fi
+      - name: 依赖变更审查（PR）
+        # 需依赖清单文件（pyproject.toml / *.csproj / package-lock.json 等）；无清单的项目删除此步骤
+        if: steps.detect.outputs.is_template != 'true' && github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
       - name: 手册数值一致性
         run: python scripts/verify-manual.py
       - name: 陷阱审计（falsy / 结构）
@@ -117,12 +125,12 @@ jobs:
         # Python: ruff check src/ scripts/
         # C#:    dotnet format --verify-no-changes
         if: steps.detect.outputs.is_template != 'true'
-        run: {{LINT_CMD}}
+        run: "{{LINT_CMD}}"
       - name: 覆盖率门禁
         # Python: pytest --cov=src --cov-fail-under=80（需 dev 依赖 pytest-cov）
         # C#:    dotnet test --collect:"XPlat Code Coverage"（需 coverlet.collector）
         if: steps.detect.outputs.is_template != 'true'
-        run: {{COVERAGE_CMD}}
+        run: "{{COVERAGE_CMD}}"
 
   # ============ template-self-test：模板仓库自测 ============
   # 仅模板仓库运行（检测到 AGENTS.md 中未替换的 {{PROJECT_NAME}} 占位符即视为模板）。
@@ -132,8 +140,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
       - name: 检测是否为模板仓库自身（存在未替换占位符）

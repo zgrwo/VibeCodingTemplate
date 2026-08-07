@@ -58,7 +58,12 @@ New-Item -ItemType Directory -Path $Target -Force | Out-Null
 Get-ChildItem $template -Force | Where-Object { $_.Name -notin @(".git", "logs") } | ForEach-Object {
     Copy-Item $_.FullName $Target -Recurse -Force
 }
-Write-Host "    完成（已跳过 .git / logs）" -ForegroundColor Green
+# 清理被复制进来的垃圾/构建目录（__pycache__/bin/obj 等不入库，也不应进入新项目）
+foreach ($junk in @("__pycache__", ".venv", "node_modules", "bin", "obj")) {
+    Get-ChildItem $Target -Recurse -Force -Directory -Filter $junk -ErrorAction SilentlyContinue |
+        Remove-Item -Recurse -Force
+}
+Write-Host "    完成（已跳过 .git / logs / __pycache__ 等）" -ForegroundColor Green
 
 # ----------------------------------------------------------------------------
 # 3. 扫描 {{...}} 占位符
@@ -186,6 +191,7 @@ if ($CreateCompatibilityLinks) {
     # 主文件为 AGENTS.md（大写，Codex/Copilot/Windsurf 等直接读取）；仅为 Claude Code 创建副本
     Copy-Item "$Target\AGENTS.md" "$Target\CLAUDE.md" -Force
     Write-Host "==> 已创建 CLAUDE.md（AGENTS.md 副本，供 Claude Code 读取）" -ForegroundColor Green
+    Write-Host "    （注意：AGENTS.md 后续更新需重新创建 CLAUDE.md 副本，见 AGENTS.md「AGENTS.md 生态兼容」）" -ForegroundColor Yellow
 }
 
 Write-Host "`n==> 初始化完成，全部占位符已替换 ✔" -ForegroundColor Green

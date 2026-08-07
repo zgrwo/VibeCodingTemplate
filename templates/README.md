@@ -15,6 +15,7 @@
 | `language/pyproject.toml.template` | Python 项目构建配置 | Python |
 | `language/Directory.Build.props.template` | .NET 统一构建属性 | .NET |
 | `language/nuget.config.template` | NuGet 源配置 | .NET |
+| `language/{Name}.Tests.csproj.template` | .NET 测试项目（xUnit） | .NET |
 
 ## 占位符约定
 
@@ -30,13 +31,14 @@
 ## 新增模块流程（C# 示例）
 
 ```
-1. 复制 4 个 NewModule 文件到目标目录（首次使用另复制 Foundation 模板）
-2. 替换 {Name}/{Module}/{PREFIX}/{{ROOT_NAMESPACE}}
-3. Core 实现纯计算逻辑（哨兵契约 L1-L5）
-4. Udf 仅做分发（MapOver + WrapError）
-5. 测试覆盖：正常路径 + 哨兵契约 + 边界值
-6. CrossVal 放入 scripts/crossval/ 目录（verify-manual.py 自动发现并执行）
-7. 同步规则文档：specification.md → api-reference.md → user-manual.md
+1. 复制 5 个 NewModule 文件到目标目录（Core/Udf/Foundation/Tests/CrossVal，按需裁剪）
+2. 复制 language/{Name}.Tests.csproj.template 到 tests/{Module}.Tests/（.NET 项目）
+3. 替换 {Name}/{Module}/{PREFIX}/{{ROOT_NAMESPACE}}
+4. Core 实现纯计算逻辑（哨兵契约 L1-L5）
+5. Udf 仅做分发（MapOver + WrapError）
+6. 测试覆盖：正常路径 + 哨兵契约 + 边界值
+7. CrossVal 放入 scripts/crossval/ 目录（verify-manual.py 自动发现并执行）
+8. 同步规则文档：specification.md → api-reference.md → user-manual.md
 ```
 
 ## 注意事项
