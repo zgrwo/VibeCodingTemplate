@@ -36,6 +36,12 @@ BenchmarkDotNet.Artifacts/
 # === Node.js ===
 node_modules/
 npm-debug.log*
+*.tsbuildinfo
+dist/
+dist-ssr/
+
+# === Docker ===
+docker-compose.override.yml
 
 # === IDE / 编辑器 ===
 .vs/

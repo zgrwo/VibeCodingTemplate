@@ -8,6 +8,7 @@
 |------|------|----------|----------|
 | `AGENTS.md` | AI 助手 | "项目怎么组织？红线在哪？" | 架构/红线/流程变更 |
 | `README.md` | 人类用户 | "这是什么？怎么用？" | 功能新增/安装方式变更 |
+| `README.en.md` | 国际用户 | "What is this? How to use?"（英文入口） | 功能新增/安装方式变更 |
 | `rules/context.md` | AI + 新人 | "术语什么意思？为什么这样设计？" | 新概念引入 |
 | `rules/api-reference.md` | 开发者/AI | "函数签名是什么？"（**签名唯一信源**） | 任何 Public 接口变更 |
 | `rules/user-manual.md` | 最终用户 | "我要做 X，怎么操作？" | 用户可见功能变更 |
@@ -20,6 +21,20 @@
 | `CHANGELOG.md` | 用户/维护者 | "这个版本改了什么？" | 每次发版 |
 | `SECURITY.md` | 安全报告者 | "怎么报告漏洞？" | 安全政策变更 |
 | `skills/*.md` | AI 编码 | "这个语言/框架有什么陷阱？" | 发现新陷阱/模式 |
+
+## 建议阅读顺序
+
+> 文档间存在大量交叉引用，以下顺序避免"文档跳转迷宫"。
+
+| 角色 | 阅读顺序 | 预计耗时 |
+|------|----------|----------|
+| **新贡献者** | README.md → AGENTS.md → context.md → CONTRIBUTING.md | 20 min |
+| **AI 编码助手** | AGENTS.md → 对应 skills/*.md → rules/falsy-pitfalls.md（Python） | 10 min |
+| **代码审查者** | AGENTS.md → rules/code-review-prompt.md → 对应 skills/*.md | 15 min |
+| **架构决策者** | AGENTS.md → rules/project-structure.md → skills/architecture-reviewer.md → rules/adr-template.md | 20 min |
+| **重构执行者** | rules/refactoring-plan.md → skills/refactoring-guardian.md → AGENTS.md「防错三原则」 | 15 min |
+
+> 跳过项：`rules/cross-project-synthesis.md`（方法论库，按需查阅，不必线性阅读）
 
 ## 禁止事项
 

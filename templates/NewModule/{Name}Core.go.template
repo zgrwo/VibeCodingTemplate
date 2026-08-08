@@ -1,0 +1,57 @@
+// ============================================================================
+// {Name}Core.go — 核心层模块
+// 使用方式：将 {Name} 替换为模块名（PascalCase，如 Weather、Finance）
+// 目标位置：src/{Module}/{Name}Core.go
+// 注意：核心层为纯逻辑实现，零外部框架依赖（可在无依赖环境独立单元测试）
+// ============================================================================
+
+package {module}
+
+import "math"
+
+// ComputeResult 类型别名（哨兵值模式：NaN 表示无效，0 是有效值）
+// 在数值计算中，0 是有效值（均值=0、计数=0），必须用 NaN 表示"无效"
+
+// Compute 计算数值入口。
+//
+// 参数:
+//   - value: 输入值；NaN/Inf 返回 NaN（哨兵契约）
+//
+// 返回:
+//   计算结果；无效输入返回 NaN（不 panic，不返回 error）
+func Compute(value float64) float64 {
+	// 1. 哨兵守卫：NaN/Inf → NaN
+	if math.IsNaN(value) || math.IsInf(value, 0) {
+		return math.NaN()
+	}
+
+	// 2. 防御完整性：领域约束前置验证
+	// if value < 0 { return math.NaN() }
+
+	// 3. 核心逻辑
+	result := value * 2.0 // TODO: 替换为实际计算
+
+	// 4. 结果守卫：防止中间步骤产生 Inf
+	if math.IsInf(result, 0) {
+		return math.NaN()
+	}
+
+	return result
+}
+
+// Process 字符串处理入口。
+//
+// 参数:
+//   - text: 输入文本；空串返回空串
+//
+// 返回:
+//   处理结果
+func Process(text string) string {
+	// 哨兵契约：空串 → ""
+	if text == "" {
+		return ""
+	}
+
+	// TODO: 实现处理逻辑
+	return strings.TrimSpace(text)
+}

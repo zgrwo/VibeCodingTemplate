@@ -1,0 +1,63 @@
+// ============================================================================
+// test_{Name}Core.ts — 核心层单元测试
+// 使用方式：将 {Name} 替换为模块名
+// 目标位置：tests/{Module}/test_{Name}Core.ts
+// 运行：npx vitest run tests/{Module}/test_{Name}Core.ts
+// ============================================================================
+
+import { describe, it, expect } from "vitest";
+import { compute, process } from "{Module}/{Name}Core";
+
+describe("{Name}Core", () => {
+  // ========== compute ==========
+
+  describe("compute", () => {
+    it("正常输入返回正确结果", () => {
+      expect(compute(5)).toBe(10);
+    });
+
+    it("0 是有效值（不误判为 falsy）", () => {
+      expect(compute(0)).toBe(0);
+    });
+
+    it("null 返回 null（哨兵契约）", () => {
+      expect(compute(null)).toBeNull();
+    });
+
+    it("undefined 返回 null（哨兵契约）", () => {
+      expect(compute(undefined)).toBeNull();
+    });
+
+    it("NaN 返回 null（防御性）", () => {
+      expect(compute(NaN)).toBeNull();
+    });
+
+    it("Infinity 返回 null（防御性）", () => {
+      expect(compute(Infinity)).toBeNull();
+    });
+
+    it("-Infinity 返回 null（防御性）", () => {
+      expect(compute(-Infinity)).toBeNull();
+    });
+  });
+
+  // ========== process ==========
+
+  describe("process", () => {
+    it("正常输入返回处理结果", () => {
+      expect(process("  hello  ")).toBe("hello");
+    });
+
+    it("空串返回空串（有效输入）", () => {
+      expect(process("")).toBe("");
+    });
+
+    it("null 返回空串（哨兵契约）", () => {
+      expect(process(null)).toBe("");
+    });
+
+    it("undefined 返回空串（哨兵契约）", () => {
+      expect(process(undefined)).toBe("");
+    });
+  });
+});

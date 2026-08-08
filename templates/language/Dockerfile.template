@@ -1,0 +1,62 @@
+# ============================================================================
+# Dockerfile.template — 通用容器化模板
+# 使用方式：复制到项目根目录，替换 {{...}} 占位符
+# 适用语言：Python / Node.js / .NET（按需取消注释对应阶段）
+# 参考：Google Distroless 容器最佳实践（最小镜像 + 无 shell 攻击面）
+# ============================================================================
+
+# ---- 构建阶段（multi-stage，减小最终镜像体积）----
+FROM {{BUILD_IMAGE}} AS builder
+
+WORKDIR /app
+
+# --- Python 项目 ---
+# COPY pyproject.toml ./
+# COPY src/ ./src/
+# RUN pip install --no-cache-dir build && python -m build
+# RUN pip install --no-cache-dir dist/*.whl -t /app/installed
+
+# --- Node.js 项目 ---
+# COPY package.json package-lock.json ./
+# RUN npm ci --production
+# COPY tsconfig.json ./
+# COPY src/ ./src/
+# RUN npx tsc
+
+# --- .NET 项目 ---
+# COPY *.sln ./
+# COPY src/ ./src/
+# RUN dotnet publish -c Release -o /app/publish
+
+# ---- 运行阶段（distroless / minimal）----
+FROM {{RUNTIME_IMAGE}}
+
+WORKDIR /app
+
+# --- Python 运行时 ---
+# COPY --from=builder /app/installed ./site-packages
+# COPY src/ ./src/
+# ENV PYTHONPATH=/app:/app/site-packages
+# ENV PYTHONUNBUFFERED=1
+
+# --- Node.js 运行时 ---
+# COPY --from=builder /app/node_modules ./node_modules
+# COPY --from=builder /app/dist ./dist
+# COPY package.json ./
+
+# --- .NET 运行时 ---
+# COPY --from=builder /app/publish ./
+
+# 非 root 用户（安全最佳实践）
+RUN groupadd -r app && useradd -r -g app app
+USER app
+
+# 健康检查（按需调整端口/路径）
+# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+#   CMD [ "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')" ]
+
+# 入口（按语言调整）
+# Python:  CMD ["python", "-m", "{{PACKAGE_NAME}}"]
+# Node:   CMD ["node", "dist/index.js"]
+# .NET:    CMD ["dotnet", "{{PACKAGE_NAME}}.dll"]
+CMD ["{{ENTRY_CMD}}"]

@@ -1,0 +1,75 @@
+// ============================================================================
+// {Name}Core.ts — 核心层模块
+// 使用方式：将 {Name} 替换为模块名（PascalCase，如 Weather、Finance）
+// 目标位置：src/{Module}/{Name}Core.ts
+// 注意：核心层为纯逻辑实现，零外部框架依赖（可在无依赖环境独立单元测试）
+// ============================================================================
+
+/**
+ * 核心层模块：纯函数实现，零外部依赖。
+ *
+ * 设计原则（见 skills/typescript-SKILL.md）：
+ * - strict null check：null/undefined 显式守卫
+ * - 错误边界：异步操作用 Result 模式，同步操作用哨兵值
+ * - 不可变性：输入不变异，返回新对象
+ * - 类型安全：不使用 any/unknown 断言绕过
+ */
+
+// ====== 类型定义 ======
+
+/** 计算结果：成功返回值，失败返回 null（哨兵契约） */
+type ComputeResult = number | null;
+
+/** Result 模式（适用于需要区分错误类型的场景） */
+type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
+
+// ====== 核心函数 ======
+
+/**
+ * 数值计算入口。
+ *
+ * @param value - 输入值；null/undefined 表示未提供
+ * @returns 计算结果；无效输入返回 null
+ */
+export function compute(value: number | null | undefined): ComputeResult {
+  // 1. 哨兵守卫：null/undefined → null
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  // 2. 防御：NaN/Infinity
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+
+  // 3. 核心逻辑
+  const result = value * 2.0; // TODO: 替换为实际计算
+
+  // 4. 结果守卫：防止中间步骤产生 Infinity
+  if (!Number.isFinite(result)) {
+    return null;
+  }
+
+  return result;
+}
+
+/**
+ * 字符串处理入口。
+ *
+ * @param text - 输入文本；null/undefined 返回空串
+ * @returns 处理结果
+ */
+export function process(text: string | null | undefined): string {
+  // 哨兵契约：null/undefined → ""
+  if (text === null || text === undefined) {
+    return "";
+  }
+
+  return text.trim();
+}
+
+// ====== 测试导出（仅用于内部测试，不暴露为 Public API） ======
+
+export const _testUtils = {
+  // 仅供单元测试内部使用
+};

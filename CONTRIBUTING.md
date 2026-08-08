@@ -34,11 +34,14 @@ cd {{PROJECT_NAME}}
 {{INSTALL_COMMANDS}}
 ```
 
-- **提交规范校验 hook**（推荐启用）：初始化时 `init-project.ps1 -GitInit` 已自动配置；手动启用：
+- **提交规范校验 hook**（推荐启用）：初始化时 `init-project.ps1 -GitInit` 或 `python scripts/init-project.py --git-init` 已自动配置；手动启用：
   ```bash
   git config core.hooksPath scripts/git-hooks
   ```
   hook 会拦截不符合 Conventional Commits 的提交（紧急情况可用 `git commit --no-verify` 逃生，不推荐）。
+- **跨平台验证**：
+  - Windows：`.\scripts\verify-all.ps1`
+  - Linux/macOS/WSL：`python scripts/verify-all.py` 或 `make verify`
 - **IDE 提示**：`.editorconfig` 已统一缩进/换行/编码，主流 IDE 自动生效；PowerShell 脚本须保持 UTF-8 with BOM（见 [rules/tooling-pitfalls.md](rules/tooling-pitfalls.md)）。
 
 ## 修改流程（强制）

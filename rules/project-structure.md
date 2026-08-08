@@ -15,6 +15,7 @@
 ├── tests/                        # 测试
 │   ├── unit/                     # 单元测试
 │   ├── integration/              # 集成测试
+│   ├── scripts/                  # 验证脚本自身测试套件
 │   └── fixtures/                 # 测试数据/黄金文件
 │
 ├── rules/                        # 规范文档（本目录）
@@ -36,6 +37,8 @@
 │   ├── csharp-SKILL.md           # C# 编码陷阱与规范
 │   ├── python-SKILL.md           # Python 编码陷阱与规范
 │   ├── vba-SKILL.md              # VBA 编码陷阱与规范
+│   ├── typescript-SKILL.md       # TypeScript 编码陷阱与规范
+│   ├── go-SKILL.md               # Go 编码陷阱与规范
 │   ├── architecture-reviewer.md  # 架构审查专家（重构生命周期）
 │   ├── refactoring-guardian.md   # 重构守卫（每 Phase 前后）
 │   └── project-plan-review.md    # 规划评审专家
@@ -45,18 +48,21 @@
 │   ├── placeholder-utils.ps1     # 占位符 manifest 读取工具（init/test 共用）
 │   ├── validate-commit-msg.sh    # Conventional Commits 校验（commit hook 与 CI 共用）
 │   ├── git-hooks/                # git hooks（commit-msg → core.hooksPath）
-│   ├── verify-all.ps1            # 全量验证入口（构建+测试+文档一致性）
-│   ├── verify-docs.py            # 文档链接/目录树一致性验证
+│   ├── verify-all.ps1            # 全量验证入口（Windows PowerShell）
+│   ├── verify-all.py             # 全量验证入口（跨平台 Python）
+│   ├── verify-docs.py            # 文档链接/目录树一致性验证（AST 增强版）
 │   ├── verify-manual.py          # 手册示例一致性验证（禁自校验）
-│   ├── falsy-audit.py            # Falsy 陷阱静态审计
-│   ├── init-project.ps1          # 从模板初始化新项目（占位符替换）
+│   ├── falsy-audit.py            # Falsy 陷阱静态审计（AST 增强版）
+│   ├── init-project.ps1          # 从模板初始化新项目（Windows PowerShell）
+│   ├── init-project.py           # 从模板初始化新项目（跨平台 Python）
 │   ├── crossval/                 # 交叉验证（与独立参考实现比对，verify-manual.py 自动发现）
 │   └── ...
 │
 ├── templates/                    # 模块脚手架
 │   ├── README.md                 # 脚手架使用说明（占位符约定 + 多语言流程）
-│   ├── NewModule/                # 新增模块多语言模板（C# 五件套 + Python/VBA 三件 + VariantKit）
-│   └── language/                 # 构建配置模板（pyproject/Build.props/nuget/Tests.csproj）
+│   ├── NewModule/                # 新增模块多语言模板（C#/Python/VBA/TypeScript/Go）
+│   ├── language/                 # 构建配置模板（pyproject/Build.props/nuget/Dockerfile/docker-compose）
+│   └── monorepo/                 # Monorepo 子项目模板（子目录级 AGENTS.md）
 │
 ├── .github/                      # GitHub 协作
 │   ├── workflows/ci.yml          # CI 质量门禁（quick/full/quality + commit 规范检查）
@@ -76,11 +82,16 @@
 │
 ├── logs/                         # 运行日志（.gitignore 排除）
 │
+├── examples/                     # 示例项目（最小可运行的完整实践）
+│   └── README.md                 # 示例说明（Core/Udf/CrossVal 分层演示）
+│
 ├── tools/                        # 辅助工具/脚本
 │   └── ...
 │
+├── Makefile                      # 跨平台验证入口（Linux/macOS: make verify）
 ├── AGENTS.md                     # 项目宪法（AI 约束）
-├── README.md                     # 用户入口
+├── README.md                     # 用户入口（中文）
+├── README.en.md                  # 用户入口（英文，国际化）
 ├── CONTRIBUTING.md               # 贡献指南
 ├── CHANGELOG.md                  # 版本变更记录（release-please 自动维护）
 ├── SECURITY.md                   # 安全政策

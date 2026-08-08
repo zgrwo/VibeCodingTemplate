@@ -63,7 +63,7 @@
 | :--- | :--- | :--- |
 | `{{SCOPE_1}}` | `skills/{{SKILL_1}}` | `{{DESCRIPTION_1}}` |
 | `{{SCOPE_2}}` | `skills/{{SKILL_2}}` | `{{DESCRIPTION_2}}` |
-| 语言陷阱（按需） | `skills/csharp-SKILL.md` / `skills/python-SKILL.md` / `skills/vba-SKILL.md` | 对应语言的易错点与最佳实践 |
+| 语言陷阱（按需） | `skills/csharp-SKILL.md` / `skills/python-SKILL.md` / `skills/vba-SKILL.md` / `skills/typescript-SKILL.md` / `skills/go-SKILL.md` | 对应语言的易错点与最佳实践 |
 | 工具陷阱（按需） | `rules/tooling-pitfalls.md` | Windows/PowerShell/git 脚本坑位 |
 
 > **执行方式**：直接 Read skill 文件。
@@ -100,6 +100,7 @@
 ├── docs/                         # ✅ 文档（设计文档，见 docs/README.md）
 ├── scripts/                      # ✅ 构建/验证脚本（占位符 manifest / commit 校验 / init / verify 等）
 ├── templates/                    # ✅ 模块脚手架（NewModule 多语言模板 + language 构建配置）
+├── examples/                     # ✅ 示例项目（最小可运行的完整实践）
 ├── skills/                       # ✅ Skill 定义
 ├── rules/                        # ✅ 规范文档（含 ADR 决策记录）
 ├── tools/                        # ✅ 辅助工具
@@ -202,7 +203,7 @@
 | :--- | :--- |
 | 日常构建 | `{{BUILD_CMD}}` |
 | 运行测试 | `{{TEST_CMD}}` |
-| 全量验证 | `{{FULL_VERIFY_CMD}}` |
+| 全量验证 | `{{FULL_VERIFY_CMD}}`（Windows: `verify-all.ps1` / 跨平台: `python scripts/verify-all.py` 或 `make verify`） |
 | CI（PR 级） | `.github/workflows/ci.yml` quick-check（构建+测试+裸 catch 自检） |
 | CI（质量门禁） | quality-gate：手册一致性 / 陷阱审计 / 架构约束 / 代码风格 |
 
@@ -324,5 +325,8 @@
 | [falsy-pitfalls.md](rules/falsy-pitfalls.md) | 陷阱清单 | Python falsy 值误判检查清单 |
 | [tooling-pitfalls.md](rules/tooling-pitfalls.md) | 陷阱清单 | Windows/PowerShell/git 脚本坑位 |
 | [templates/README.md](templates/README.md) | 脚手架说明 | 新增模块/构建配置的使用方式 |
+| [examples/README.md](examples/README.md) | 示例项目 | 最小可运行的完整实践演示 |
+| [README.en.md](README.en.md) | 英文入口 | 国际用户入口 |
+| [Makefile](Makefile) | 跨平台入口 | Linux/macOS 验证命令（make verify/docs/test/init） |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南 | 开发/PR/发版流程 |
 | [CHANGELOG.md](CHANGELOG.md) | 变更记录 | 版本变更历史（keepachangelog） |

@@ -1,0 +1,43 @@
+# ============================================================================
+# docker-compose.yml.template — 开发环境编排
+# 使用方式：复制到项目根目录，替换 {{...}} 占位符
+# 启动：docker compose up -d
+# 关闭：docker compose down
+# ============================================================================
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "{{APP_PORT}}:8080"
+    environment:
+      - NODE_ENV=development
+      # - PYTHONPATH=/app:/app/site-packages
+    volumes:
+      # 开发模式挂载源码（生产镜像不挂载）
+      - ./src:/app/src:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  # --- 数据库（按需启用）---
+  # db:
+  #   image: postgres:17-alpine
+  #   environment:
+  #     POSTGRES_DB: {{DB_NAME}}
+  #     POSTGRES_USER: {{DB_USER}}
+  #     POSTGRES_PASSWORD: {{DB_PASSWORD}}
+  #   volumes:
+  #     - db-data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   restart: unless-stopped
+
+# volumes:
+#   db-data:

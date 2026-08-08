@@ -16,12 +16,38 @@
 | `NewModule/test_{Name}Core.py.template` | 单元测试（正常/边界/falsy/异常） | Python (pytest) |
 | `NewModule/{Name}Udf.bas.template` | UDF 入口（Variant 参数 + 错误三模式） | VBA |
 | `NewModule/{Name}VariantKit.bas.template` | Variant 输入归一化基础层（Range/数组统一入口） | VBA |
+| `NewModule/{Name}Core.ts.template` | 核心逻辑（纯函数 + strict null check + Result 模式） | TypeScript |
+| `NewModule/test_{Name}Core.ts.template` | 单元测试（正常/边界/null/NaN） | TypeScript (vitest) |
+| `NewModule/{Name}Core.go.template` | 核心逻辑（哨兵值 NaN + error 包装 + 零 panic） | Go |
+| `NewModule/{Name}Core_test.go.template` | 单元测试（table-driven + 0 有效值 + NaN 哨兵） | Go (testing) |
 | `language/pyproject.toml.template` | Python 项目构建配置 | Python |
 | `language/Directory.Build.props.template` | .NET 统一构建属性 | .NET |
 | `language/nuget.config.template` | NuGet 源配置 | .NET |
 | `language/{Name}.Tests.csproj.template` | .NET 测试项目（xUnit） | .NET |
+| `language/Dockerfile.template` | 通用容器化模板（multi-stage, Python/Node/.NET） | Docker |
+| `language/docker-compose.yml.template` | 开发环境编排（含健康检查） | Docker Compose |
+| `monorepo/AGENTS.md.template` | Monorepo 子目录级 AGENTS.md（子项目宪法） | Monorepo |
+| `monorepo/README.md` | Monorepo 使用说明与依赖规则 | Monorepo |
 
 ## 占位符约定
+
+> **双语法体系**（故意设计，非冗余）：
+
+| 语法 | 用途 | 替换时机 | 示例 | 被谁替换 |
+|------|------|----------|------|----------|
+| `{{UPPER_CASE}}` | 项目级占位符 | `init-project` 初始化时 | `{{PROJECT_NAME}}`, `{{VERSION}}` | init-project.ps1 / .py |
+| `{PascalCase}` | 模块级占位符 | 新增模块时手动替换 | `{Name}`, `{Module}` | 开发者 |
+
+**为什么用两种语法？**
+
+`{{}}` 双花括号 → init-project 的正则 `\{\{(\w+)\}\}` 匹配，初始化时自动替换。
+`{}` 单花括号 → 不被 init-project 匹配，复制到 `src/` 后仍保留，等开发者创建新模块时替换。
+
+**如果误混用**：
+- `{{Name}}` 出现在 NewModule 模板中 → init-project 会误替换为 `name`（小写占位）
+- `{PROJECT_NAME}` 出现在根目录文档中 → init-project 不会匹配，占位符残留
+
+→ CI 中有 `模板守卫` step 检测 NewModule 模板中的 `{{` 泄漏（见 ci.yml）。
 
 | 占位符 | 含义 | 示例 |
 |--------|------|------|
@@ -29,8 +55,6 @@
 | `{Module}` | 所在模块目录 | `Analytics` |
 | `{PREFIX}` | UDF 前缀（大写） | `WEATHER` |
 | `{{ROOT_NAMESPACE}}` | 项目根命名空间（初始化时确定） | `Acme.Stats` |
-
-> 与根目录文档使用的 `{{...}}`（大括号双写）不同——`templates/` 内的文件被复制到 `src/` 使用，`{Name}` 是源码级占位符；`{{ROOT_NAMESPACE}}` 与根目录占位符同体系（init-project.ps1 统一替换）。
 
 ## 新增模块流程（按语言选择对应模板）
 
@@ -66,6 +90,35 @@
 **所有语言通用（最后一步）**
 ```
 同步规则文档：specification.md → api-reference.md → user-manual.md → project-structure.md
+```
+
+**TypeScript**
+```
+1. 复制 {Name}Core.ts + test_{Name}Core.ts 到 src/{Module}/ 与 tests/{Module}/
+2. 替换 {Name}/{Module}；调整 import 路径
+3. Core 遵循 strict null check 与 Result 模式（见 skills/typescript-SKILL.md）
+4. 运行 npx vitest run tests/{Module}/（或 npx jest）
+5. 数值结果可加 CrossVal（与 numpy/scipy 独立比对，见 Python 流程）
+6. 容器化：复制 language/Dockerfile.template 到根目录，按需取消注释对应阶段
+```
+
+**Go**
+```
+1. 复制 {Name}Core.go + {Name}Core_test.go 到 src/{Module}/
+2. 替换 {Name}/{module}（包名小写）；初始化 go mod（如尚未有）
+3. Core 遵循哨兵值模式（NaN 表示无效，0 是有效值）与 error 包装（见 skills/go-SKILL.md）
+4. 运行 go test ./src/{Module}/... -v
+5. 数值结果可加 CrossVal（与 numpy/scipy 独立比对，见 Python 流程）
+6. 容器化：复制 language/Dockerfile.template，取消注释 Go 对应阶段
+```
+
+**Monorepo（新增子项目）**
+```
+1. 复制 monorepo/AGENTS.md.template 到 src/{子项目名}/AGENTS.md
+2. 替换 {子项目名}/{子项目语言}/{子项目入口文件}
+3. 填写子项目特有红线（在根 AGENTS.md 基础上追加，不可覆盖根红线）
+4. 同步根目录 rules/project-structure.md 与 AGENTS.md 目录树
+5. 子项目间通信必须通过 foundation/ 共享层或显式接口
 ```
 
 ## 注意事项

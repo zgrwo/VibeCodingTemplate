@@ -58,11 +58,14 @@ DOC_FILES = [
     "skills/csharp-SKILL.md",
     "skills/python-SKILL.md",
     "skills/vba-SKILL.md",
+    "skills/typescript-SKILL.md",
+    "skills/go-SKILL.md",
     "skills/architecture-reviewer.md",
     "skills/refactoring-guardian.md",
     "skills/project-plan-review.md",
     # templates/ 与 docs/
     "templates/README.md",
+    "templates/monorepo/README.md",
     "docs/README.md",
 ]
 

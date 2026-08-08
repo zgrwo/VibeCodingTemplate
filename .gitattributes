@@ -31,6 +31,25 @@ scripts/git-hooks/* text eol=lf
 *.json text eol=lf
 *.xml text eol=lf
 
+# TypeScript / JavaScript → LF
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+
+# Go → LF
+*.go text eol=lf
+*.mod text eol=lf
+*.sum text eol=lf
+
+# Dockerfile → LF
+Dockerfile text eol=lf
+Dockerfile.* text eol=lf
+
+# Makefile → LF
+Makefile text eol=lf
+
 # 二进制 → 不做任何转换
 *.dll binary
 *.pdb binary

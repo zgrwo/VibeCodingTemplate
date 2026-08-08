@@ -1,0 +1,60 @@
+// ============================================================================
+// {Name}Core_test.go — 核心层单元测试
+// 使用方式：将 {Name}/{module} 替换为模块名/包名
+// 目标位置：src/{Module}/{Name}Core_test.go
+// 运行：go test ./src/{Module}/...
+// ============================================================================
+
+package {module}
+
+import (
+	"math"
+	"testing"
+)
+
+func TestCompute(t *testing.T) {
+	tests := []struct {
+		name  string
+		input float64
+		want  float64
+	}{
+		{"normal positive", 5.0, 10.0},
+		{"zero is valid", 0.0, 0.0}, // 0 是有效值
+		{"normal negative", -3.0, -6.0},
+		{"NaN returns NaN", math.NaN(), math.NaN()},
+		{"+Inf returns NaN", math.Inf(1), math.NaN()},
+		{"-Inf returns NaN", math.Inf(-1), math.NaN()},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := Compute(tt.input)
+			if math.IsNaN(tt.want) {
+				if !math.IsNaN(got) {
+					t.Errorf("Compute(%v) = %v, want NaN", tt.input, got)
+				}
+			} else if got != tt.want {
+				t.Errorf("Compute(%v) = %v, want %v", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestProcess(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{"normal", "  hello  ", "hello"},
+		{"empty is valid", "", ""}, // 空串是有效输入
+		{"no trim needed", "hello", "hello"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := Process(tt.input)
+			if got != tt.want {
+				t.Errorf("Process(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}

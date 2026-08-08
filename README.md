@@ -2,6 +2,8 @@
 
 {{ONE_LINE_DESCRIPTION}}
 
+[English](README.en.md) | **中文**
+
 <!-- 徽章区（初始化后按需启用：取消注释，并将 OWNER/REPO_NAME 替换为实际值）：
 [![CI](https://github.com/{{OWNER}}/{{REPO_NAME}}/actions/workflows/ci.yml/badge.svg)](https://github.com/{{OWNER}}/{{REPO_NAME}}/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -140,11 +142,18 @@
 ### 1. 复制与重命名
 
 ```powershell
-# 自动方式（推荐）：复制 + 占位符扫描/替换一体
+# 自动方式（Windows 推荐）：复制 + 占位符扫描/替换一体
 .\scripts\init-project.ps1 -Target d:\path\<PROJECT_NAME>
+```
 
+```bash
+# 自动方式（Linux/macOS/跨平台）：Python 版
+python scripts/init-project.py /path/to/<PROJECT_NAME> --git-init
+```
+
+```bash
 # 手动方式：
-robocopy VibeCodingTemplate <PROJECT_NAME> /E /XD .git
+cp -r VibeCodingTemplate <PROJECT_NAME>  # robocopy /E /XD .git (Windows)
 # 然后替换全部 {{...}} 占位符（README.md / AGENTS.md / CONTRIBUTING.md / LICENSE）
 ```
 
