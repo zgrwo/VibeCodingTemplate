@@ -4,6 +4,25 @@ All notable changes to {{PROJECT_NAME}}.
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.1.1](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.1.0...v0.1.1) (2026-08-08)
+
+
+### ✨ 新功能
+
+* VibeCodingTemplate 初始提交（AI 编码治理模板仓库） ([e9a2b27](https://github.com/zgrwo/VibeCodingTemplate/commit/e9a2b2773df911382667ca226a4d5f6836586fc9))
+* 模板卓越化增强——占位符SSOT/commit校验/release-please/跨语言脚手架 ([1d06e3f](https://github.com/zgrwo/VibeCodingTemplate/commit/1d06e3fa717f2542951e418de2bc06f5eda6e44f))
+* 跨平台脚本/TypeScript+Go Skill/Docker/Monorepo/AST审计/示例项目/验证脚本测试 ([de6d94e](https://github.com/zgrwo/VibeCodingTemplate/commit/de6d94ee262bba8bb8e74045b3378f76701bdab2))
+
+
+### 🐛 Bug 修复
+
+* **ci:** 修复 CI 失败——跨平台临时目录与 CodeQL v4 升级 ([6d96fed](https://github.com/zgrwo/VibeCodingTemplate/commit/6d96fed9754962ad89c5f9917f2b9f303da9dc9d))
+* **ci:** 占位符扫描加 -Force，修复 pwsh 7 漏扫 .github 隐藏目录导致死条目误报 ([26fb174](https://github.com/zgrwo/VibeCodingTemplate/commit/26fb17422b23aeaaf1cbe0de6ed708dfb00cae0d))
+* 修复二次评估发现的 M1/M2/M3/L1/L3 问题 ([064c945](https://github.com/zgrwo/VibeCodingTemplate/commit/064c9457b0b44b7f108a9d241f2776f81b06ebca))
+* 修复成熟度评估发现的 H1/H2/M1/M2/M3/L1-L4 全部问题 ([bd476c6](https://github.com/zgrwo/VibeCodingTemplate/commit/bd476c6bd07214d7378227ba9fc8ad1cd74731fe))
+* 修复模板审查发现的高中低问题并升级 Issue Forms ([66d2dc5](https://github.com/zgrwo/VibeCodingTemplate/commit/66d2dc56572778adb116ab6a6693d35cd1aa13a1))
+* 修复模板评估发现的高中低问题（P-A 至 P-T） ([7f12009](https://github.com/zgrwo/VibeCodingTemplate/commit/7f12009b11701a07ed53ae3feda4585539daa5b6))
+
 ## [Unreleased]
 
 > 本模板自身的变更记录（新项目初始化时请重置为项目自己的变更历史）。
