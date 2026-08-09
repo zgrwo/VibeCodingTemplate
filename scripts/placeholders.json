@@ -3,7 +3,8 @@
   "placeholders": {
     "ARCHITECTURE_NOTES": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "分层：UI → Core → Foundation（Core 零依赖，可独立测试）"
     },
     "APP_PORT": {
       "category": "core",
@@ -32,19 +33,23 @@
     },
     "CALLING_CONVENTION_NOTES": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "Public 入口参数 As Variant，内部强类型；数值返回 NaN 哨兵"
     },
     "CAVEAT_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "Excel 版本差异可能导致浮点精度偏差"
     },
     "CAVEAT_2": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "大数组输入建议分批处理"
     },
     "CHANGE_SUMMARY": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "新增 {Module} 模块：均值计算与边界守卫"
     },
     "COC_CONTACT": {
       "category": "core",
@@ -58,7 +63,8 @@
     },
     "COMPATIBILITY_MATRIX": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "Windows 10/11 + Office 2016+；macOS 暂不支持"
     },
     "COUNT_1": {
       "category": "content",
@@ -103,7 +109,8 @@
     },
     "DEFAULT_2": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "默认权重 1.0"
     },
     "DEFINITION_1": {
       "category": "content",
@@ -129,19 +136,23 @@
     },
     "DESC_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "模块 1 功能描述：输入校验与数值计算"
     },
     "DESC_2": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "模块 2 功能描述：结果格式化与输出"
     },
     "EDGE_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "空数组输入返回 NaN（哨兵契约）"
     },
     "EMPTY_ERROR": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "输入为空"
     },
     "ENTRY_CMD": {
       "category": "core",
@@ -150,51 +161,63 @@
     },
     "ERROR_CONDITION_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "除数为零"
     },
     "ERROR_FIXABLE_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "可修复：检查输入是否含非数值单元格"
     },
     "ERROR_HANDLING_DESCRIPTION": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "无效输入返回 NaN 哨兵值，不抛异常"
     },
     "ERROR_MEANING_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "结果无效（NaN 哨兵）"
     },
     "ERROR_POLICY": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "静默传播阻断：无效输入返回 NaN，禁止返回类型零值 0"
     },
     "ERROR_VALUE_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "NaN"
     },
     "EXAMPLE_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "mean([1, 2, 3, 4, 5]) → 3"
     },
     "EXAMPLE_2": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "weightedMean([1, 2], [1, 1]) → 1.5"
     },
     "FAQ_CAUSE1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "0 被误判为 False（falsy 陷阱）"
     },
     "FAQ_FIX1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "改用 `is not None` 判断，0 是有效值"
     },
     "FAQ_Q1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "为什么无效输入返回 NaN 而非抛异常？"
     },
     "FORMULA": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "mean = Σxᵢ / n"
     },
     "FOUNDATION_PACKAGE": {
       "category": "core",
@@ -208,15 +231,18 @@
     },
     "FUNCTION_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "Compute（数值计算）"
     },
     "FUNCTION_NAME": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "Compute"
     },
     "FUNCTION_SIGNATURE": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "Compute(value: double) -> double"
     },
     "IMAGE_NAME": {
       "category": "core",
@@ -225,11 +251,13 @@
     },
     "INPUT_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "values: number[]"
     },
     "INPUT_DATA": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "[1.0, 2.0, 3.0, 4.0, 5.0]"
     },
     "INSTALL_COMMANDS": {
       "category": "content",
@@ -243,11 +271,13 @@
     },
     "INTERPRETATION_GUIDE": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "均值 > 0 表示数据整体偏高，< 0 表示偏低"
     },
     "ISSUE_NUMBER": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "1234"
     },
     "KEYWORD_1": {
       "category": "content",
@@ -261,7 +291,8 @@
     },
     "KNOWN_LIMITATIONS": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "不支持流式输入；单线程执行"
     },
     "LAYER_DEPENDENCY_DIAGRAM": {
       "category": "core",
@@ -302,7 +333,8 @@
     },
     "N": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "5"
     },
     "ONE_LINE_DESCRIPTION": {
       "category": "content",
@@ -311,11 +343,13 @@
     },
     "OUTPUT_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "result: number"
     },
     "OUTPUT_RESULT": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "3.0"
     },
     "OWNER": {
       "category": "core",
@@ -330,35 +364,43 @@
     },
     "PARAM_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "values"
     },
     "PARAM_2": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "weights"
     },
     "PARAM_DESC_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "数值数组"
     },
     "PARAM_DESC_2": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "权重数组（与 values 等长）"
     },
     "PARAM_EXAMPLE_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "[1, 2, 3]"
     },
     "PERFORMANCE_BUDGET": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "单次调用 < 10ms（10k 元素）"
     },
     "PREFIX_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "STATS"
     },
     "PREFIX_2": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "WEATHER"
     },
     "PRIVATE_PACKAGE_PREFIX": {
       "category": "content",
@@ -387,11 +429,13 @@
     },
     "QUALITY_ASSURANCE": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "68 tests + 78% 覆盖率 + CrossVal 独立比对"
     },
     "QUICK_START_GUIDE": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "1) 安装依赖 2) 运行 verify-all 3) 按占位符表初始化"
     },
     "REPO_NAME": {
       "category": "core",
@@ -405,11 +449,13 @@
     },
     "RETURN_DESC": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "计算结果；无效输入返回 NaN"
     },
     "RETURN_TYPE": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "double"
     },
     "RUNTIME_IMAGE": {
       "category": "core",
@@ -441,7 +487,8 @@
     },
     "SECURITY_NOTES": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "不执行输入内容；无敏感数据落盘"
     },
     "SKILL_1": {
       "category": "core",
@@ -457,11 +504,13 @@
     },
     "SYNTAX": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "=STATS_MEAN(A1:A10)"
     },
     "TABLE_OF_CONTENTS": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "1. 简介 2. 快速开始 3. API 参考"
     },
     "TARGET_FRAMEWORK": {
       "category": "core",
@@ -486,7 +535,8 @@
     },
     "TOLERANCE": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "1e-10"
     },
     "TOTAL": {
       "category": "content",
@@ -495,19 +545,23 @@
     },
     "TROUBLESHOOTING_GUIDE": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "结果 NaN → 检查输入是否含非数值单元格"
     },
     "TYPE_1": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "double"
     },
     "TYPE_2": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "string"
     },
     "USAGE_PATTERNS": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "工作表公式；VBA 内部调用；跨语言 CrossVal"
     },
     "VERIFY_INSTALL": {
       "category": "content",
@@ -522,7 +576,8 @@
     },
     "WHEN_TO_USE": {
       "category": "content",
-      "prompt": ""
+      "prompt": "",
+      "test": "需要对一组数值求均值或加权均值时"
     },
     "YEAR": {
       "category": "auto",
