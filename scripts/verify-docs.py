@@ -216,7 +216,9 @@ def check_backtick_paths() -> list[str]:
         for m in code_re.finditer(path.read_text(encoding="utf-8")):
             raw = m.group(1)
             # 规范化 Windows 反斜杠路径 → 正斜杠（如 .\scripts\init-project.ps1）
-            target = raw.replace("\\", "/").lstrip("./")
+            target = raw.replace("\\", "/")
+            if target.startswith("./"):
+                target = target[2:]
             if not target.startswith(_KNOWN_ROOT_PREFIXES):
                 continue  # 非根目录路径：可能是示例文件名/命名规范，不校验
             if target.startswith(_BACKTICK_SKIP_PREFIXES):

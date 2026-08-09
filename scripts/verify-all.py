@@ -36,7 +36,11 @@ def run_step(name: str, cmd: list[str], cwd: Path | None = None) -> bool:
     """运行一个验证步骤，返回是否成功。"""
     print(f"\n=== {name} ===")
     print(f"  命令: {' '.join(cmd)}")
-    result = subprocess.run(cmd, cwd=cwd or ROOT)
+    try:
+        result = subprocess.run(cmd, cwd=cwd or ROOT)
+    except (FileNotFoundError, OSError) as e:
+        print(f"  [FAIL] {name} 失败（工具未找到: {e}）")
+        return False
     if result.returncode != 0:
         print(f"  [FAIL] {name} 失败 (退出码 {result.returncode})")
         return False

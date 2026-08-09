@@ -174,7 +174,8 @@ def replace_placeholders(target: Path, replacements: dict) -> tuple[int, int]:
         if f.suffix in (".pyc", ".dll", ".exe", ".xll", ".pdb"):
             continue
         try:
-            content = f.read_text(encoding="utf-8")
+            raw_bytes = f.read_bytes()
+            content = raw_bytes.decode("utf-8")
         except (UnicodeDecodeError, OSError):
             continue
 
@@ -189,7 +190,7 @@ def replace_placeholders(target: Path, replacements: dict) -> tuple[int, int]:
 
         new_content = pattern.sub(_replace, content)
         if new_content != content:
-            f.write_text(new_content, encoding="utf-8")
+            f.write_bytes(new_content.encode("utf-8"))
             replaced_files += 1
         remaining += len(set(missing))
 
@@ -214,9 +215,13 @@ def main() -> int:
     args = parser.parse_args()
 
     target = Path(args.target).resolve()
-    if target.exists() and any(target.iterdir()):
-        print(f"[ERROR] 目标目录非空: {target}")
-        return 1
+    if target.exists():
+        if not target.is_dir():
+            print(f"[ERROR] 目标路径是文件，不是目录: {target}")
+            return 1
+        if any(target.iterdir()):
+            print(f"[ERROR] 目标目录非空: {target}")
+            return 1
 
     print(f"==> 复制模板到 {target}")
     copied = copy_template(target)

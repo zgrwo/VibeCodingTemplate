@@ -162,7 +162,8 @@ class FalsyAuditor(ast.NodeVisitor):
                         base_var = var.split(".")[0] if "." in var else var
                         if not self._is_safe_type(base_var):
                             self.findings.append(
-                                (level, var, node.lineno, kind, "or 回退")
+                                (level, var, node.lineno,
+                                 ast.unparse(node), kind)
                             )
                 break  # 只检查第一个操作数
 

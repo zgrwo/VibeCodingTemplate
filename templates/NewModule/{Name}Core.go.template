@@ -7,7 +7,10 @@
 
 package {module}
 
-import "math"
+import (
+	"math"
+	"strings"
+)
 
 // ComputeResult 类型别名（哨兵值模式：NaN 表示无效，0 是有效值）
 // 在数值计算中，0 是有效值（均值=0、计数=0），必须用 NaN 表示"无效"
