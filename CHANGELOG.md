@@ -4,6 +4,13 @@ All notable changes to VibeCodingTemplate.
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.1.2](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.1.1...v0.1.2) (2026-08-09)
+
+
+### ✨ 新功能
+
+* **init-project:** 初始化时裁剪 TEMPLATE_ONLY 模板专属段落 ([ddf0d11](https://github.com/zgrwo/VibeCodingTemplate/commit/ddf0d11a2bd92ca725e4f35fcec9e342f26213fa))
+
 ## [0.1.1](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.1.0...v0.1.1) (2026-08-09)
 
 
