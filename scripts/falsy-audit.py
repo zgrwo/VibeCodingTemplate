@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 falsy-audit.py — Falsy 陷阱静态审计（AST 增强版）
 
@@ -37,15 +36,14 @@ from __future__ import annotations
 
 import argparse
 import ast
+import contextlib
 import re
 import sys
 from pathlib import Path
 
 # Windows GBK 控制台：强制 UTF-8 输出
-try:
+with contextlib.suppress(AttributeError, ValueError):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-except (AttributeError, ValueError):
-    pass
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_SCOPE = "src"
@@ -124,9 +122,7 @@ class FalsyAuditor(ast.NodeVisitor):
         if any(t in low for t in SAFE_TYPES_BOOL):
             return True
         # 集合类型：if data: 安全（空集合语义正确）
-        if any(t in low for t in SAFE_TYPES_COLLECTION):
-            return True
-        return False
+        return bool(any(t in low for t in SAFE_TYPES_COLLECTION))
 
     def _check_truthy(self, test: ast.expr, kind: str, lineno: int,
                       line_text: str) -> None:
@@ -207,7 +203,6 @@ class FalsyAuditor(ast.NodeVisitor):
 
 def audit_file_ast(path: Path) -> list[tuple[str, str, int, str, str]] | None:
     """AST 模式审计一个文件。"""
-    findings: list[tuple[str, str, int, str, str]] = []
     try:
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source, filename=str(path))
@@ -280,7 +275,7 @@ def main() -> int:
 
     if high:
         print(f"[FAIL] 发现 {len(high)} 个 HIGH 风险（falsy 误判，必须修复）：")
-        for path, var, lineno, code, kind in high:
+        for path, _var, lineno, code, kind in high:
             print(f"  {path}:{lineno} [{kind}] {code} — 数值 0 可能被误判为 False，"
                   f"应改为 `is not None`")
     if low:

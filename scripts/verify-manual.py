@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 verify-manual.py — 手册一致性验证 + CrossVal 执行器
 
@@ -20,16 +19,15 @@ verify-manual.py — 手册一致性验证 + CrossVal 执行器
 退出码：0 = 通过（crossval 缺失时 SKIP 不算失败）；1 = 发现不一致
 """
 import argparse
+import contextlib
 import importlib.util
 import re
 import sys
 from pathlib import Path
 
 # Windows GBK 控制台：强制 UTF-8 输出，避免中文说明乱码（[OK]/[FAIL] 标记保持 ASCII 兼容）
-try:
+with contextlib.suppress(AttributeError, ValueError):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-except (AttributeError, ValueError):
-    pass
 
 ROOT = Path(__file__).resolve().parent.parent
 MANUAL = ROOT / "rules" / "user-manual.md"
@@ -96,8 +94,9 @@ def run_crossval() -> bool:
         return True
     # CrossVal 脚本通过 `from verify_manual import check, cross_check, section` 使用辅助 API
     sys.path.insert(0, str(ROOT / "scripts"))
-    # 本脚本以 `python scripts/verify-manual.py` 运行时，模块名是 __main__ 而非 verify_manual
-    # （文件名含连字符无法直接 import）。为 __main__ 注册别名，避免 CrossVal 脚本 ModuleNotFoundError。
+    # 本脚本以 `python scripts/verify-manual.py` 运行时，模块名是 __main__ 而非
+    # verify_manual（文件名含连字符无法直接 import）。
+    # 为 __main__ 注册别名，避免 CrossVal 脚本 ModuleNotFoundError。
     sys.modules.setdefault("verify_manual", sys.modules.get("__main__"))
     for s in scripts:
         print(f"\n>>> 执行 {s.relative_to(ROOT)}")
@@ -169,7 +168,7 @@ def main() -> int:
         print("[OK] 静态检查通过（数值比对已跳过）")
         return 0
 
-    ok = run_crossval()
+    run_crossval()
     if _FAIL:
         print(f"\n[FAIL] 手册一致性验证失败：{_PASS} 项通过 / {_FAIL} 项失败")
         return 1

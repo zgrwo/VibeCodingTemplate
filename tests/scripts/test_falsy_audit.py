@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 test_falsy_audit.py — falsy-audit.py 自身测试套件
 
@@ -10,18 +9,14 @@ test_falsy_audit.py — falsy-audit.py 自身测试套件
   - 各检测模式（if x / if not x / while x / x or default）
   - 类型注解感知（bool/collection 安全）
 """
+import importlib.util
 import sys
-import tempfile
 from pathlib import Path
-
-import pytest
 
 # 将 scripts/ 加入路径以导入 falsy-audit
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-# falsy-audit.py 文件名含连字符，需要用 importlib 导入
-import importlib.util
 _spec = importlib.util.spec_from_file_location(
     "falsy_audit", SCRIPTS_DIR / "falsy-audit.py"
 )

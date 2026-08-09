@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 verify-docs.py — 文档一致性验证
 
@@ -20,15 +19,14 @@ verify-docs.py — 文档一致性验证
 退出码：0 = 通过；1 = 发现断链/缺失
 """
 import argparse
+import contextlib
 import re
 import sys
 from pathlib import Path
 
 # Windows GBK 控制台：强制 UTF-8 输出，避免中文说明乱码（[OK]/[FAIL] 标记保持 ASCII 兼容）
-try:
+with contextlib.suppress(AttributeError, ValueError):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-except (AttributeError, ValueError):
-    pass
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -73,7 +71,10 @@ DOC_FILES = [
 # 注：logs/ 为运行时目录（.gitignore 排除、init-project 复制时跳过），不检查；
 #     .git/ 为 git 内部目录，无需声明；
 #     .claude/.codegraph/.qoder/ 为 AI 工具本地目录（.gitignore 已忽略、init-project 复制时跳过）
-EXCLUDED_DIRS = {"logs", ".git", ".claude", ".codegraph", ".qoder", ".pytest_cache", ".ruff_cache", "__pycache__"}
+EXCLUDED_DIRS = {
+    "logs", ".git", ".claude", ".codegraph", ".qoder",
+    ".pytest_cache", ".ruff_cache", "__pycache__", ".coverage",
+}
 
 
 def _parse_top_dirs() -> list[str]:
@@ -141,7 +142,9 @@ def check_dirs() -> list[str]:
     problems: list[str] = []
     declared = _parse_top_dirs()
     if not declared:
-        problems.append("[配置错误] 无法从 project-structure.md 目录树解析顶层目录（目录树格式异常？）")
+        problems.append(
+            "[配置错误] 无法从 project-structure.md 目录树解析顶层目录（目录树格式异常？）"
+        )
         return problems
     for d in declared:
         if d in EXCLUDED_DIRS:
@@ -240,9 +243,15 @@ def check_agents_tree() -> list[str]:
     if not ps_dirs or not agents_dirs:
         return problems  # 目录树解析失败由 check_dirs 报告
     for d in sorted(ps_dirs - agents_dirs):
-        problems.append(f"[目录树漂移] project-structure.md 声明 {d}/，AGENTS.md 未收录（请同步 AGENTS.md）")
+        problems.append(
+            f"[目录树漂移] project-structure.md 声明 {d}/，"
+            f"AGENTS.md 未收录（请同步 AGENTS.md）"
+        )
     for d in sorted(agents_dirs - ps_dirs):
-        problems.append(f"[目录树漂移] AGENTS.md 声明 {d}/，project-structure.md 未收录（请同步 project-structure.md）")
+        problems.append(
+            f"[目录树漂移] AGENTS.md 声明 {d}/，"
+            f"project-structure.md 未收录（请同步 project-structure.md）"
+        )
     return problems
 
 
@@ -265,7 +274,10 @@ def check_undeclared(strict: bool) -> list[str]:
         if p.is_file():
             problems.append(f"[未声明文件] {p.name}（请同步 project-structure.md 目录树）")
         elif p.is_dir():
-            problems.append(f"[未声明目录] {p.name}/（请同步 project-structure.md 目录树，或裁剪时同步删除）")
+            problems.append(
+                f"[未声明目录] {p.name}/（请同步 project-structure.md 目录树，"
+                f"或裁剪时同步删除）"
+            )
     return problems
 
 
@@ -274,7 +286,13 @@ def main() -> int:
     parser.add_argument("--strict", action="store_true", help="含未声明文件检查")
     args = parser.parse_args()
 
-    problems = check_links() + check_backtick_paths() + check_dirs() + check_agents_tree() + check_undeclared(args.strict)
+    problems = (
+        check_links()
+        + check_backtick_paths()
+        + check_dirs()
+        + check_agents_tree()
+        + check_undeclared(args.strict)
+    )
     if problems:
         print("[FAIL] 发现以下问题：")
         for p in problems:

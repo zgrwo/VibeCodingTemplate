@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 verify-all.py — 全量验证入口（跨平台 Python 版）
 
@@ -21,14 +20,13 @@ verify-all.py — 全量验证入口（跨平台 Python 版）
 from __future__ import annotations
 
 import argparse
+import contextlib
 import subprocess
 import sys
 from pathlib import Path
 
-try:
+with contextlib.suppress(AttributeError, ValueError):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-except (AttributeError, ValueError):
-    pass
 
 ROOT = Path(__file__).resolve().parent.parent
 PYTHON = sys.executable

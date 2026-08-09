@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 test_verify_docs.py — verify-docs.py 自身测试套件
 
@@ -9,26 +8,22 @@ test_verify_docs.py — verify-docs.py 自身测试套件
   - 双目录树一致性校验
   - 排除目录配置
 """
+import contextlib
+import importlib.util
 import re
 import sys
 from pathlib import Path
-
-import pytest
 
 # 将 scripts/ 加入路径以导入 verify-docs
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-# verify-docs.py 的模块名带连字符，需要用 importlib
-import importlib.util
 _spec = importlib.util.spec_from_file_location(
     "verify_docs", SCRIPTS_DIR / "verify-docs.py"
 )
 vd = importlib.util.module_from_spec(_spec)
-try:
-    _spec.loader.exec_module(vd)
-except SystemExit:
-    pass  # verify-docs.py 在 import 时不会 exit，但以防万一
+with contextlib.suppress(SystemExit):
+    _spec.loader.exec_module(vd)  # verify-docs.py 在 import 时不会 exit，但以防万一
 
 
 class TestExcludedDirs:

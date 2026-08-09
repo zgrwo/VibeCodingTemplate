@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 init-project.py — 从模板初始化新项目（跨平台 Python 版）
 
@@ -24,6 +23,7 @@ init-project.py — 从模板初始化新项目（跨平台 Python 版）
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime as _dt
 import json
 import re
@@ -32,10 +32,8 @@ import sys
 from pathlib import Path
 
 # Windows GBK 控制台：强制 UTF-8 输出
-try:
+with contextlib.suppress(AttributeError, ValueError):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-except (AttributeError, ValueError):
-    pass
 
 TEMPLATE_ROOT = Path(__file__).resolve().parent.parent
 PLACEHOLDERS_JSON = TEMPLATE_ROOT / "scripts" / "placeholders.json"
@@ -182,11 +180,11 @@ def replace_placeholders(target: Path, replacements: dict) -> tuple[int, int]:
 
         missing: list[str] = []
 
-        def _replace(m: re.Match) -> str:
+        def _replace(m: re.Match, _m: list = missing) -> str:
             name = m.group(1)
             if name in replacements and replacements[name] is not None:
                 return replacements[name]
-            missing.append(name)
+            _m.append(name)
             return m.group(0)
 
         new_content = pattern.sub(_replace, content)
@@ -257,7 +255,7 @@ def main() -> int:
     # 执行替换
     replaced_files, remaining = replace_placeholders(target, replacements)
 
-    print(f"\n==> 占位符替换完成")
+    print("\n==> 占位符替换完成")
     print(f"    替换文件数: {replaced_files}")
     if remaining:
         print(f"    [WARN] {remaining} 个占位符未替换（content 类，需开发期手动填充）")
