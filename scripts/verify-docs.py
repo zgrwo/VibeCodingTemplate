@@ -255,7 +255,7 @@ _BACKTICK_SKIP_DOCS = {"CHANGELOG.md"}
 
 
 def _is_pattern_like(s: str) -> bool:
-    """识别占位符/模式串（如 {{X}}、{Name}、<Module>、0001-xxx.md）——非真实路径，跳过。"""
+    """识别占位符/模式串（如 {{...}}、{Name}、<Module>、0001-xxx.md）——非真实路径，跳过。"""
     low = s.lower()
     return any(mk in low for mk in _BACKTICK_SKIP_MARKERS)
 

@@ -38,6 +38,20 @@ SELF_CHECK_RE = re.compile(
     r"check\s*\(\s*['\"]?[^,]+['\"]?\s*,\s*(\w+)\s*,\s*\1\s*\)"
 )
 
+
+def _display(path: Path) -> str:
+    """输出脚本相对路径；位于仓库外时回退绝对路径（防 relative_to ValueError）。"""
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
+def _is_comment_or_docstring(line: str) -> bool:
+    """判断是否为注释/docstring 行（自校验扫描应跳过，避免文档反例被误判）。"""
+    stripped = line.lstrip()
+    return stripped.startswith(("#", "\"", "'"))
+
 # ============================================================================
 # CrossVal 辅助 API（供 scripts/crossval/*.py 脚本 import）
 # ============================================================================
@@ -50,7 +64,9 @@ def section(name: str, count: int) -> None:
     print(f"\n=== {name} — {count} 项 ===")
 
 
-def cross_check(name: str, actual: float, expected: float, tol: float = 1e-10) -> None:
+def cross_check(
+    name: str, actual: float | None, expected: float | None, tol: float = 1e-10
+) -> None:
     """数值交叉验证：被测实现结果 vs 独立参考实现结果（两路独立计算）。
 
     禁止自校验：actual 与 expected 必须来自两条独立路径
@@ -74,7 +90,7 @@ def cross_check(name: str, actual: float, expected: float, tol: float = 1e-10) -
         print(f"  [FAIL] {name}: {actual} != {expected} (tol={tol})")
 
 
-def check(name: str, actual, expected) -> None:
+def check(name: str, actual: object, expected: object) -> None:
     """确定性结果比对：actual vs 硬编码期望值（非自校验）。"""
     global _PASS, _FAIL
     if actual == expected:
@@ -98,12 +114,14 @@ def run_crossval() -> bool:
         return True
     # CrossVal 脚本通过 `from verify_manual import check, cross_check, section` 使用辅助 API
     sys.path.insert(0, str(ROOT / "scripts"))
+    # 让 `from src.stats.StatsCore import ...` 等仓库包导入可解析（CrossVal 位于 scripts/crossval/）
+    sys.path.insert(0, str(ROOT))
     # 本脚本以 `python scripts/verify-manual.py` 运行时，模块名是 __main__ 而非
     # verify_manual（文件名含连字符无法直接 import）。
     # 为 __main__ 注册别名，避免 CrossVal 脚本 ModuleNotFoundError。
     sys.modules.setdefault("verify_manual", sys.modules.get("__main__"))
     for s in scripts:
-        print(f"\n>>> 执行 {s.relative_to(ROOT)}")
+        print(f"\n>>> 执行 {_display(s)}")
         try:
             spec = importlib.util.spec_from_file_location(s.stem, s)
             mod = importlib.util.module_from_spec(spec)
@@ -111,6 +129,12 @@ def run_crossval() -> bool:
         except Exception as e:  # noqa: BLE001 —— 隔离单个脚本失败，继续执行其余
             _FAIL += 1
             print(f"  [FAIL] {s.name} 执行失败: {type(e).__name__}: {e}")
+    # 防门禁说谎：crossval 脚本若被 `if __name__ == "__main__"` 包裹则不会执行任何校验
+    # （spec_from_file_location 加载时 __name__ 恒为模块 stem），0 PASS/0 FAIL 必须显式失败。
+    if _PASS + _FAIL == 0:
+        print("[FAIL] crossval 脚本未产生任何校验项（检查是否误用了 "
+              "`if __name__ == '__main__':` 守卫，它会被 spec 加载绕过）")
+        _FAIL += 1
     return _FAIL == 0
 
 
@@ -127,6 +151,10 @@ def check_self_validation() -> list[str]:
         targets.extend(sorted(CROSSVAL_DIR.glob("*.py")))
     for path in targets:
         for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            # 跳过注释/docstring 行：文档中的反例教学文字
+            # （如「禁止自校验 check(name, X, X)」）不应被误判为真实自校验
+            if _is_comment_or_docstring(line):
+                continue
             if SELF_CHECK_RE.search(line):
                 problems.append(f"[自校验] {path.name}:{i} check(X, X) 永远 PASS")
     return problems

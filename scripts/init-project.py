@@ -51,6 +51,9 @@ CLEANUP_DIRS = {
     "__pycache__", "bin", "obj", ".venv", "venv", "env", "node_modules",
     ".pytest_cache", ".ruff_cache", ".mypy_cache", "TestResults", "dist",
 }
+# 占位符扫描/替换时跳过的顶层目录：tests/ 内含 scanner 测试夹具（如 {{A}}/{{X1_}}），
+# 这些 {{...}} 字面量是测试输入而非待替换占位符，替换会破坏生成项目的测试套件。
+SKIP_PLACEHOLDER_DIRS = {"tests"}
 
 # auto 规则计算
 _AUTO_RULES = {
@@ -59,7 +62,7 @@ _AUTO_RULES = {
 }
 
 
-def load_manifest() -> dict:
+def load_manifest() -> dict[str, dict[str, str]]:
     """读取 placeholders.json；损坏时回退空 manifest（仅警告，不崩溃）。"""
     if not PLACEHOLDERS_JSON.exists():
         print(f"[WARN] placeholders.json 缺失: {PLACEHOLDERS_JSON}")
@@ -73,7 +76,7 @@ def load_manifest() -> dict:
 
 
 def scan_placeholders(text: str) -> list[str]:
-    """扫描文本中的 {{NAME}} 占位符，返回去重列表。
+    """扫描文本中的 {{...}} 占位符，返回去重列表。
 
     与 init-project.ps1 / test-template.ps1 的 `[A-Z0-9_]+` 保持一致：
     仅识别大写占位符（{PascalCase} 模块级占位符不应被 init 匹配）。
@@ -84,14 +87,21 @@ def scan_placeholders(text: str) -> list[str]:
 
 
 def get_placeholder_value(
-    name: str, manifest: dict, values: dict, interactive: bool
+    name: str, manifest: dict[str, dict[str, str]], values: dict[str, str], interactive: bool
 ) -> str | None:
-    """获取占位符替换值：values > interactive > auto > default > name.lower()"""
+    """获取占位符替换值：values > interactive > auto > default > name.lower()。
+
+    未登记 token（不在 manifest 且不在 values）→ 返回 None，保留原样，
+    禁止 name.lower() 污染元文档引用（如教学用的 {{...}} 字面量），
+    见 CHANGELOG H3 已修复缺陷回归。
+    """
     # 1. 命令行 --values 优先
     if name in values:
         return values[name]
 
-    entry = manifest.get(name, {})
+    entry = manifest.get(name)
+    if entry is None:
+        return None  # 未登记 → 保留原样，不计入 remaining
     category = entry.get("category", "content")
 
     # 2. auto 自动计算
@@ -167,11 +177,20 @@ def copy_template(target: Path) -> list[str]:
     return copied
 
 
+def _in_skip_dirs(path: Path, target: Path) -> bool:
+    """判断 path 是否位于 SKIP_PLACEHOLDER_DIRS 顶层目录内（如 tests/ 测试夹具）。"""
+    try:
+        rel = path.relative_to(target)
+    except ValueError:
+        return False
+    return any(part in SKIP_PLACEHOLDER_DIRS for part in rel.parts)
+
+
 def collect_placeholders(target: Path) -> set[str]:
-    """扫描目标目录中全部 {{...}} 占位符（去重）。"""
+    """扫描目标目录中全部 {{...}} 占位符（去重，跳过 tests/ 测试夹具目录）。"""
     all_placeholders: set[str] = set()
     for f in target.rglob("*"):
-        if f.is_file():
+        if f.is_file() and not _in_skip_dirs(f, target):
             try:
                 all_placeholders.update(
                     scan_placeholders(f.read_text(encoding="utf-8"))
@@ -182,25 +201,38 @@ def collect_placeholders(target: Path) -> set[str]:
 
 
 def build_replacements(
-    target: Path, manifest: dict, values: dict, interactive: bool
-) -> dict[str, str | None]:
-    """为全部占位符生成替换值（values > interactive > auto > default > name.lower()）。"""
-    replacements: dict[str, str | None] = {}
+    target: Path, manifest: dict[str, dict[str, str]], values: dict[str, str], interactive: bool
+) -> tuple[dict[str, str], set[str]]:
+    """为全部占位符生成替换值，返回 (replacements, undeclared)。
+
+    undeclared = 出现在文件中但未在 manifest/values 登记的占位符名集合——
+    这类 token 是元文档引用（如 {{...}} 字面量），应保留原样不替换。
+    """
+    replacements: dict[str, str] = {}
+    undeclared: set[str] = set()
     for name in sorted(collect_placeholders(target)):
-        replacements[name] = get_placeholder_value(
-            name, manifest, values, interactive
-        )
-    return replacements
+        value = get_placeholder_value(name, manifest, values, interactive)
+        if value is None:
+            undeclared.add(name)
+        else:
+            replacements[name] = value
+    return replacements, undeclared
 
 
-def replace_placeholders(target: Path, replacements: dict) -> tuple[int, int]:
-    """替换目标目录中所有文件内的占位符，返回（已替换文件数，剩余占位符数）。"""
+def replace_placeholders(
+    target: Path, replacements: dict[str, str], undeclared: set[str] | None = None
+) -> tuple[int, int]:
+    """替换目标目录中所有文件内的占位符，返回（已替换文件数，剩余占位符数）。
+
+    undeclared：未登记占位符名集合——这些 token 保留原样且不计入 remaining。
+    """
+    undeclared = undeclared or set()
     replaced_files = 0
     remaining = 0
     pattern = re.compile(r"\{\{([A-Z0-9_]+)\}\}")
 
     for f in target.rglob("*"):
-        if not f.is_file():
+        if not f.is_file() or _in_skip_dirs(f, target):
             continue
         if f.suffix in (".pyc", ".dll", ".exe", ".xll", ".pdb"):
             continue
@@ -214,9 +246,10 @@ def replace_placeholders(target: Path, replacements: dict) -> tuple[int, int]:
 
         def _replace(m: re.Match, _m: list = missing) -> str:
             name = m.group(1)
-            if name in replacements and replacements[name] is not None:
+            if name in replacements:
                 return replacements[name]
-            _m.append(name)
+            if name not in undeclared:
+                _m.append(name)
             return m.group(0)
 
         new_content = pattern.sub(_replace, content)
@@ -226,6 +259,70 @@ def replace_placeholders(target: Path, replacements: dict) -> tuple[int, int]:
         remaining += len(set(missing))
 
     return replaced_files, remaining
+
+
+def _normalize_values(raw: dict) -> dict[str, str]:
+    """归一化 --values 键：兼容带/不带 {{}} 两种写法（与 init-project.ps1 对齐）。"""
+    return {
+        k.strip().strip("{}"): v
+        for k, v in raw.items()
+    }
+
+
+def _reset_changelog(target: Path) -> None:
+    """将 CHANGELOG.md 重置为新项目初始态（模板自身变更历史不属于新项目）。
+
+    与 init-project.ps1 对齐；拼接占位符键避免源文件内字面量被自扫描替换。
+    """
+    changelog = target / "CHANGELOG.md"
+    if not changelog.exists():
+        return
+    init_text = (
+        "# Changelog\n\n"
+        "All notable changes to this project.\n\n"
+        "格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)"
+        " 与 [Semantic Versioning](https://semver.org/lang/zh-CN/)。\n\n"
+        "## [Unreleased]\n\n"
+        "> 新项目初始状态：首个功能落地后在此登记变更。\n"
+    )
+    changelog.write_text(init_text, encoding="utf-8")
+    print("==> CHANGELOG.md 已重置为新项目初始态")
+
+
+def _setup_git(target: Path) -> bool:
+    """初始化 git 仓库并配置 commit-msg hook。成功返回 True。"""
+    import subprocess
+    print("\n==> 初始化 git 仓库")
+    try:
+        r = subprocess.run(["git", "init"], cwd=target, capture_output=True)
+    except FileNotFoundError:
+        print("[ERROR] git 不可用：请先安装 git 或去掉 --git-init")
+        return False
+    if r.returncode != 0:
+        print(f"[ERROR] git init 失败: {r.stderr.decode('utf-8', 'replace').strip()}")
+        return False
+    hook_path = target / "scripts" / "git-hooks"
+    r2 = subprocess.run(
+        ["git", "config", "core.hooksPath", "scripts/git-hooks"],
+        cwd=target, capture_output=True
+    )
+    if r2.returncode != 0:
+        err = r2.stderr.decode("utf-8", "replace").strip()
+        print(f"[WARN] git config core.hooksPath 失败: {err}")
+        print(f"    生成的仓库可能不带 commit-msg 校验（hook 目录: {hook_path}）")
+    else:
+        print(f"    git init 完成（commit-msg hook 已配置: {hook_path}）")
+    return True
+
+
+def _create_compat_links(target: Path) -> None:
+    """创建 CLAUDE.md 副本（Claude Code 兼容）。"""
+    agents_md = target / "AGENTS.md"
+    claude_md = target / "CLAUDE.md"
+    if agents_md.exists():
+        shutil.copy2(agents_md, claude_md)
+        print("    已创建 CLAUDE.md（AGENTS.md 副本，供 Claude Code 读取）")
+        print("    注意: AGENTS.md 更新后需重新创建 CLAUDE.md 副本")
 
 
 def main() -> int:
@@ -238,7 +335,9 @@ def main() -> int:
         help='占位符值 JSON，如 \'{"PROJECT_NAME": "MyApp", "VERSION": "1.0.0"}\''
     )
     parser.add_argument("--non-interactive", action="store_true",
-                        help="非交互模式（content 占位符用 name.lower() 填充）")
+                        help="非交互模式（core 占位符用 default/占位符名小写填充，不询问）")
+    parser.add_argument("--force", action="store_true",
+                        help="覆盖已存在的非空目标目录（与 init-project.ps1 -Force 对齐）")
     parser.add_argument("--git-init", action="store_true",
                         help="初始化 git 仓库并配置 commit-msg hook")
     parser.add_argument("--create-compatibility-links", action="store_true",
@@ -250,8 +349,8 @@ def main() -> int:
         if not target.is_dir():
             print(f"[ERROR] 目标路径是文件，不是目录: {target}")
             return 1
-        if any(target.iterdir()):
-            print(f"[ERROR] 目标目录非空: {target}")
+        if any(target.iterdir()) and not args.force:
+            print(f"[ERROR] 目标目录非空: {target}（如确需覆盖请加 --force）")
             return 1
 
     print(f"==> 复制模板到 {target}")
@@ -261,47 +360,42 @@ def main() -> int:
     # 加载占位符 manifest
     manifest = load_manifest()
 
-    # 解析 --values
-    values: dict = {}
+    # 解析 --values（键归一化：兼容 {{X}} 与 X 两种写法，键本身不进入替换扫描）
+    values: dict[str, str] = {}
     if args.values:
         try:
-            values = json.loads(args.values)
+            values = _normalize_values(json.loads(args.values))
         except json.JSONDecodeError as e:
             print(f"[ERROR] --values JSON 解析失败: {e}")
             return 1
 
     # 收集所有占位符并生成替换值
-    interactive = not args.non_interactive and not values
-    replacements = build_replacements(target, manifest, values, interactive)
+    # 交互询问按占位符决定（core 且未在 values 中才询问），不因传了任一 values 就整体关闭
+    interactive = not args.non_interactive
+    replacements, undeclared = build_replacements(target, manifest, values, interactive)
 
     # 执行替换
-    replaced_files, remaining = replace_placeholders(target, replacements)
+    replaced_files, remaining = replace_placeholders(target, replacements, undeclared)
 
     print("\n==> 占位符替换完成")
     print(f"    替换文件数: {replaced_files}")
+    if undeclared:
+        names = ", ".join(sorted(undeclared))
+        print(f"    [WARN] {len(undeclared)} 个未登记占位符保留原样"
+              f"（如需替换请登记 placeholders.json）: {names}")
     if remaining:
         print(f"    [WARN] {remaining} 个占位符未替换（content 类，需开发期手动填充）")
 
+    # 重置 CHANGELOG 为新项目初始态（与 ps1 对齐，避免新项目携带模板发布历史）
+    _reset_changelog(target)
+
     # git init
-    if args.git_init:
-        import subprocess
-        print("\n==> 初始化 git 仓库")
-        subprocess.run(["git", "init"], cwd=target, capture_output=True)
-        hook_path = target / "scripts" / "git-hooks"
-        subprocess.run(
-            ["git", "config", "core.hooksPath", "scripts/git-hooks"],
-            cwd=target, capture_output=True
-        )
-        print(f"    git init 完成（commit-msg hook 已配置: {hook_path}）")
+    if args.git_init and not _setup_git(target):
+        return 1
 
     # CLAUDE.md 兼容副本
     if args.create_compatibility_links:
-        agents_md = target / "AGENTS.md"
-        claude_md = target / "CLAUDE.md"
-        if agents_md.exists():
-            shutil.copy2(agents_md, claude_md)
-            print("    已创建 CLAUDE.md（AGENTS.md 副本，供 Claude Code 读取）")
-            print("    注意: AGENTS.md 更新后需重新创建 CLAUDE.md 副本")
+        _create_compat_links(target)
 
     print("\n==> 初始化完成")
     return 0 if remaining == 0 else 1

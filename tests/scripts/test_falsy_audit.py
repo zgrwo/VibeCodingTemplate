@@ -215,3 +215,36 @@ class TestRegexFallback:
         results = fa.audit_file(f, use_ast=True)
         # 正则兜底应该捕获 if count:
         assert len(results) >= 1
+
+
+class TestMainCLI:
+    """main() CLI 入口级测试：--path 守卫（防门禁说谎）与退出码。"""
+
+    def _run(self, monkeypatch, argv):
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        monkeypatch.setattr("sys.argv", ["falsy-audit.py"] + argv)
+        with redirect_stdout(out):
+            code = fa.main()
+        return code, out.getvalue()
+
+    def test_path_not_exist_fails(self, monkeypatch, tmp_path):
+        """--path 指向不存在目录 → exit 1 + 可操作报错。"""
+        code, out = self._run(monkeypatch, ["--path", str(tmp_path / "nope")])
+        assert code == 1
+        assert "路径不存在" in out
+
+    def test_path_is_file_fails(self, monkeypatch, tmp_path):
+        """--path 指向文件 → exit 1（防 rglob 不迭代导致门禁说谎）。"""
+        f = tmp_path / "a.py"
+        f.write_text("x = 1\n", encoding="utf-8")
+        code, out = self._run(monkeypatch, ["--path", str(f)])
+        assert code == 1
+        assert "路径不是目录" in out
+
+    def test_clean_scope_passes(self, monkeypatch, tmp_path):
+        """--path 指向干净目录 → exit 0。"""
+        code, out = self._run(monkeypatch, ["--path", str(tmp_path)])
+        assert code == 0
+        assert "未发现" in out

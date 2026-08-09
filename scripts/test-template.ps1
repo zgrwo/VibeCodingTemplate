@@ -59,13 +59,17 @@ if ($deadEntries.Count -gt 0) {
     exit 1
 }
 
-# 未登记占位符告警：实际文件有但 manifest 未声明 → 应补充（双向漂移守护）
+# 未登记占位符守卫（双向漂移守护）：
+#   死条目（manifest 声明但无文件用）→ 上方硬失败；
+#   未登记（文件用但不在 manifest）→ 此处 WARN（测试夹具 {{A}}/{{X1_}} 等
+#   属 scanner 测试输入，无法登记，故不硬失败）；真正的元占位符污染由下方
+#   生成后断言拦截（转义标记必须存活、约定文字不得被替换成小写）。
 $undeclared = @()
 foreach ($n in $names.Keys) {
     if (-not $manifest.ContainsKey($n)) { $undeclared += $n }
 }
 if ($undeclared.Count -gt 0) {
-    Write-Host "[WARN] 以下占位符未在 placeholders.json 登记（请补充 manifest）：$($undeclared -join ', ')" -ForegroundColor Yellow
+    Write-Host "[WARN] 以下占位符未在 placeholders.json 登记（新增占位符请登记 manifest；教学引用请用 {{...}} 转义）：$($undeclared -join ', ')" -ForegroundColor Yellow
 }
 
 $values = @{}
@@ -83,6 +87,19 @@ Write-Host "==> 初始化生成 → $Target" -ForegroundColor Cyan
 & (Join-Path $template "scripts\init-project.ps1") -Target $Target -Values $values -Force
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ 初始化失败（占位符未全部替换）" -ForegroundColor Red
+    exit 1
+}
+
+# ----------------------------------------------------------------------------
+# 3.5 生成后断言：占位符约定教学文字未被 init 污染（防 P1 元占位符回归）
+#     pre-release-review.md 的教学引用应为 `{{...}}`（转义标记），
+#     若 init 用 name.lower() 替换了未登记 token，会出现 `{{...}}`→`...`
+#     或约定文字变 `upper`/`x`——此处直接断言拦截。
+# ----------------------------------------------------------------------------
+$escapeOk = Select-String -Path "$Target\rules\pre-release-review.md" -Pattern '\{\{\.\.\.\}\}' -Quiet
+$lowered = Select-String -Path "$Target\rules\pre-release-review.md" -Pattern '`upper`|`x`|`upper_case`' -Quiet
+if (-not $escapeOk -or $lowered) {
+    Write-Host "❌ 生成项目的占位符约定教学被污染：init 未正确保留 {{...}} 转义标记（元占位符回归）" -ForegroundColor Red
     exit 1
 }
 

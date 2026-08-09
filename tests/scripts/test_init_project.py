@@ -135,10 +135,56 @@ class TestReplacePlaceholders:
 
 
 class TestBuildReplacements:
-    def test_returns_mapping_for_all(self, tmp_path):
+    def test_returns_mapping_for_registered(self, tmp_path):
         (tmp_path / "f.txt").write_text("{{PROJECT_NAME}} {{CONT}}", encoding="utf-8")
-        repl = ip.build_replacements(
+        repl, undeclared = ip.build_replacements(
             tmp_path, {"PROJECT_NAME": {"category": "core", "test": "App"}}, {}, False
         )
         assert repl["PROJECT_NAME"] == "project_name"  # 无默认值 core → name.lower()
-        assert "CONT" in repl
+        # CONT 未登记 → 归入 undeclared，保留原样（防元占位符污染）
+        assert "CONT" not in repl
+        assert "CONT" in undeclared
+
+    def test_undeclared_preserved_not_replaced(self, tmp_path):
+        """未登记占位符必须保留原样：init 生成的文档中 {{UPPER}}/{{X}} 不被污染。"""
+        (tmp_path / "f.txt").write_text("{{UPPER}} {{PROJECT_NAME}}", encoding="utf-8")
+        repl, undeclared = ip.build_replacements(
+            tmp_path, {"PROJECT_NAME": {"category": "core", "test": "App"}}, {}, False
+        )
+        assert "UPPER" in undeclared
+        assert "UPPER" not in repl
+        replaced, remaining = ip.replace_placeholders(tmp_path, repl, undeclared)
+        # UPPER 保留原样且不计入 remaining；PROJECT_NAME 被替换
+        assert remaining == 0
+        assert "{{UPPER}}" in (tmp_path / "f.txt").read_text(encoding="utf-8")
+
+
+class TestMainCLI:
+    """main() CLI 入口级测试：目标目录校验与 --force 对齐 ps1。"""
+
+    def _run(self, monkeypatch, argv):
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        monkeypatch.setattr("sys.argv", ["init-project.py"] + argv)
+        with redirect_stdout(out):
+            code = ip.main()
+        return code, out.getvalue()
+
+    def test_nonempty_target_rejected(self, monkeypatch, tmp_path):
+        """非空目标目录 → exit 1（防覆盖已存在项目）。"""
+        target = tmp_path / "proj"
+        target.mkdir()
+        (target / "existing.txt").write_text("x", encoding="utf-8")
+        code, out = self._run(monkeypatch, [str(target), "--non-interactive"])
+        assert code == 1
+        assert "目标目录非空" in out
+
+    def test_force_overrides_nonempty(self, monkeypatch, tmp_path):
+        """--force 允许覆盖非空目标（与 init-project.ps1 -Force 对齐）。"""
+        target = tmp_path / "proj"
+        target.mkdir()
+        (target / "existing.txt").write_text("x", encoding="utf-8")
+        code, _ = self._run(monkeypatch, [str(target), "--non-interactive", "--force"])
+        assert code == 0
+        assert (target / "AGENTS.md").exists()

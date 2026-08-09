@@ -21,6 +21,9 @@ _spec = importlib.util.spec_from_file_location(
 )
 vm = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(vm)
+# 与 verify-manual.py 运行时一致：注册 verify_manual 别名，
+# 使 crossval 测试脚本的 `from verify_manual import ...` 可解析
+sys.modules.setdefault("verify_manual", vm)
 
 
 class TestCheck:
@@ -100,6 +103,43 @@ class TestRunCrossval:
         assert ok is True
         assert "[SKIP]" in out.getvalue()
 
+    def test_main_guard_script_fails(self, tmp_path, monkeypatch):
+        """被 `if __name__ == "__main__"` 包裹的脚本产生 0 项校验 → 必须 FAIL（防门禁说谎）。"""
+        crossval = tmp_path / "crossval"
+        crossval.mkdir()
+        (crossval / "bad.py").write_text(
+            'from verify_manual import check\n'
+            'if __name__ == "__main__":\n'
+            '    check("G.BAD", 1.0, 2.0)\n',
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(vm, "CROSSVAL_DIR", crossval)
+        monkeypatch.setattr(vm, "_PASS", 0)
+        monkeypatch.setattr(vm, "_FAIL", 0)
+        out = io.StringIO()
+        with redirect_stdout(out):
+            ok = vm.run_crossval()
+        assert ok is False
+        assert "未产生任何校验项" in out.getvalue()
+
+    def test_valid_script_passes(self, tmp_path, monkeypatch):
+        """正常产生校验项的脚本 → PASS。"""
+        crossval = tmp_path / "crossval"
+        crossval.mkdir()
+        (crossval / "good.py").write_text(
+            'from verify_manual import check\n'
+            'check("G.OK", 1.0, 1.0)\n',
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(vm, "CROSSVAL_DIR", crossval)
+        monkeypatch.setattr(vm, "_PASS", 0)
+        monkeypatch.setattr(vm, "_FAIL", 0)
+        out = io.StringIO()
+        with redirect_stdout(out):
+            ok = vm.run_crossval()
+        assert ok is True
+        assert "未产生任何校验项" not in out.getvalue()
+
 
 class TestStaticChecks:
     """自校验模式与代码块检查。"""
@@ -136,3 +176,17 @@ class TestStaticChecks:
         monkeypatch.setattr(vm, "MANUAL", manual)
         problems = vm.check_example_blocks()
         assert any("未标注语言" in p for p in problems)
+
+
+class TestMainCLI:
+    """main() CLI 入口级测试：--check-only 与退出码。"""
+
+    def test_check_only_returns_zero(self, monkeypatch):
+        """--check-only 干净手册 → exit 0。"""
+        import io
+        from contextlib import redirect_stdout
+        monkeypatch.setattr("sys.argv", ["verify-manual.py", "--check-only"])
+        out = io.StringIO()
+        with redirect_stdout(out):
+            code = vm.main()
+        assert code == 0

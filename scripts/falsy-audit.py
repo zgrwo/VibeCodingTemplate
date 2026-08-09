@@ -304,8 +304,8 @@ def main() -> int:
         return 1
 
     use_ast = not args.no_ast
-    high: list = []
-    low: list = []
+    high: list[tuple[str, str, int, str, str]] = []
+    low: list[tuple[str, str, int, str, str]] = []
     for p in sorted(scope.rglob("*.py")):
         for level, var, lineno, code, kind in audit_file(p, use_ast=use_ast):
             target = (high if level == "HIGH" else low)

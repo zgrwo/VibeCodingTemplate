@@ -123,3 +123,43 @@ class TestPatternLike:
 
     def test_name_pattern_is_pattern(self):
         assert vd._is_pattern_like("0001-xxx.md")
+
+
+class TestMainCLI:
+    """main() CLI 入口级测试：--strict 接线与退出码。"""
+
+    def test_main_returns_zero_on_clean(self, monkeypatch):
+        """全绿时 main() 返回 0。"""
+        import io
+        from contextlib import redirect_stdout
+        monkeypatch.setattr("sys.argv", ["verify-docs.py", "--strict"])
+        out = io.StringIO()
+        with redirect_stdout(out):
+            code = vd.main()
+        assert code == 0
+
+
+class TestCheckFunctionsDetection:
+    """检出型测试：构造破坏场景 → 断言问题被检出（非仅 return type）。"""
+
+    def test_agents_tree_drift_detected(self, monkeypatch):
+        """单边漂移：AGENTS.md 多声明一个目录 → 必须被 check_agents_tree 检出。"""
+        monkeypatch.setattr(
+            vd, "_parse_top_dirs", lambda: ["src", "tests"]
+        )
+        monkeypatch.setattr(
+            vd, "_parse_agents_top_dirs", lambda: ["src", "tests", "drifted"]
+        )
+        problems = vd.check_agents_tree()
+        assert any("目录树漂移" in p and "drifted" in p for p in problems)
+
+    def test_agents_tree_clean_no_problems(self, monkeypatch):
+        """双树一致 → 无目录树漂移问题。"""
+        monkeypatch.setattr(
+            vd, "_parse_top_dirs", lambda: ["src", "tests"]
+        )
+        monkeypatch.setattr(
+            vd, "_parse_agents_top_dirs", lambda: ["src", "tests"]
+        )
+        problems = vd.check_agents_tree()
+        assert not any("目录树漂移" in p for p in problems)
