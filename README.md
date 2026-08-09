@@ -4,6 +4,10 @@
 
 [English](README.en.md) | **中文**
 
+> **本文档是「下游项目模板」**,含 `{{...}}` 占位符段落,由 `scripts/init-project.py` / `scripts/init-project.ps1` 在初始化新项目时自动替换
+> (完整清单见 `scripts/placeholders.json`)。模板仓库自身的架构与治理说明,见 [`docs/architecture.md`](docs/architecture.md)、
+> `README.en.md` 与本文件底部「治理体系说明」。
+
 <!-- 徽章区（初始化后按需启用：取消注释，并将 OWNER/REPO_NAME 替换为实际值）：
 [![CI](https://github.com/{{OWNER}}/{{REPO_NAME}}/actions/workflows/ci.yml/badge.svg)](https://github.com/{{OWNER}}/{{REPO_NAME}}/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -133,11 +137,15 @@
 
 **核心原则**：SSOT（信息只在一处定义）、Skill-first（修改代码前加载技能）、四条核心准则、闭环验证。
 
+<!-- TEMPLATE_ONLY_START -->
 ---
 
 ## 从本模板初始化新项目
 
 > 本模板沉淀了 5 个子项目（Excel 函数库 / VBA 库 / 工程分析 / 成本分析 / 文档审查）的共性治理经验。初始化新项目时按以下顺序执行：
+
+> **本节为模板专属内容**，由 TEMPLATE_ONLY 标记（HTML 注释）圈定（约定与语法见 `rules/documentation.md`）；
+> `init-project` 初始化时会整体删除本节，**不进入新项目**。后续新增模板专属内容请沿用同一标记。
 
 ### 1. 复制与重命名
 
@@ -191,3 +199,4 @@ cp -r VibeCodingTemplate <PROJECT_NAME>  # robocopy /E /XD .git (Windows)
 - [ ] CHANGELOG.md 标记 v0.1.0 初始化版本
 - [ ] 目录树与 project-structure.md 一致
 - [ ] 空目录已放置 .gitkeep 并入库
+<!-- TEMPLATE_ONLY_END -->

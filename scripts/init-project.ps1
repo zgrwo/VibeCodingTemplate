@@ -71,6 +71,78 @@ foreach ($junk in @("__pycache__", ".venv", "node_modules", "bin", "obj")) {
 Write-Host "    完成（已跳过 .git / logs / .claude / __pycache__ 等）" -ForegroundColor Green
 
 # ----------------------------------------------------------------------------
+# 2.5 删除标记的模板专属段落（README 的「从本模板初始化新项目」等不进入新项目）
+# ----------------------------------------------------------------------------
+# 与 init-project.py 的 TEMPLATE_ONLY 标记对齐：HTML 注释圈定段落边界，初始化时
+# 整体删除。在占位符扫描前执行，被删段落内的 {{...}} 示例不计入下游替换清单。
+# 跳过 tests/（扫描夹具目录，与 py 版对齐）；写回保留原文件 BOM 状态。
+$startMarker = '<!-- TEMPLATE_ONLY_START -->'
+$endMarker   = '<!-- TEMPLATE_ONLY_END -->'
+Get-ChildItem $Target -Recurse -File -Force | Where-Object {
+    $_.Extension -eq ".md" -and $_.FullName -notmatch "\\(tests)\\" -and $_.FullName -notmatch "\\.git\\"
+} | ForEach-Object {
+    $content = Get-Content $_.FullName -Encoding UTF8 -Raw
+    $new = $content
+    while ($true) {
+        $i = $new.IndexOf($startMarker)
+        if ($i -lt 0) { break }
+        # 深度计数找配对 END：段内文档若引用了标记字面量（成对出现）视为嵌套而非真实边界
+        $depth = 1
+        $pos = $i + $startMarker.Length
+        $endPos = -1
+        while ($depth -gt 0) {
+            $nextS = $new.IndexOf($startMarker, $pos)
+            $nextE = $new.IndexOf($endMarker, $pos)
+            if ($nextE -lt 0) { break }  # 未闭合
+            if ($nextS -ge 0 -and $nextS -lt $nextE) {
+                $depth++      # 段内 START 字面量 → 深度 +1
+                $pos = $nextS + $startMarker.Length
+            } else {
+                $depth--      # END：深度回到 0 才视为真实段落边界
+                $endPos = $nextE
+                $pos = $nextE + $endMarker.Length
+            }
+        }
+        if ($endPos -lt 0) {
+            Write-Host "  [WARN] $($_.Name) 含未闭合 TEMPLATE_ONLY 标记（仅 START），段落保留" -ForegroundColor Yellow
+            break
+        }
+        $j = $endPos + $endMarker.Length
+        # 吞掉 END 标记所在行末尾的换行（最多一个 CRLF 或两个换行符，与 py 版对齐）
+        if ($j -lt $new.Length -and ($new[$j] -eq "`r" -or $new[$j] -eq "`n")) {
+            $j++
+            if ($j -lt $new.Length -and $new[$j] -eq "`n") { $j++ }
+        }
+        $new = $new.Substring(0, $i) + $new.Substring($j)
+    }
+    if ($new -ne $content) {
+        # 裁剪文件尾部多余空行，保留最后一行内容的行尾风格（CRLF/LF 不变）
+        $trimmed = $new.TrimEnd("`t`r`n ")
+        if ($trimmed.Length -eq 0) {
+            $new = $content  # 整文件为空白：不改写
+        } else {
+            $rest = $new.Substring($trimmed.Length)
+            $nlIdx = $rest.IndexOf("`n")
+            if ($nlIdx -lt 0) {
+                $new = $trimmed + "`n"  # 尾部无换行：补一个 LF
+            } else {
+                $term = if ($nlIdx -gt 0 -and $rest.Substring($nlIdx - 1, 1) -eq "`r") { "`r`n" } else { "`n" }
+                $new = $trimmed + $term
+            }
+        }
+        if ($new -ne $content) {
+            # 写回时保留原文件 BOM 状态（.ps1 必须 UTF-8 with BOM，否则 PowerShell 5.1 中文解析失败）
+            $bytes = [System.IO.File]::ReadAllBytes($_.FullName)
+            $hasBom = ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF)
+            $enc = if ($hasBom) { New-Object System.Text.UTF8Encoding $true }
+                   else { New-Object System.Text.UTF8Encoding $false }
+            [System.IO.File]::WriteAllText($_.FullName, $new, $enc)
+            Write-Host "  ==> 已删除 $($_.Name) 中的模板专属段落" -ForegroundColor Green
+        }
+    }
+}
+
+# ----------------------------------------------------------------------------
 # 3. 扫描 {{...}} 占位符
 # ----------------------------------------------------------------------------
 $placeholderRe = [regex]::new("\{\{([A-Z0-9_]+)\}\}")

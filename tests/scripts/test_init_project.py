@@ -7,6 +7,7 @@
   - copy_template()：跳过 .git/.coverage、清理缓存目录
   - replace_placeholders()：字节级替换保留 CRLF、跳过 binary 后缀
   - build_replacements()：全量占位符生成
+  - _strip_template_only_blocks() / strip_template_only_sections()：TEMPLATE_ONLY 段落裁剪
 """
 import importlib.util
 import sys
@@ -157,6 +158,100 @@ class TestBuildReplacements:
         # UPPER 保留原样且不计入 remaining；PROJECT_NAME 被替换
         assert remaining == 0
         assert "{{UPPER}}" in (tmp_path / "f.txt").read_text(encoding="utf-8")
+
+
+class TestStripTemplateOnly:
+    """TEMPLATE_ONLY 标记段落裁剪：模板专属内容不进入新项目。"""
+
+    def test_midfile_block_removed_preserves_surrounding(self):
+        data = (
+            b"# keep\n\n"
+            b"<!-- TEMPLATE_ONLY_START -->\n"
+            b"## drop me\n"
+            b"- [ ] template only\n"
+            b"<!-- TEMPLATE_ONLY_END -->\n"
+            b"# after\n"
+        )
+        assert ip._strip_template_only_blocks(data) == b"# keep\n\n# after\n"
+
+    def test_eof_block_trims_leftover_blank_line(self):
+        """模板专属段落位于文件末尾时，删除后裁剪遗留的空行。"""
+        data = (
+            b"keep\n"
+            b"\n"
+            b"<!-- TEMPLATE_ONLY_START -->\n"
+            b"## some template-only section\n"
+            b"- [ ] x\n"
+            b"<!-- TEMPLATE_ONLY_END -->\n"
+        )
+        assert ip._strip_template_only_blocks(data) == b"keep\n"
+
+    def test_preserves_crlf(self):
+        """CRLF 文件：删除段落且不把收尾换行归一化为 LF。"""
+        data = (
+            b"keep\r\n"
+            b"<!-- TEMPLATE_ONLY_START -->\r\n"
+            b"drop\r\n"
+            b"<!-- TEMPLATE_ONLY_END -->\r\n"
+            b"after\r\n"
+        )
+        assert ip._strip_template_only_blocks(data) == b"keep\r\nafter\r\n"
+
+    def test_unclosed_marker_preserved(self):
+        """未闭合标记（有 START 无 END）→ 整段保留，防误删文件后半部分。"""
+        data = b"keep\n<!-- TEMPLATE_ONLY_START -->\ndrop\n"
+        assert ip._strip_template_only_blocks(data) == data
+
+    def test_marker_literals_in_note_do_not_split_section(self):
+        """段内说明引用标记字面量：深度计数把成对字面量当嵌套，不中途截断段落。"""
+        data = (
+            b"keep\n"
+            b"<!-- TEMPLATE_ONLY_START -->\n"
+            b"> note quotes <!-- TEMPLATE_ONLY_START --> and <!-- TEMPLATE_ONLY_END -->\n"
+            b"## drop\n"
+            b"<!-- TEMPLATE_ONLY_END -->\n"
+            b"after\n"
+        )
+        assert ip._strip_template_only_blocks(data) == b"keep\nafter\n"
+
+    def test_multiple_blocks_all_removed(self):
+        data = (
+            b"a\n"
+            b"<!-- TEMPLATE_ONLY_START -->\n"
+            b"x\n"
+            b"<!-- TEMPLATE_ONLY_END -->\n"
+            b"b\n"
+            b"<!-- TEMPLATE_ONLY_START -->\n"
+            b"y\n"
+            b"<!-- TEMPLATE_ONLY_END -->\n"
+            b"c\n"
+        )
+        assert ip._strip_template_only_blocks(data) == b"a\nb\nc\n"
+
+    def test_no_markers_unchanged(self):
+        data = b"a\nb\n"
+        assert ip._strip_template_only_blocks(data) == data
+
+    def test_strip_sections_walks_md_only(self, tmp_path):
+        """strip_template_only_sections 只处理 .md，且跳过 tests/ 夹具目录。"""
+        (tmp_path / "README.md").write_bytes(
+            b"keep\n<!-- TEMPLATE_ONLY_START -->\ndrop\n<!-- TEMPLATE_ONLY_END -->\n"
+        )
+        tests = tmp_path / "tests"
+        tests.mkdir()
+        (tests / "README.md").write_bytes(
+            b"keep\n<!-- TEMPLATE_ONLY_START -->\ndrop\n<!-- TEMPLATE_ONLY_END -->\n"
+        )
+        (tmp_path / "data.py").write_bytes(
+            b"keep\n<!-- TEMPLATE_ONLY_START -->\ndrop\n<!-- TEMPLATE_ONLY_END -->\n"
+        )
+        modified = ip.strip_template_only_sections(tmp_path)
+        assert modified == 1
+        assert (tmp_path / "README.md").read_bytes() == b"keep\n"
+        assert (tests / "README.md").read_bytes().startswith(
+            b"keep\n<!-- TEMPLATE_ONLY_START -->"
+        )
+        assert b"<!-- TEMPLATE_ONLY_START -->" in (tmp_path / "data.py").read_bytes()
 
 
 class TestMainCLI:

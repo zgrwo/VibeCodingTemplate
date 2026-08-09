@@ -72,6 +72,10 @@ All notable changes to VibeCodingTemplate.
 
 ### Changed
 
+- `init-project.py` / `init-project.ps1`：新增 TEMPLATE_ONLY 模板专属段落裁剪（README「从本模板初始化新项目」等模板专属内容不再进入新项目；深度计数配对 END，防段内标记字面量截断；未闭合标记告警保留）
+- `README.md`：顶部新增「本文档是下游项目模板」横幅；「从本模板初始化新项目」一节由 TEMPLATE_ONLY 标记圈定（初始化时整体删除）
+- `rules/documentation.md`：新增「模板专属段落（TEMPLATE_ONLY）」约定（标记语法、维护触发、深度计数防坑）
+- `README.en.md`：Placeholder System 段补充 TEMPLATE_ONLY 说明
 - `placeholders.json` / `placeholder-utils.ps1`：ROOT_NAMESPACE / TARGET_FRAMEWORK / PACKAGE_NAME / SKILL / SCOPE / DESCRIPTION / LAYER 等 11 个语义键由 content 提升为 core（替换错=构建/文档不可用），初始化交互式询问并带默认值，避免被静默填充为无意义占位名
 - `init-project.ps1` / `test-template.ps1`：占位符处理改为从 placeholders.json 读取（init 按 core/content/auto 分派，auto 的 DATE/YEAR 不再询问；test-template 读 test 值 + 死条目硬校验）
 - `init-project.ps1`：`-GitInit` 自动配置 `git config core.hooksPath scripts/git-hooks`

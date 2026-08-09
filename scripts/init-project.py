@@ -289,6 +289,99 @@ def _reset_changelog(target: Path) -> None:
     print("==> CHANGELOG.md 已重置为新项目初始态")
 
 
+_TEMPLATE_ONLY_START = b"<!-- TEMPLATE_ONLY_START -->"
+_TEMPLATE_ONLY_END = b"<!-- TEMPLATE_ONLY_END -->"
+
+
+def _trim_trailing_blank_lines(data: bytes) -> bytes:
+    """裁掉文件尾部多余的空行，保留最后一行内容的行尾风格（CRLF/LF 不变）。"""
+    base = data.rstrip(b" \t\r\n")
+    if not base:
+        return data  # 整文件为空白：原样返回，不动
+    rest = data[len(base):]  # 原文件尾部空白区（空格/换行）
+    nl = rest.find(b"\n")
+    if nl < 0:
+        return base + b"\n"  # 尾部无换行：补一个 LF
+    term = b"\r\n" if nl > 0 and rest[nl - 1:nl] == b"\r" else b"\n"
+    return base + term
+
+
+def _strip_template_only_blocks(data: bytes) -> bytes:
+    """删除 data 中被 TEMPLATE_ONLY 标记圈定的模板专属段落，字节级处理。
+
+    模板仓库的 README 同时充当「下游项目模板」与「自身落地页」：落地页需要自我
+    说明，但模板专属内容（如「从本模板初始化新项目」）不应被复制进新项目。
+    - 删除 [START, END 行尾) 整段：保留 START 前一行（其行尾归前行所有，避免
+      中间位置段落删除后相邻行并到一起），吞掉 END 标记所在行的行尾换行。
+    - 配对 END 用深度计数：段内文档若引用了标记字面量（成对出现），视为嵌套
+      而不当作真实段落边界，防说明文字把段落中途截断。
+    - 删过段落后再裁掉文件尾部遗留的空行（模板专属段落常位于文件末尾）。
+    - 遇到未闭合的 START（其后无 END）→ 停止处理并保留该段，防误删文件后半部分。
+    """
+    result = data
+    removed = False
+    while True:
+        i = result.find(_TEMPLATE_ONLY_START)
+        if i < 0:
+            break
+        # 从该 START 起做深度计数，找配对的真实 END
+        depth = 1
+        pos = i + len(_TEMPLATE_ONLY_START)
+        end_pos = -1
+        while depth > 0:
+            next_s = result.find(_TEMPLATE_ONLY_START, pos)
+            next_e = result.find(_TEMPLATE_ONLY_END, pos)
+            if next_e < 0:
+                break  # 未闭合
+            if next_s >= 0 and next_s < next_e:
+                depth += 1  # 段内出现的 START 字面量 → 深度 +1
+                pos = next_s + len(_TEMPLATE_ONLY_START)
+            else:
+                depth -= 1  # END：深度回到 0 才视为真实段落边界
+                end_pos = next_e
+                pos = next_e + len(_TEMPLATE_ONLY_END)
+        if end_pos < 0:
+            break  # 未闭合 → 保留该段，停止处理
+        removed = True
+        j = end_pos + len(_TEMPLATE_ONLY_END)
+        # 吞掉 END 标记所在行末尾的一个换行（CRLF/LF）
+        if j < len(result) and result[j:j + 1] in (b"\r", b"\n"):
+            j += 1
+            if j < len(result) and result[j:j + 1] == b"\n":
+                j += 1
+        result = result[:i] + result[j:]
+    if removed:
+        return _trim_trailing_blank_lines(result)
+    return result
+
+
+def strip_template_only_sections(target: Path) -> int:
+    """从目标目录全部 .md 文档删除 TEMPLATE_ONLY 标记段落，返回修改文件数。
+
+    与 _reset_changelog 同属「复制后清理」：模板专属内容不进入新项目。
+    字节级读写以保留原文件换行风格（CRLF/LF）；未闭合标记保留原样并告警。
+    """
+    modified = 0
+    for f in target.rglob("*.md"):
+        if _in_skip_dirs(f, target):
+            continue
+        try:
+            raw = f.read_bytes()
+        except OSError:
+            continue
+        new_raw = _strip_template_only_blocks(raw)
+        if new_raw != raw:
+            f.write_bytes(new_raw)
+            modified += 1
+        if b"<!-- TEMPLATE_ONLY_START -->" in new_raw and b"<!-- TEMPLATE_ONLY_END -->" not in new_raw:
+            try:
+                rel = f.relative_to(target)
+            except ValueError:
+                rel = f
+            print(f"[WARN] {rel} 含未闭合 TEMPLATE_ONLY 标记（仅 START），段落已保留")
+    return modified
+
+
 def _setup_git(target: Path) -> bool:
     """初始化 git 仓库并配置 commit-msg hook。成功返回 True。"""
     import subprocess
@@ -356,6 +449,12 @@ def main() -> int:
     print(f"==> 复制模板到 {target}")
     copied = copy_template(target)
     print(f"    复制了 {len(copied)} 个文件")
+
+    # 删除模板专属段落（README 的「从本模板初始化新项目」等不进入新项目；
+    # 在占位符收集前执行，被删段落内的 {{...}} 示例不计入下游替换清单）
+    stripped = strip_template_only_sections(target)
+    if stripped:
+        print(f"    删除了 {stripped} 个文件中的模板专属段落")
 
     # 加载占位符 manifest
     manifest = load_manifest()
