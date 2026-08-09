@@ -348,16 +348,6 @@
       "category": "content",
       "prompt": ""
     },
-    "PATTERN_1": {
-      "category": "content",
-      "prompt": "",
-      "test": "注册/同步遗漏"
-    },
-    "PATTERN_2": {
-      "category": "content",
-      "prompt": "",
-      "test": "文档数字漂移"
-    },
     "PERFORMANCE_BUDGET": {
       "category": "content",
       "prompt": ""
@@ -425,16 +415,6 @@
       "category": "core",
       "prompt": "Docker 运行时镜像（如 gcr.io/distroless/python3）",
       "test": "gcr.io/distroless/static-debian12"
-    },
-    "ROOT_CAUSE_1": {
-      "category": "content",
-      "prompt": "",
-      "test": "新增功能后忘记更新关联位置"
-    },
-    "ROOT_CAUSE_2": {
-      "category": "content",
-      "prompt": "",
-      "test": "数字多处硬编码"
     },
     "ROOT_NAMESPACE": {
       "category": "core",
