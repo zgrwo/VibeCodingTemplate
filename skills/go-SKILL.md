@@ -40,14 +40,18 @@ func Mean(values []float64) float64 {
     if len(values) == 0 {
         return math.NaN() // 哨兵：空输入 → NaN
     }
-    sum := 0.0
+    sum, count := 0.0, 0
     for _, v := range values {
         if math.IsNaN(v) || math.IsInf(v, 0) {
             continue // 静默过滤无效值
         }
         sum += v
+        count++ // 分母是有效值计数，不是 len(values)
     }
-    return sum / float64(len(values))
+    if count == 0 {
+        return math.NaN() // 全部无效 → NaN
+    }
+    return sum / float64(count)
 }
 
 // ❌ 错误：用 error 表示"结果为 0"

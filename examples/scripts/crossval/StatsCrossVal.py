@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """StatsCrossVal.py — 统计模块交叉验证
 
 使用方式：
@@ -8,19 +7,18 @@
 
 原则（防错三原则之闭环验证）：
   - 禁止自校验 check(name, X, X) —— 永远 PASS，无验证价值
-  - 数值型必须 cross_check()（与 scipy 独立比对）
+  - 数值型必须 cross_check()（与 numpy 独立参考实现比对）
 """
-import numpy as np
-from scipy import stats as sp_stats
-
-# 确保可导入 verify_manual（CI 在 scripts/ 下执行，本地在项目根执行）
 import sys
 from pathlib import Path
+
+import numpy as np
+
+# 确保可导入 verify_manual（CI 在 scripts/ 下执行，本地在项目根执行）
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from verify_manual import check, cross_check, section
-
 from src.stats.StatsCore import mean, weighted_mean
+from verify_manual import check, cross_check, section
 
 # ========================================================================
 # Stats — 2 UDFs

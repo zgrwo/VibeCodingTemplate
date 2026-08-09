@@ -7,7 +7,7 @@
   - 异常输入（NaN/Inf 元素被过滤）
 """
 import math
-import pytest
+
 from src.stats.StatsCore import mean, weighted_mean
 
 

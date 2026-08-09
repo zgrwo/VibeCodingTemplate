@@ -8,7 +8,6 @@
 """
 from __future__ import annotations
 
-from typing import Optional
 import math
 
 
@@ -73,7 +72,7 @@ def weighted_mean(
     if total_weight == 0:
         return float("nan")
 
-    result = sum(v * w for v, w in zip(values, weights)) / total_weight
+    result = sum(v * w for v, w in zip(values, weights, strict=True)) / total_weight
 
     if math.isinf(result) or math.isnan(result):
         return float("nan")

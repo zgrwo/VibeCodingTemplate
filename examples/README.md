@@ -1,7 +1,7 @@
 # examples/ — 最小示例项目
 
 > 本目录演示使用 VibeCodingTemplate 初始化后的项目长什么样。
-> 一个完整的"统计均值计算"模块，展示 Core / Udf / Foundation 分层 + CrossVal + 测试的完整实践。
+> 一个完整的"统计均值计算"模块，展示 Core 多语言实现（Python/TypeScript/Go）+ CrossVal + 测试的完整实践。
 
 ## 目录结构
 
@@ -12,8 +12,7 @@ examples/
 │   └── stats/
 │       ├── StatsCore.py         # 核心层 Python
 │       ├── StatsCore.ts         # 核心层 TypeScript
-│       ├── StatsCore.go         # 核心层 Go
-│       └── StatsUdf.py          # UDF 层
+│       └── StatsCore.go         # 核心层 Go
 ├── tests/
 │   ├── test_stats.py            # Python 单元测试（pytest，16 tests）
 │   ├── test_stats.ts            # TypeScript 单元测试（vitest，17 tests）
@@ -26,9 +25,10 @@ examples/
 ## 运行示例
 
 ```bash
-# Python 示例
-pip install scipy numpy pytest
-pytest examples/tests/test_stats.py -v  # 16 tests
+# Python 示例（需在 examples/ 下运行，src/ 结构在包路径内）
+cd examples
+pip install numpy pytest
+pytest tests/test_stats.py -v  # 16 tests
 
 # TypeScript 示例（需 Node.js 18+）
 npm install -g vitest
@@ -43,16 +43,16 @@ cd examples && go mod init examples && go test ./tests/... -v  # 16 tests
 1. **Core 零依赖**：所有 Core 实现不引用外部框架，可独立单元测试
 2. **Falsy 守卫**：0 是有效值（均值=0 表示数据全为零），用 `is not None` 不用 `if x:`
 3. **哨兵契约**：空/NaN 输入返回 NaN，不抛异常（三种语言一致）
-4. **闭环验证**：CrossVal 与 `scipy.stats` 独立比对，禁止自校验
+4. **闭环验证**：CrossVal 与 numpy 独立参考实现比对，禁止自校验
 
 ## 与模板的对应关系
 
 | 示例文件 | 来源模板 |
 |----------|----------|
-| `src/stats/StatsCore.py` | `templates/NewModule/{Name}Core.py.template` |
-| `src/stats/StatsCore.ts` | `templates/NewModule/{Name}Core.ts.template` |
-| `src/stats/StatsCore.go` | `templates/NewModule/{Name}Core.go.template` |
-| `tests/test_stats.py` | `templates/NewModule/test_{Name}Core.py.template` |
-| `tests/test_stats.ts` | `templates/NewModule/test_{Name}Core.ts.template` |
-| `tests/test_stats.go` | `templates/NewModule/{Name}Core_test.go.template` |
-| `scripts/crossval/StatsCrossVal.py` | `templates/NewModule/{Name}CrossVal.py.template` |
+| `examples/src/stats/StatsCore.py` | `templates/NewModule/{Name}Core.py.template` |
+| `examples/src/stats/StatsCore.ts` | `templates/NewModule/{Name}Core.ts.template` |
+| `examples/src/stats/StatsCore.go` | `templates/NewModule/{Name}Core.go.template` |
+| `examples/tests/test_stats.py` | `templates/NewModule/test_{Name}Core.py.template` |
+| `examples/tests/test_stats.ts` | `templates/NewModule/test_{Name}Core.ts.template` |
+| `examples/tests/test_stats.go` | `templates/NewModule/{Name}Core_test.go.template` |
+| `examples/scripts/crossval/StatsCrossVal.py` | `templates/NewModule/{Name}CrossVal.py.template` |
