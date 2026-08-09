@@ -33,14 +33,31 @@ Public Function {PREFIX}_COMPUTE(value As Variant) As Variant
         Exit Function
     End If
 
+    ' 2b. 二维区块守卫：NormalizeInput 仅展平单行/单列，
+    '     矩形区块（如 3×2）保持 2D，逐元素索引 arr(i) 会越界 → 显式 CVErr
+    On Error Resume Next
+    Dim nRows As Long, nCols As Long
+    nRows = UBound(arr, 1) - LBound(arr, 1) + 1
+    nCols = UBound(arr, 2) - LBound(arr, 2) + 1
+    On Error GoTo 0
+    If nRows > 1 And nCols > 1 Then
+        {PREFIX}_COMPUTE = CVErr(xlErrValue)
+        Exit Function
+    End If
+
     ' 3. 逐元素计算（vba-SKILL §3.1：始终用 LBound，不假设 1-based）
+    '    哨兵契约：非数值/空单元格 → CVErr(xlErrValue)，不静默置 Empty（Empty 渲染为 0 会污染统计）
     ReDim result(LBound(arr) To UBound(arr))
     For i = LBound(arr) To UBound(arr)
         ' 嵌套 If 避免 And/Or 非短路求值（vba-SKILL §4.1）
         If Not IsEmpty(arr(i)) Then
             If IsNumeric(arr(i)) Then
                 result(i) = arr(i) * 2
+            Else
+                result(i) = CVErr(xlErrValue)
             End If
+        Else
+            result(i) = CVErr(xlErrValue)
         End If
     Next i
 

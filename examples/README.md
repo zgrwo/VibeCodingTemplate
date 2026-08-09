@@ -15,7 +15,7 @@ examples/
 │       └── StatsCore.go         # 核心层 Go
 ├── tests/
 │   ├── test_stats.py            # Python 单元测试（pytest，16 tests）
-│   ├── test_stats.ts            # TypeScript 单元测试（vitest，17 tests）
+│   ├── test_stats.test.ts       # TypeScript 单元测试（vitest，17 tests）
 │   └── test_stats.go            # Go 单元测试（table-driven，16 tests）
 └── scripts/
     └── crossval/
@@ -32,7 +32,7 @@ pytest tests/test_stats.py -v  # 16 tests
 
 # TypeScript 示例（需 Node.js 18+）
 npm install -g vitest
-npx vitest run examples/tests/test_stats.ts  # 17 tests
+npx vitest run examples/tests/  # 17 tests（文件后缀 .test.ts 匹配 vitest 默认 glob）
 
 # Go 示例（需 Go 1.22+）
 cd examples && go mod init examples && go test ./tests/... -v  # 16 tests
@@ -53,6 +53,6 @@ cd examples && go mod init examples && go test ./tests/... -v  # 16 tests
 | `examples/src/stats/StatsCore.ts` | `templates/NewModule/{Name}Core.ts.template` |
 | `examples/src/stats/StatsCore.go` | `templates/NewModule/{Name}Core.go.template` |
 | `examples/tests/test_stats.py` | `templates/NewModule/test_{Name}Core.py.template` |
-| `examples/tests/test_stats.ts` | `templates/NewModule/test_{Name}Core.ts.template` |
+| `examples/tests/test_stats.test.ts` | `templates/NewModule/{Name}Core.test.ts.template` |
 | `examples/tests/test_stats.go` | `templates/NewModule/{Name}Core_test.go.template` |
 | `examples/scripts/crossval/StatsCrossVal.py` | `templates/NewModule/{Name}CrossVal.py.template` |

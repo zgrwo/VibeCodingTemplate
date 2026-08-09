@@ -57,8 +57,11 @@ WORKDIR /app
 # COPY --from=builder /app/server ./
 
 # 非 root 用户（安全最佳实践）
-RUN groupadd -r app && useradd -r -g app app
-USER app
+# 注：Distroless 镜像无 shell/groupadd/useradd，不能用 RUN useradd；
+#     用无 UID 65532（非 root）替代，跨 python/distroless/go 运行时通用。
+#     如用带 shell 的基础镜像（如 debian-slim）需要具名用户，可改回：
+#       RUN groupadd -r app && useradd -r -g app app && USER app
+USER 65532
 
 # 健康检查（按需调整端口/路径）
 # HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

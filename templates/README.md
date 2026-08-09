@@ -17,7 +17,7 @@
 | `NewModule/{Name}Udf.bas.template` | UDF 入口（Variant 参数 + 错误三模式） | VBA |
 | `NewModule/{Name}VariantKit.bas.template` | Variant 输入归一化基础层（Range/数组统一入口） | VBA |
 | `NewModule/{Name}Core.ts.template` | 核心逻辑（纯函数 + strict null check + Result 模式） | TypeScript |
-| `NewModule/test_{Name}Core.ts.template` | 单元测试（正常/边界/null/NaN） | TypeScript (vitest) |
+| `NewModule/{Name}Core.test.ts.template` | 单元测试（正常/边界/null/NaN） | TypeScript (vitest) |
 | `NewModule/{Name}Core.go.template` | 核心逻辑（哨兵值 NaN + error 包装 + 零 panic） | Go |
 | `NewModule/{Name}Core_test.go.template` | 单元测试（table-driven + 0 有效值 + NaN 哨兵） | Go (testing) |
 | `language/pyproject.toml.template` | Python 项目构建配置 | Python |
@@ -37,7 +37,7 @@
 
 | 语法 | 用途 | 替换时机 | 示例 | 被谁替换 |
 |------|------|----------|------|----------|
-| `{{UPPER_CASE}}` | 项目级占位符 | `init-project` 初始化时 | `{{PROJECT_NAME}}`, `{{VERSION}}` | init-project.ps1 / .py |
+| `{{...}}` | 项目级占位符 | `init-project` 初始化时 | `{{...}}` | init-project.ps1 / .py |
 | `{PascalCase}` | 模块级占位符 | 新增模块时手动替换 | `{Name}`, `{Module}` | 开发者 |
 
 **为什么用两种语法？**
@@ -55,6 +55,8 @@
 |--------|------|------|
 | `{Name}` | 模块名 PascalCase | `Weather` |
 | `{Module}` | 所在模块目录 | `Analytics` |
+| `{module}` | Go 包名（小写，源码 `package` 声明用） | `stats` |
+| `{module_path}` | Go 模块路径（go.mod `module` 指令用） | `github.com/org/repo` |
 | `{PREFIX}` | UDF 前缀（大写） | `WEATHER` |
 | `{{ROOT_NAMESPACE}}` | 项目根命名空间（初始化时确定） | `Acme.Stats` |
 
@@ -96,8 +98,8 @@
 
 **TypeScript**
 ```
-1. 复制 {Name}Core.ts + test_{Name}Core.ts 到 src/{Module}/ 与 tests/{Module}/
-2. 替换 {Name}/{Module}；调整 import 路径
+1. 复制 {Name}Core.ts + {Name}Core.test.ts 到 src/{Module}/ 与 tests/{Module}/
+2. 替换 {Name}/{Module}（测试模板已用相对 import 引用 src/{Module}/{Name}Core，无需调整路径）
 3. Core 遵循 strict null check 与 Result 模式（见 skills/typescript-SKILL.md）
 4. 运行 npx vitest run tests/{Module}/（或 npx jest）
 5. 数值结果可加 CrossVal（与 numpy/scipy 独立比对，见 Python 流程）

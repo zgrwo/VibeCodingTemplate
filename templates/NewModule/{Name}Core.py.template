@@ -28,8 +28,9 @@ def compute(value: Optional[float]) -> float:
     Returns:
         计算结果；无效输入返回 NaN。
 
-    Raises:
-        ValueError: 领域约束前置验证失败（如 value < 0）。
+    Note:
+        遵循哨兵契约：无效输入返回 NaN，不抛异常（勿开启下方注释掉的
+        raise ValueError——那会违反「静默传播阻断」红线）。
     """
     # 1. 静默传播阻断：None 显式守卫（Falsy 陷阱：0 是有效值，勿用 if value）
     if value is None:

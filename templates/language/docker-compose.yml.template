@@ -20,7 +20,10 @@ services:
       - ./src:/app/src:ro
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      # 注：运行时镜像为 distroless（无 curl），用 python urllib 探测
+      #     （与 Dockerfile.template 注释的健康检查一致）。
+      #     Node/Go 项目可改用 Node 或语言原生探测，或为镜像加装 curl。
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8080/health').status==200 else sys.exit(1)"]
       interval: 30s
       timeout: 3s
       retries: 3

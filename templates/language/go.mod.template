@@ -1,8 +1,11 @@
 // ============================================================================
 // go.mod — Go 模块定义
 // 使用方式：复制到项目根目录，替换 {module_path} 为实际模块路径
+//           （如 github.com/org/repo，见 templates/README.md 占位符表）
 // 目标位置：go.mod（项目根目录）
 // 初始化：go mod init {module_path}
+// 注意：Go 源码包的 package 名用小写 {module}（如 src/stats/ 用 package stats），
+//       与目录名 {Module} 大小写不同，替换时勿遗漏。
 // ============================================================================
 
 module {module_path}

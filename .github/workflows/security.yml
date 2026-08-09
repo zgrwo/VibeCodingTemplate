@@ -25,9 +25,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 按项目语言调整：python / csharp / javascript-typescript / go / java ...
-        # 注：VBA 无 CodeQL 语言（省略）；C# 覆盖 NewModule/Udf/Foundation 模板
-        language: [csharp, python, javascript-typescript, go]
+        # 按项目语言调整：python / javascript-typescript / go / java ...
+        # 注：VBA 无 CodeQL 语言（省略）；模板文件 *.template 不被 CodeQL 分析
+        # csharp/go 为编译型语言，需可构建源码；本仓 C#/Go 仅存在于 *.template
+        # （CodeQL 不分析且无法构建）与 examples（无 .sln/.csproj/go.mod）→
+        # autobuild 必然硬失败。仅保留 extraction 型语言（python/javascript-typescript）。
+        language: [python, javascript-typescript]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3 # v4.37.6

@@ -17,7 +17,17 @@ on:
       - "tests/**"
       - "templates/**"
       - "rules/**"
+      - "skills/**"
+      - "docs/**"
+      - "examples/**"
       - ".github/**"
+      - "AGENTS.md"
+      - "README.md"
+      - "README.en.md"
+      - "CONTRIBUTING.md"
+      - "CHANGELOG.md"
+      - "SECURITY.md"
+      - "CODE_OF_CONDUCT.md"
   workflow_dispatch:
   # Merge Queue：配合 Settings → Branches → 开启 merge queue 使用
   # （merge_group 事件无 paths 过滤，全部 job 运行；未开启 merge queue 时本触发不生效）
@@ -159,10 +169,15 @@ jobs:
 
   # ============ template-self-test：模板仓库自测 ============
   # 仅模板仓库运行（检测到 AGENTS.md 中未替换的 '{{' 占位符即视为模板）。
-  # 新项目初始化替换占位符后自动跳过，无需删除。
+  # 新项目初始化替换占位符后由 detect 门控直接跳过整个 job（不启动 runner，省 2 runner-minutes），无需删除。
+  detect:
+    name: Detect Template Mode
+    uses: ./.github/workflows/detect-template.yml
   template-self-test:
     name: Template Self-Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    needs: detect
+    if: needs.detect.outputs.is_template == 'true'
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]

@@ -17,8 +17,8 @@
 
 // ====== 类型定义 ======
 
-/** 计算结果：成功返回值，失败返回 null（哨兵契约） */
-type ComputeResult = number | null;
+/** 计算结果：成功返回值，失败返回 NaN（哨兵契约，与 Python/C#/Go 模板一致） */
+type ComputeResult = number;
 
 /** Result 模式（适用于需要区分错误类型的场景） */
 type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
@@ -29,17 +29,17 @@ type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
  * 数值计算入口。
  *
  * @param value - 输入值；null/undefined 表示未提供
- * @returns 计算结果；无效输入返回 null
+ * @returns 计算结果；无效输入返回 NaN
  */
 export function compute(value: number | null | undefined): ComputeResult {
-  // 1. 哨兵守卫：null/undefined → null
+  // 1. 哨兵守卫：null/undefined → NaN
   if (value === null || value === undefined) {
-    return null;
+    return NaN;
   }
 
   // 2. 防御：NaN/Infinity
   if (!Number.isFinite(value)) {
-    return null;
+    return NaN;
   }
 
   // 3. 核心逻辑
@@ -47,7 +47,7 @@ export function compute(value: number | null | undefined): ComputeResult {
 
   // 4. 结果守卫：防止中间步骤产生 Infinity
   if (!Number.isFinite(result)) {
-    return null;
+    return NaN;
   }
 
   return result;

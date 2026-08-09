@@ -17,7 +17,7 @@
         模块测试分节标题
 
 原则（防错三原则之闭环验证）：
-  - 禁止自校验 check(name, X, X) —— 永远 PASS，无验证价值（verify-manual.py 会静态拦截）
+  - 禁止自校验：check(name, X, Y) 中 X 与 Y 相同则永远 PASS，无验证价值（verify-manual.py 会静态拦截）
   - 数值型 UDF 必须 cross_check()（与独立实现比对）
   - 字符串/确定性结果使用 check() + 硬编码期望值
 """
@@ -32,8 +32,10 @@ from verify_manual import check, cross_check, section  # noqa: E402
 # ========================================================================
 section("{PREFIX} — {模块说明}", {N})
 
-# 示例 1：数值型 UDF 交叉验证
-# cross_check("{PREFIX}.COMPUTE", np.mean([1, 2, 3, 4, 5]))
+# 示例 1：数值型 UDF 交叉验证（3 参：name, actual, expected，两路独立）
+# cross_check("{PREFIX}.COMPUTE",
+#             your_impl([1, 2, 3, 4, 5]),
+#             float(np.mean([1, 2, 3, 4, 5])))
 
 # 示例 2：确定性结果 UDF 验证（硬编码期望值）
 # check("{PREFIX}.PROCESS", "hello world".title(), "Hello World")
