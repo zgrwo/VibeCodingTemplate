@@ -16,13 +16,18 @@ on:
   workflow_call:
     outputs:
       is_template:
-        description: "true if AGENTS.md has unreplaced {{PROJECT_NAME}}"
+        description: "true if AGENTS.md has unreplaced '{{' placeholders"
         value: ${{ jobs.check.outputs.is_template }}
+
+# 最小权限：仅读取仓库内容（checkout 需要）
+permissions:
+  contents: read
 
 jobs:
   check:
     name: Check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     outputs:
       is_template: ${{ steps.detect.outputs.is_template }}
     steps:

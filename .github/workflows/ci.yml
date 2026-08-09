@@ -158,7 +158,7 @@ jobs:
         run: "{{COVERAGE_CMD}}"
 
   # ============ template-self-test：模板仓库自测 ============
-  # 仅模板仓库运行（检测到 AGENTS.md 中未替换的 {{PROJECT_NAME}} 占位符即视为模板）。
+  # 仅模板仓库运行（检测到 AGENTS.md 中未替换的 '{{' 占位符即视为模板）。
   # 新项目初始化替换占位符后自动跳过，无需删除。
   template-self-test:
     name: Template Self-Test (${{ matrix.os }})
