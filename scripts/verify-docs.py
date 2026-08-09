@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DOC_FILES = [
     # 根目录治理文件
     "README.md",
+    "README.en.md",
     "AGENTS.md",
     "CONTRIBUTING.md",
     "CHANGELOG.md",
@@ -47,6 +48,7 @@ DOC_FILES = [
     "rules/api-reference.md",
     "rules/user-manual.md",
     "rules/code-review-prompt.md",
+    "rules/pre-release-review.md",
     "rules/cross-project-synthesis.md",
     "rules/refactoring-plan.md",
     "rules/adr-template.md",
@@ -61,10 +63,12 @@ DOC_FILES = [
     "skills/architecture-reviewer.md",
     "skills/refactoring-guardian.md",
     "skills/project-plan-review.md",
-    # templates/ 与 docs/
+    # templates/ 与 docs/ 与 examples/
     "templates/README.md",
     "templates/monorepo/README.md",
     "docs/README.md",
+    "docs/architecture.md",
+    "examples/README.md",
 ]
 
 # 顶层目录检查：从 project-structure.md 目录树解析（唯一定义处，随规模裁剪自动适配）
@@ -135,6 +139,59 @@ def _parse_agents_top_dirs() -> list[str]:
         if m:
             dirs.append(m.group(1))
     return dirs
+
+
+def _parse_agents_top_entries() -> list[str]:
+    """解析 AGENTS.md 目录树的顶层条目（目录 + 根级文件，用于文件级双树比对）。"""
+    path = ROOT / "AGENTS.md"
+    if not path.exists():
+        return []
+    entries: list[str] = []
+    in_block = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        s = line.strip()
+        if s.startswith("```"):
+            in_block = not in_block
+            continue
+        if not in_block:
+            continue
+        m = re.match(r"^[├└]──\s+([^#\s]+)", s)
+        if m:
+            entries.append(m.group(1).rstrip("/"))
+    return entries
+
+
+# 需核对"目录内文件已登记"的 SSOT 关键子目录（目录树即契约，逐文件枚举）
+# 补充 check_undeclared 只查根级的盲区：子目录新增文件（如新 rules/*.md）
+# 之前可静默通过 --strict，现在必须登记目录树。
+_SUBDIR_CHECK = ("rules", "skills", "scripts", "docs", ".github", "templates", "examples")
+
+
+def _parse_nested_files() -> dict[str, set[str]]:
+    """解析 project-structure.md 目录树中顶层目录下的直接文件条目。"""
+    path = ROOT / "rules" / "project-structure.md"
+    result: dict[str, set[str]] = {}
+    current: str | None = None
+    in_block = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        s = line.rstrip()
+        if s.strip().startswith("```"):
+            in_block = not in_block
+            continue
+        if not in_block:
+            continue
+        m = re.match(r"^[├└]──\s+([^/#\s]+)/", s)
+        if m:
+            current = m.group(1)
+            result.setdefault(current, set())
+            continue
+        if current is not None and "│" in s:
+            m2 = re.match(r"^│\s*[├└]──\s+([^#\s]+)", s)
+            if m2:
+                entry = m2.group(1).rstrip("/")
+                if "/" not in entry and entry not in ("...",):
+                    result[current].add(entry)
+    return result
 
 
 def check_dirs() -> list[str]:
@@ -258,6 +315,23 @@ def check_agents_tree() -> list[str]:
             f"[目录树漂移] AGENTS.md 声明 {d}/，"
             f"project-structure.md 未收录（请同步 project-structure.md）"
         )
+    # 文件级双树比对：原检查只比较目录行，根级文件漂移（如 AGENTS.md 树漏 Makefile）
+    # 永不被 CI 捕获。新增"根级文件集合"一致性校验。
+    ps_entries = set(_parse_top_entries())
+    agents_entries = set(_parse_agents_top_entries())
+    if ps_entries and agents_entries:
+        ps_files = ps_entries - set(ps_dirs)
+        agents_files = agents_entries - set(agents_dirs)
+        for f in sorted(ps_files - agents_files):
+            problems.append(
+                f"[目录树文件漂移] project-structure.md 声明 {f}，"
+                f"AGENTS.md 未收录（请同步 AGENTS.md）"
+            )
+        for f in sorted(agents_files - ps_files):
+            problems.append(
+                f"[目录树文件漂移] AGENTS.md 声明 {f}，"
+                f"project-structure.md 未收录（请同步 project-structure.md）"
+            )
     return problems
 
 
@@ -287,6 +361,34 @@ def check_undeclared(strict: bool) -> list[str]:
     return problems
 
 
+def check_subdir_undeclared(strict: bool) -> list[str]:
+    """（可选 --strict）检查 SSOT 关键子目录内文件是否在目录树中登记。
+
+    补充 check_undeclared 只查根级的盲区：rules/、scripts/ 等子目录新增文件
+    之前可静默通过 --strict，导致新规则文档孤儿化（无注册、无链接校验）。
+    """
+    if not strict:
+        return []
+    problems: list[str] = []
+    nested = _parse_nested_files()
+    for sub in _SUBDIR_CHECK:
+        base = ROOT / sub
+        if not base.exists():
+            continue
+        declared = nested.get(sub, set())
+        for p in sorted(base.iterdir()):
+            if p.is_dir():
+                continue
+            if p.name == ".gitkeep":  # 空目录占位文件，非 SSOT 契约对象
+                continue
+            if p.name in declared:
+                continue
+            problems.append(
+                f"[未声明文件] {sub}/{p.name}（请同步 project-structure.md 目录树）"
+            )
+    return problems
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="文档一致性验证")
     parser.add_argument("--strict", action="store_true", help="含未声明文件检查")
@@ -297,6 +399,7 @@ def main() -> int:
         + check_backtick_paths()
         + check_dirs()
         + check_agents_tree()
+        + check_subdir_undeclared(args.strict)
         + check_undeclared(args.strict)
     )
     if problems:

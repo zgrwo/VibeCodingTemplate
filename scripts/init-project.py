@@ -44,6 +44,8 @@ PLACEHOLDERS_JSON = TEMPLATE_ROOT / "scripts" / "placeholders.json"
 SKIP_TOP_DIRS = {
     ".git", "logs", ".claude", ".codegraph", ".qoder",
 }
+# 跳过的根级文件（运行产物，非模板内容；如 pytest-cov 生成的 .coverage）
+SKIP_TOP_FILES = {".coverage"}
 # 复制后清理的目录（递归，构建产物/缓存）
 CLEANUP_DIRS = {
     "__pycache__", "bin", "obj", ".venv", "venv", "env", "node_modules",
@@ -71,9 +73,13 @@ def load_manifest() -> dict:
 
 
 def scan_placeholders(text: str) -> list[str]:
-    """扫描文本中的 {{NAME}} 占位符，返回去重列表。"""
+    """扫描文本中的 {{NAME}} 占位符，返回去重列表。
+
+    与 init-project.ps1 / test-template.ps1 的 `[A-Z0-9_]+` 保持一致：
+    仅识别大写占位符（{PascalCase} 模块级占位符不应被 init 匹配）。
+    """
     return list(dict.fromkeys(
-        m for m in re.findall(r"\{\{(\w+)\}\}", text)
+        m for m in re.findall(r"\{\{([A-Z0-9_]+)\}\}", text)
     ))
 
 
@@ -134,9 +140,11 @@ def copy_template(target: Path) -> list[str]:
     target.mkdir(parents=True, exist_ok=True)
 
     copied: list[str] = []
-    # 仅跳过顶级目录
+    # 仅跳过顶级目录/运行产物文件
     for item in TEMPLATE_ROOT.iterdir():
         if item.name in SKIP_TOP_DIRS:
+            continue
+        if item.name in SKIP_TOP_FILES:
             continue
         rel = item.relative_to(TEMPLATE_ROOT)
         dst = target / rel
@@ -146,27 +154,50 @@ def copy_template(target: Path) -> list[str]:
             shutil.copy2(item, dst)
             copied.append(str(rel))
 
-    # 复制后递归清理构建产物/缓存目录
-    for junk in CLEANUP_DIRS:
-        for p in target.rglob(junk):
-            if p.is_dir():
-                shutil.rmtree(p, ignore_errors=True)
-
-    # 收集所有实际复制的文件
-    for f in target.rglob("*"):
-        if f.is_file():
-            rel = f.relative_to(target)
+    # 复制后单趟遍历：递归清理构建产物/缓存目录 + 收集实际复制文件
+    # （原实现对每个 CLEANUP_DIRS 各做一次 rglob，O(13N)；合并为单趟 O(N)）
+    for p in target.rglob("*"):
+        if p.is_dir() and p.name in CLEANUP_DIRS:
+            shutil.rmtree(p, ignore_errors=True)
+        elif p.is_file():
+            rel = p.relative_to(target)
             if str(rel) not in copied:
                 copied.append(str(rel))
 
     return copied
 
 
+def collect_placeholders(target: Path) -> set[str]:
+    """扫描目标目录中全部 {{...}} 占位符（去重）。"""
+    all_placeholders: set[str] = set()
+    for f in target.rglob("*"):
+        if f.is_file():
+            try:
+                all_placeholders.update(
+                    scan_placeholders(f.read_text(encoding="utf-8"))
+                )
+            except (UnicodeDecodeError, OSError):
+                continue
+    return all_placeholders
+
+
+def build_replacements(
+    target: Path, manifest: dict, values: dict, interactive: bool
+) -> dict[str, str | None]:
+    """为全部占位符生成替换值（values > interactive > auto > default > name.lower()）。"""
+    replacements: dict[str, str | None] = {}
+    for name in sorted(collect_placeholders(target)):
+        replacements[name] = get_placeholder_value(
+            name, manifest, values, interactive
+        )
+    return replacements
+
+
 def replace_placeholders(target: Path, replacements: dict) -> tuple[int, int]:
     """替换目标目录中所有文件内的占位符，返回（已替换文件数，剩余占位符数）。"""
     replaced_files = 0
     remaining = 0
-    pattern = re.compile(r"\{\{(\w+)\}\}")
+    pattern = re.compile(r"\{\{([A-Z0-9_]+)\}\}")
 
     for f in target.rglob("*"):
         if not f.is_file():
@@ -239,23 +270,9 @@ def main() -> int:
             print(f"[ERROR] --values JSON 解析失败: {e}")
             return 1
 
-    # 收集所有占位符
-    all_placeholders: set[str] = set()
-    for f in target.rglob("*"):
-        if f.is_file():
-            try:
-                all_placeholders.update(
-                    scan_placeholders(f.read_text(encoding="utf-8"))
-                )
-            except (UnicodeDecodeError, OSError):
-                continue
-
-    # 获取替换值
+    # 收集所有占位符并生成替换值
     interactive = not args.non_interactive and not values
-    replacements: dict[str, str | None] = {}
-    for name in sorted(all_placeholders):
-        val = get_placeholder_value(name, manifest, values, interactive)
-        replacements[name] = val
+    replacements = build_replacements(target, manifest, values, interactive)
 
     # 执行替换
     replaced_files, remaining = replace_placeholders(target, replacements)

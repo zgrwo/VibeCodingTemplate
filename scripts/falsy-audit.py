@@ -75,6 +75,25 @@ SAFE_TYPES_BOOL = {"bool", "boolean"}
 SAFE_TYPES_COLLECTION = {"list", "set", "dict", "frozenset", "deque", "tuple"}
 
 
+def _top_type_name(ann: ast.expr) -> str:
+    """提取类型注解的顶层类型构造器名（AST 解析，非子串匹配）。
+
+    list[float]        → 'list'
+    Optional[list[float]] → 'Optional'（含 None，不安全，不在安全集合）
+    list[float] | None → ''（PEP 604 联合含 None，不安全）
+    MyList             → 'MyList'（自定义类型，不在安全集合）
+    """
+    if isinstance(ann, ast.BinOp):  # X | None（PEP 604 联合：含 None 即 Optional）
+        return ""
+    if isinstance(ann, ast.Subscript):
+        return _top_type_name(ann.value)
+    if isinstance(ann, ast.Attribute):  # typing.Optional → 'Optional'
+        return ann.attr
+    if isinstance(ann, ast.Name):
+        return ann.id
+    return ""
+
+
 def _classify(var: str) -> str:
     """返回 'HIGH' / 'LOW' / ''（名单外）。"""
     for pattern in HIGH_RISK_RE:
@@ -94,8 +113,8 @@ class FalsyAuditor(ast.NodeVisitor):
     def __init__(self, filename: str):
         self.filename = filename
         self.findings: list[tuple[str, str, int, str, str]] = []
-        # 变量 → 类型注解映射（从 AnnAssign 收集）
-        self._type_hints: dict[str, str] = {}
+        # 变量 → 类型注解 AST 节点映射（从 AnnAssign / 函数参数收集）
+        self._type_hints: dict[str, ast.expr] = {}
 
     def _var_name(self, node: ast.expr) -> str | None:
         """提取变量名（支持 Name / Attribute / Constant）。"""
@@ -113,16 +132,16 @@ class FalsyAuditor(ast.NodeVisitor):
         return None
 
     def _is_safe_type(self, var: str) -> bool:
-        """检查变量是否有安全类型注解（bool/collection）。"""
-        hint = self._type_hints.get(var, "")
-        if not hint:
+        """检查变量是否有安全类型注解（bool/collection），按 AST 顶层类型构造器判断。
+
+        子串匹配会误判 Optional[list[float]]（None/空列表混淆）与自定义类型 MyList，
+        故改为解析注解 AST 取顶层构造器名。
+        """
+        ann = self._type_hints.get(var)
+        if ann is None:
             return False
-        low = hint.lower()
-        # bool 类型：if flag: 安全
-        if any(t in low for t in SAFE_TYPES_BOOL):
-            return True
-        # 集合类型：if data: 安全（空集合语义正确）
-        return bool(any(t in low for t in SAFE_TYPES_COLLECTION))
+        name = _top_type_name(ann)
+        return name in SAFE_TYPES_BOOL or name in SAFE_TYPES_COLLECTION
 
     def _check_truthy(self, test: ast.expr, kind: str, lineno: int,
                       line_text: str) -> None:
@@ -152,40 +171,36 @@ class FalsyAuditor(ast.NodeVisitor):
         self.findings.append((level, var, lineno, line_text, kind))
 
     def _check_or_fallback(self, node: ast.AST, kind: str) -> None:
-        """检查 x or default 模式。"""
-        if isinstance(node, ast.BoolOp) and isinstance(node.op, ast.Or):
-            for val in node.values:
-                var = self._var_name(val)
-                if var:
-                    level = _classify(var)
-                    if level:
-                        base_var = var.split(".")[0] if "." in var else var
-                        if not self._is_safe_type(base_var):
-                            self.findings.append(
-                                (level, var, node.lineno,
-                                 ast.unparse(node), kind)
-                            )
-                break  # 只检查第一个操作数
+        """检查 x or default 模式。只检查第一个可命名的操作数（值操作数），
+        default 是安全回退。第一个操作数非变量（如函数调用）时继续扫描下一个，
+        避免 compute() or threshold 漏检 threshold。
+        """
+        if not (isinstance(node, ast.BoolOp) and isinstance(node.op, ast.Or)):
+            return
+        for val in node.values:
+            var = self._var_name(val)
+            if not var:
+                continue  # 非变量操作数（函数调用等），继续扫描
+            level = _classify(var)
+            if level:
+                base_var = var.split(".")[0] if "." in var else var
+                if not self._is_safe_type(base_var):
+                    self.findings.append(
+                        (level, var, node.lineno, ast.unparse(node), kind)
+                    )
+            break  # 第一个可命名的操作数即值操作数，检查后停止
 
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
         """收集类型注解：var: Type = value"""
         if isinstance(node.target, ast.Name) and node.annotation:
-            try:
-                hint = ast.unparse(node.annotation)
-                self._type_hints[node.target.id] = hint
-            except Exception:
-                pass
+            self._type_hints[node.target.id] = node.annotation
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         """收集函数参数的类型注解：def f(x: bool) -> None"""
         for arg in node.args.args + node.args.kwonlyargs:
             if arg.annotation:
-                try:
-                    hint = ast.unparse(arg.annotation)
-                    self._type_hints[arg.arg] = hint
-                except Exception:
-                    pass
+                self._type_hints[arg.arg] = arg.annotation
         self.generic_visit(node)
 
     def visit_If(self, node: ast.If) -> None:
@@ -274,7 +289,11 @@ def main() -> int:
 
     scope = ROOT / args.path
     if not scope.exists():
-        print(f"[FAIL] 目录不存在: {scope}")
+        print(f"[FAIL] 路径不存在: {scope}")
+        return 1
+    if not scope.is_dir():
+        # --path 指向文件时 rglob 不迭代 → 静默输出"无发现"（门禁说谎）
+        print(f"[FAIL] 路径不是目录（--path 需指向目录）: {scope}")
         return 1
 
     use_ast = not args.no_ast
