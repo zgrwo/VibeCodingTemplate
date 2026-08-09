@@ -5,6 +5,12 @@
 // 注意：{{ROOT_NAMESPACE}} 由项目根命名空间替换（初始化时确定）
 // ============================================================================
 using System;
+using System.Runtime.CompilerServices;
+
+// 测试程序集可访问 internal Core：Core 层按 csharp-SKILL 设计为 internal，
+// 但单元测试项目位于独立程序集 {Module}.Tests（tests/{Module}.Tests/），
+// 需显式声明 friend assembly，否则生成项目编译报 CS0122（内部类型不可访问）。
+[assembly: InternalsVisibleTo("{Module}.Tests")]
 
 namespace {{ROOT_NAMESPACE}}.{Module}
 {

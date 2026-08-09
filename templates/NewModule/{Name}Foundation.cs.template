@@ -63,8 +63,19 @@ namespace {{ROOT_NAMESPACE}}.Foundation
             return func(ToT<TIn>(value));
         }
 
-        private static T ToT<T>(object v) =>
-            v is T t ? t : default!;
+        private static T ToT<T>(object v)
+        {
+            if (v is T t)
+                return t;
+            // 哨兵契约：数值类型转换失败 → NaN（返回类型零值 0.0 会静默参与计算，
+            // 污染统计结果；csharp-SKILL 明确禁止 `return default(T)`）。
+            // 非数值类型仍返回零值（string → null，WrapError 无法捕获非异常场景）。
+            if (typeof(T) == typeof(double))
+                return (T)(object)double.NaN;
+            if (typeof(T) == typeof(float))
+                return (T)(object)float.NaN;
+            return default!;
+        }
     }
 
     /// <summary>
