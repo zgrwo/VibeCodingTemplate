@@ -4,6 +4,35 @@ All notable changes to VibeCodingTemplate.
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.1.1](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.1.0...v0.1.1) (2026-08-09)
+
+
+### ✨ 新功能
+
+* VibeCodingTemplate 初始提交（AI 编码治理模板仓库） ([e9a2b27](https://github.com/zgrwo/VibeCodingTemplate/commit/e9a2b2773df911382667ca226a4d5f6836586fc9))
+* 模板卓越化增强——占位符SSOT/commit校验/release-please/跨语言脚手架 ([1d06e3f](https://github.com/zgrwo/VibeCodingTemplate/commit/1d06e3fa717f2542951e418de2bc06f5eda6e44f))
+* 跨平台脚本/TypeScript+Go Skill/Docker/Monorepo/AST审计/示例项目/验证脚本测试 ([de6d94e](https://github.com/zgrwo/VibeCodingTemplate/commit/de6d94ee262bba8bb8e74045b3378f76701bdab2))
+
+
+### 🐛 Bug 修复
+
+* **ci:** 修复 CI 失败——跨平台临时目录与 CodeQL v4 升级 ([6d96fed](https://github.com/zgrwo/VibeCodingTemplate/commit/6d96fed9754962ad89c5f9917f2b9f303da9dc9d))
+* **ci:** 占位符扫描加 -Force，修复 pwsh 7 漏扫 .github 隐藏目录导致死条目误报 ([26fb174](https://github.com/zgrwo/VibeCodingTemplate/commit/26fb17422b23aeaaf1cbe0de6ed708dfb00cae0d))
+* 修复 4 个 CI HIGH 严重性缺陷——审计发现 ([04f156d](https://github.com/zgrwo/VibeCodingTemplate/commit/04f156de634ff2d864c9d97e5efe8deac2a75a84))
+* 修复 6 个 HIGH 严重性缺陷——审计发现 ([f124055](https://github.com/zgrwo/VibeCodingTemplate/commit/f12405503a9f79b49a819e0fd3081e7c42a1dd3e))
+* 修复 7 个 MEDIUM 严重性缺陷——审计发现 ([077889f](https://github.com/zgrwo/VibeCodingTemplate/commit/077889f14074a4c894f3108b6809992f6cc25d1e))
+* 修复二次评估发现的 M1/M2/M3/L1/L3 问题 ([064c945](https://github.com/zgrwo/VibeCodingTemplate/commit/064c9457b0b44b7f108a9d241f2776f81b06ebca))
+* 修复审计发现的剩余 MEDIUM 缺陷 ([66686b9](https://github.com/zgrwo/VibeCodingTemplate/commit/66686b9c2980bfc7b00842abbc8853774e4644e9))
+* 修复成熟度评估发现的 H1/H2/M1/M2/M3/L1-L4 全部问题 ([bd476c6](https://github.com/zgrwo/VibeCodingTemplate/commit/bd476c6bd07214d7378227ba9fc8ad1cd74731fe))
+* 修复模板审查发现的高中低问题并升级 Issue Forms ([66d2dc5](https://github.com/zgrwo/VibeCodingTemplate/commit/66d2dc56572778adb116ab6a6693d35cd1aa13a1))
+* 修复模板评估发现的高中低问题（P-A 至 P-T） ([7f12009](https://github.com/zgrwo/VibeCodingTemplate/commit/7f12009b11701a07ed53ae3feda4585539daa5b6))
+* 实施 P1-P3 全面修复——模板卓越化增强 ([b02b792](https://github.com/zgrwo/VibeCodingTemplate/commit/b02b792d30645c3df545df2a16ff3695c3433a08))
+
+
+### 📄 文档
+
+* P4 文档目录树同步——补齐新文件声明 ([8a9dee4](https://github.com/zgrwo/VibeCodingTemplate/commit/8a9dee40c725c7f5b3f98b3cccf0e80a066d95d6))
+
 ## [Unreleased]
 
 > 本模板自身的变更记录（新项目初始化时请重置为项目自己的变更历史）。
