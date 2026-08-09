@@ -99,10 +99,10 @@ def main() -> int:
             break  # 任一步失败立即停止
 
     if all_passed:
-        print("\n✅ 全量验证通过")
+        print("\n[OK] 全量验证通过")
         return 0
     else:
-        print("\n❌ 验证失败")
+        print("\n[FAIL] 验证失败")
         return 1
 
 

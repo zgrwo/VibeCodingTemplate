@@ -272,7 +272,11 @@ def main() -> int:
     for p in sorted(scope.rglob("*.py")):
         for level, var, lineno, code, kind in audit_file(p, use_ast=use_ast):
             target = (high if level == "HIGH" else low)
-            target.append((str(p.relative_to(ROOT)), var, lineno, code, kind))
+            try:
+                rel = str(p.relative_to(ROOT))
+            except ValueError:
+                rel = str(p)  # 路径在仓库外，使用绝对路径
+            target.append((rel, var, lineno, code, kind))
 
     if high:
         print(f"[FAIL] 发现 {len(high)} 个 HIGH 风险（falsy 误判，必须修复）：")

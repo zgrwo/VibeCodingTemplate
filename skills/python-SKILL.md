@@ -135,7 +135,7 @@ web/        ← Web 层：依赖 services/，不直接依赖 engine/
 7. `templates/` 创建 YAML 模板
 8. 测试：`test_correctness.py` + `test_invariants.py` 必做
 9. 更新 `api-reference.md`
-10. 更新 `skill.md` 决策树（如引入新场景）
+10. 更新 `python-SKILL.md` 决策树（如引入新场景）
 11. 更新 `user-manual.md`
 
 ## 8. 依赖管理

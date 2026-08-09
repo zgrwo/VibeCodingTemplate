@@ -158,7 +158,7 @@ def check_links() -> list[str]:
     """检查文档内相对链接的目标是否存在。含 {{...}} 占位符的链接跳过（打印提示）。"""
     problems: list[str] = []
     skipped: list[str] = []
-    link_re = re.compile(r"\[[^\]]*\]\(([^)#]+)\)")
+    link_re = re.compile(r"\[[^\]]*\]\(([^)#\s]+)(?:\s+\"[^\"]*\")?\)")
     for doc in DOC_FILES:
         path = ROOT / doc
         if not path.exists():
@@ -243,7 +243,11 @@ def check_agents_tree() -> list[str]:
     ps_dirs = set(_parse_top_dirs())
     agents_dirs = set(_parse_agents_top_dirs())
     if not ps_dirs or not agents_dirs:
-        return problems  # 目录树解析失败由 check_dirs 报告
+        if not agents_dirs:
+            problems.append(
+                "[配置错误] 无法从 AGENTS.md 目录树解析顶层目录（格式异常？）"
+            )
+        return problems
     for d in sorted(ps_dirs - agents_dirs):
         problems.append(
             f"[目录树漂移] project-structure.md 声明 {d}/，"

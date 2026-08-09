@@ -65,7 +65,7 @@ def load_manifest() -> dict:
     try:
         data = json.loads(PLACEHOLDERS_JSON.read_text(encoding="utf-8"))
         return data.get("placeholders", {})
-    except (json.JSONDecodeError, OSError) as e:
+    except (json.JSONDecodeError, OSError, AttributeError, TypeError) as e:
         print(f"[WARN] placeholders.json 解析失败: {e}")
         return {}
 
