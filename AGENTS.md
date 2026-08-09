@@ -110,6 +110,8 @@
 │   ├── workflows/security.yml    # CodeQL 安全扫描（定时 + PR）
 │   ├── workflows/release.yml     # release-please 自动发版（Conventional Commits 驱动）
 │   ├── workflows/stale.yml       # 僵尸 Issue/PR 自动关闭
+│   ├── workflows/detect-template.yml  # 模板自举检测（reusable workflow）
+│   ├── workflows/docker.yml.template  # Docker 构建推送 CI 模板
 │   ├── dependabot.yml            # 依赖自动更新
 │   ├── release-please/           # release-please 配置（config.json）
 │   ├── ISSUE_TEMPLATE/           # Bug/功能/文档/重构四类模板

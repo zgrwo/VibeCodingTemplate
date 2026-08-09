@@ -61,7 +61,7 @@
 ├── templates/                    # 模块脚手架
 │   ├── README.md                 # 脚手架使用说明（占位符约定 + 多语言流程）
 │   ├── NewModule/                # 新增模块多语言模板（C#/Python/VBA/TypeScript/Go）
-│   ├── language/                 # 构建配置模板（pyproject/Build.props/nuget/Dockerfile/docker-compose）
+│   ├── language/                 # 构建配置模板（pyproject/Build.props/nuget/tsconfig/go.mod/Dockerfile）
 │   └── monorepo/                 # Monorepo 子项目模板（子目录级 AGENTS.md）
 │
 ├── .github/                      # GitHub 协作
@@ -69,13 +69,16 @@
 │   ├── workflows/security.yml    # CodeQL 安全扫描
 │   ├── workflows/release.yml     # release-please 自动发版（Conventional Commits 驱动）
 │   ├── workflows/stale.yml       # 僵尸 Issue/PR 关闭
+│   ├── workflows/detect-template.yml  # 模板自举检测（reusable workflow）
+│   ├── workflows/docker.yml.template  # Docker 构建推送 CI 模板
 │   ├── dependabot.yml            # 依赖自动更新
 │   ├── release-please/           # release-please 配置（config.json）
 │   ├── ISSUE_TEMPLATE/           # Bug/功能/文档/重构模板
 │   └── PULL_REQUEST_TEMPLATE.md  # PR 模板
 │
 ├── docs/                         # 用户文档（补充材料）
-│   └── README.md                 # 文档目录说明（与 rules/ 的分工）
+│   ├── README.md                 # 文档目录说明（与 rules/ 的分工）
+│   └── architecture.md           # 架构设计（ADR 决策记录）
 │
 ├── build/                        # 构建配置（按需裁剪）
 │   └── ...
@@ -83,7 +86,10 @@
 ├── logs/                         # 运行日志（.gitignore 排除）
 │
 ├── examples/                     # 示例项目（最小可运行的完整实践）
-│   └── README.md                 # 示例说明（Core/Udf/CrossVal 分层演示）
+│   ├── README.md                 # 示例说明（Core/Udf/CrossVal 分层演示）
+│   ├── src/stats/                # 统计模块示例（Python/TypeScript/Go）
+│   ├── tests/                    # 示例测试
+│   └── scripts/crossval/         # 交叉验证参考实现
 │
 ├── tools/                        # 辅助工具/脚本
 │   └── ...
