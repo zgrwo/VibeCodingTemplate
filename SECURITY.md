@@ -1,5 +1,11 @@
 # 安全政策
 
+> **Language note / 语言说明**: This document is maintained in Chinese by design
+> (primary audience). For English vulnerability reporting, use GitHub's
+> **Private Vulnerability Reporting** tab (language-neutral), or email
+> {{SECURITY_CONTACT}} with `[SECURITY]` in the subject.
+> 本文档按设计仅提供中文版（主要受众为中文用户）；漏洞上报流程见上方英文说明。
+
 ## 支持的版本
 
 | 版本 | 支持状态 |

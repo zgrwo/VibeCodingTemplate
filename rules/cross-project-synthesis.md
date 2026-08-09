@@ -72,6 +72,14 @@
 - Python：falsy 陷阱（0 被当作 False）
 **对策**：→ 已固化为 [skills/](../skills/) 语言陷阱文件（修改代码前必须加载）。
 
+### 9. 测试文件命名与框架 glob 不匹配
+
+**现象**：测试文件命名不匹配测试框架默认发现规则，测试永不运行却静默通过。
+**案例**：
+- TypeScript：`test_Stats.ts` 不匹配 vitest/Jest 默认 glob `**/*.{test,spec}.*` → `npx vitest run tests/` 输出 "No test files found" 且 exit 0（本模板示例曾如此）
+- 后果：CI 显示绿但测试从未执行，退化输入回归无检测
+**对策**：→ 已固化为 [tooling-pitfalls.md](tooling-pitfalls.md) #21（后缀用框架默认匹配，如 TS `.test.ts`；或显式配置 include）。
+
 ---
 
 ## 二、过度设计反模式案例（costsuite）

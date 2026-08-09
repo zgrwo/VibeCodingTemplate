@@ -11,7 +11,7 @@ VibeCodingTemplate 是一个 **元项目模板**——不是具体应用，
 - **AGENTS.md** = 项目宪法（AI 行为约束 + 目录树路由）
 - **rules/** = 规范文档（SSOT 原则：每类信息唯一定义处）
 - **skills/** = 5 语言编码陷阱 + 3 位审查专家
-- **templates/** = 模块脚手架（占位符系统：`{{UPPER}}` 项目级 / `{Pascal}` 模块级）
+- **templates/** = 模块脚手架（占位符系统：`{{...}}` 项目级 / `{Pascal}` 模块级）
 - **scripts/** = 验证脚本（AST 审计 + 文档一致性 + 手动验证 + 初始化）
 - **.github/workflows/** = CI 分层门禁（quick/full/quality/template-self-test）
 - **placeholders.json** = 占位符 SSOT 清单（init-project 读取，CI 校验）
@@ -192,9 +192,9 @@ VibeCodingTemplate 是一个 **元项目模板**——不是具体应用，
 - 扫描全部文件（含 .github/ISSUE_TEMPLATE/ 的占位符类 yml 文件）
   找出所有 `{{...}}` 和 `{...}` 占位符
 - 与 placeholders.json 交叉比对：
-  - 双花括号 `{{X}}` → 必须在 placeholders.json 中注册（core/content/auto）
+  - 双花括号 `{{...}}` → 必须在 placeholders.json 中注册（core/content/auto）
   - 单花括号 `{X}` → 为模块级手替换，不应由 init 替换
-- 检查所有 `{{X}}` 占位符的特征：
+- 检查所有 `{{...}}` 占位符的特征：
   - 检测名 → `.*_(1|2|3)$` 是序列化检测名（占位符滥用嫌疑，报告 WARN）
   - 检测值 → test 字段是否语义合理（非明显占位值如 "TODO"/"..."）
 - 检查 `test-template.ps1` 的占位符扫描是否覆盖全部声明条目
@@ -303,7 +303,7 @@ VibeCodingTemplate 是一个 **元项目模板**——不是具体应用，
 - 层级依赖方向正确（scripts/ 不依赖 tests/；rules/ 不依赖 skills/）
 - AGENTS.md 红线规则在全部代码中遵守
 - SSOT 原则：每类信息唯一定义处，无重复定义
-- 占位符系统：双语法约定（{{UPPER}} / {Pascal}）一致使用
+- 占位符系统：双语法约定（`{{...}}` / `{Pascal}`）一致使用
 
 ### 12. 反模式扫描
 基于 AGENTS.md「高频修复模式」和 cross-project-synthesis.md 反模式库：

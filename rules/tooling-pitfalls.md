@@ -47,6 +47,10 @@
 | 15 | **`Path.rglob` 在文件上不迭代** → `falsy-audit --path <文件>` 静默输出"无发现"（门禁说谎） | 扫描入口先校验 `scope.is_dir()`，文件路径显式报错 |
 | 16 | **`check_undeclared` 只查根级**（`ROOT.iterdir()`）→ 子目录新增 `rules/*.md` 等静默通过 SSOT 守卫 | 对 SSOT 关键子目录（rules/skills/scripts/docs/.github/templates/examples）逐文件比对目录树声明 |
 | 17 | **类型注解安全判定用子串匹配**（`"list" in hint.lower()`）→ `Optional[list[float]]`（None/空列表混淆）、自定义 `MyList` 被误判安全 | 解析注解 AST 取顶层类型构造器（`_top_type_name`），`X \| None` 联合视为 Optional |
+| 18 | **init 把未登记 `{{X}}` 元文档引用替换为小写**（`get_placeholder_value` 落到 `name.lower()`）→ 教学文档（如 pre-release-review.md 的占位符约定表）被污染成 `upper`/`x`，且 CI 自测无法发现 | 未登记 token 返回 None 保留原样；文档内教学引用统一 `{{...}}` 转义（三点号不匹配 `[A-Z0-9_]+`）；tests/ 目录跳过占位符扫描（内含 scanner 测试夹具） |
+| 19 | **spec 加载 crossval 脚本时 `if __name__ == "__main__"` 守卫被绕过** → 脚本 0 PASS/0 FAIL 仍 exit 0（门禁说谎） | 用 `spec_from_file_location` 加载时 `__name__` 恒为模块 stem，任何包裹 main-guard 的校验都不会执行；要求 `_PASS + _FAIL > 0` 否则显式 FAIL |
+| 20 | **自校验正则误伤 docstring/注释中的反例教学文字**（如「禁止自校验 check(name, X, X)」）→ quality-gate 必红 | 自校验扫描跳过注释/docstring 行（`line.lstrip().startswith(('#', '"', "'"))`）；或将反例改写为不匹配形式（`check(name, X, Y)` + 说明） |
+| 21 | **测试文件命名不匹配测试框架默认 glob**（`test_X.ts` vs vitest/Jest `**/*.{test,spec}.*`）→ 测试永不运行、CI 静默通过 | 后缀用框架默认匹配（TS `.test.ts`）；或显式配置 include glob |
 
 ## 提交前自查
 
