@@ -115,10 +115,14 @@
 │   ├── dependabot.yml            # 依赖自动更新
 │   ├── release-please/           # release-please 配置（config.json）
 │   ├── ISSUE_TEMPLATE/           # Bug/功能/文档/重构四类模板
-│   └── PULL_REQUEST_TEMPLATE.md  # PR 模板
+│   ├── PULL_REQUEST_TEMPLATE.md  # PR 模板
+│   └── CODEOWNERS                # 代码所有者分配（PR 审查路由）
 ├── logs/                         # ✅ 日志（.gitignore 排除）
+├── Makefile                      # ✅ 跨平台验证入口（Linux/macOS: make verify）
+├── pyproject.toml                # ✅ Python 项目配置（依赖、lint、格式化）
 ├── AGENTS.md                     # ✅ 项目宪法（本文件）
 ├── README.md                     # ✅ 用户向功能指南
+├── README.en.md                  # ✅ 英文入口（国际用户）
 ├── CONTRIBUTING.md               # ✅ 贡献指南（开发/PR/发版流程）
 ├── CHANGELOG.md                  # ✅ 版本变更记录（release-please 自动维护）
 ├── SECURITY.md                   # ✅ 安全政策与漏洞报告
@@ -129,7 +133,8 @@
 ├── .editorconfig                 # ✅ 编辑器统一风格
 ├── .gitignore                    # ✅ 排除规则
 ├── .gitattributes                # ✅ 换行符/二进制标记
-└── .pre-commit-config.yaml       # ✅ 提交前 lint（可选启用）
+├── .pre-commit-config.yaml       # ✅ 提交前 lint（可选启用）
+└── CLAUDE.md                     # ✅ Claude Code 兼容副本（AGENTS.md 副本，可选创建）
 ```
 
 ```
@@ -229,10 +234,10 @@
 
 | 模式 | 出现次数 | 根因 |
 |------|----------|------|
-| 注册/同步遗漏 | 5+ | 新增功能后忘记更新所有关联位置（_DISPATCH/TASK_REGISTRY/文档 6 处） |
-| 文档数字漂移 | 4+ | 函数计数、模块计数在多处硬编码，更新时遗漏 |
+| 注册/同步遗漏 | 6+ | 新增功能后忘记更新所有关联位置（_DISPATCH/TASK_REGISTRY/文档 6 处；2026-08 新增 pre-release-review.md 未登记 AGENTS.md 参考表 / project-structure.md / documentation.md / verify-docs DOC_FILES 共 4 处） |
+| 文档数字漂移 | 5+ | 函数计数、模块计数在多处硬编码，更新时遗漏（占位符数 109→118 第 5 次复发） |
 | 交叉验证自校验 | 3+ | `check(name, X, X)` 永远 PASS，3 处 Bug 因此漏过 |
-| 配置流断裂 | 4+ | 规则/参数在配置中声明但链路某节点断裂导致功能静默失效 |
+| 配置流断裂 | 4+ | 规则/参数在配置中声明但链路某节点断裂导致功能静默失效（PATTERN_1/2、ROOT_CAUSE_1/2 死条目：内容已固化文档但 manifest 未清理） |
 | 初始实现防御不足 | 5×15轮 | 初始实现只考虑正常路径，未系统性考虑退化输入（每个项目平均经历 5-15 轮审查修复） |
 
 ### 关键设计经验
@@ -327,6 +332,7 @@
 | [project-structure.md](rules/project-structure.md) | 结构地图 | 文件职责与层级关系 |
 | [documentation.md](rules/documentation.md) | 文档职责 | 各文档分工与维护规则 |
 | [code-review-prompt.md](rules/code-review-prompt.md) | 审查模板 | 深度代码审查 Prompt |
+| [pre-release-review.md](rules/pre-release-review.md) | 审查模板 | 发行前全量深度审查 Prompt（min/med/max） |
 | [cross-project-synthesis.md](rules/cross-project-synthesis.md) | 方法论 | 跨项目共性经验与重构方法论 |
 | [refactoring-plan.md](rules/refactoring-plan.md) | 重构计划 | 从"能用"到"卓越"的路线图模板 |
 | [adr-template.md](rules/adr-template.md) | ADR 模板 | 架构决策记录格式与编号规则 |

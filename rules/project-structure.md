@@ -26,6 +26,7 @@
 │   ├── api-reference.md          # API 签名唯一信源
 │   ├── user-manual.md            # 用户手册
 │   ├── code-review-prompt.md     # 深度审查 Prompt
+│   ├── pre-release-review.md     # 发行前全量深度审查 Prompt（min/med/max）
 │   ├── cross-project-synthesis.md# 跨项目共性经验与重构方法论
 │   ├── refactoring-plan.md       # 重构计划模板（现状→目标路线图）
 │   ├── adr-template.md           # ADR 模板（编号与格式）
@@ -55,7 +56,8 @@
 │   ├── falsy-audit.py            # Falsy 陷阱静态审计（AST 增强版）
 │   ├── init-project.ps1          # 从模板初始化新项目（Windows PowerShell）
 │   ├── init-project.py           # 从模板初始化新项目（跨平台 Python）
-│   ├── crossval/                 # 交叉验证（与独立参考实现比对，verify-manual.py 自动发现）
+│   ├── test-template.ps1         # 模板完整性自测（init → verify 三件套，CI template-self-test 调用）
+│   ├── crossval/                 # 交叉验证目录（按需创建，参考 examples/scripts/crossval/；verify-manual.py 自动发现）
 │   └── ...
 │
 ├── templates/                    # 模块脚手架
@@ -74,7 +76,8 @@
 │   ├── dependabot.yml            # 依赖自动更新
 │   ├── release-please/           # release-please 配置（config.json）
 │   ├── ISSUE_TEMPLATE/           # Bug/功能/文档/重构模板
-│   └── PULL_REQUEST_TEMPLATE.md  # PR 模板
+│   ├── PULL_REQUEST_TEMPLATE.md  # PR 模板
+│   └── CODEOWNERS                # 代码所有者分配（PR 审查路由）
 │
 ├── docs/                         # 用户文档（补充材料）
 │   ├── README.md                 # 文档目录说明（与 rules/ 的分工）
@@ -86,7 +89,8 @@
 ├── logs/                         # 运行日志（.gitignore 排除）
 │
 ├── examples/                     # 示例项目（最小可运行的完整实践）
-│   ├── README.md                 # 示例说明（Core/Udf/CrossVal 分层演示）
+│   ├── README.md                 # 示例说明（Core 多语言实现 + CrossVal + 测试）
+│   ├── conftest.py               # pytest 路径引导（使根目录运行 examples/tests 可导入 src.stats）
 │   ├── src/stats/                # 统计模块示例（Python/TypeScript/Go）
 │   ├── tests/                    # 示例测试
 │   └── scripts/crossval/         # 交叉验证参考实现

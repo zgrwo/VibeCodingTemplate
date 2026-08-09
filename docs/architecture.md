@@ -28,7 +28,8 @@ AGENTS.md              项目宪法（四条核心准则、红线规则、防幻
 - {PascalCase} → 模块级，开发者手动替换（不被 init 匹配，避免误伤）
 
 ### ADR-0002：模板自举检测
-CI 通过 `grep "{{PROJECT_NAME}}" AGENTS.md` 区分模板/项目模式。
+CI 通过 `grep -rq '{{' AGENTS.md` 区分模板/项目模式（含任意未替换占位符，
+而非特定 `{{PROJECT_NAME}}`，避免初始化替换 PROJECT_NAME 后检测失效）。
 模板仓库无构建系统，占位符命令无法执行→自举检测跳过。
 
 ### ADR-0003：Python 跨平台优先

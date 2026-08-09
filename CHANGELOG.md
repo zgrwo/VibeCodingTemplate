@@ -11,7 +11,7 @@ All notable changes to VibeCodingTemplate.
 
 ### Added
 
-- **占位符清单 SSOT**：新增 `scripts/placeholders.json`（109 项，含分类/默认值/测试值）与 `scripts/placeholder-utils.ps1`（共享读取，损坏时回退默认表）——消除占位符真相散落 init-project.ps1 / test-template.ps1 / README 三处的漂移
+- **占位符清单 SSOT**：新增 `scripts/placeholders.json`（114 项，含分类/默认值/测试值）与 `scripts/placeholder-utils.ps1`（共享读取，损坏时回退默认表）——消除占位符真相散落 init-project.ps1 / test-template.ps1 / README 三处的漂移
 - **反引号路径检查**：`verify-docs.py` 新增 `check_backtick_paths()`——拦截技能表/占位符约定表中反引号包裹的相对路径失效（如占位符替换成 `skills/skill_1` 死链），补齐 markdown 链接检查的盲区
 - **VBA 基础层模板**：新增 `templates/NewModule/{Name}VariantKit.bas.template`（Range/数组统一归一化 NormalizeInput），VBA 脚手架不再依赖外部模块移植
 - **commit 规范强制**：新增 `scripts/validate-commit-msg.sh`（Conventional Commits 校验，零依赖 POSIX sh）+ `scripts/git-hooks/commit-msg`（core.hooksPath 安装）+ CI 提交规范检查 step——与 release-please 发版闭环
