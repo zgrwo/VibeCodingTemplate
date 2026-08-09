@@ -24,8 +24,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 按项目语言调整：python / csharp / javascript / go / java ...
-        language: [python]
+        # 按项目语言调整：python / csharp / javascript-typescript / go / java ...
+        language: [python, javascript-typescript, go]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3 # v4.37.6

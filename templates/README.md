@@ -21,9 +21,11 @@
 | `NewModule/{Name}Core.go.template` | 核心逻辑（哨兵值 NaN + error 包装 + 零 panic） | Go |
 | `NewModule/{Name}Core_test.go.template` | 单元测试（table-driven + 0 有效值 + NaN 哨兵） | Go (testing) |
 | `language/pyproject.toml.template` | Python 项目构建配置 | Python |
+| `language/tsconfig.json.template` | TypeScript 项目构建配置（strict 模式） | TypeScript |
 | `language/Directory.Build.props.template` | .NET 统一构建属性 | .NET |
 | `language/nuget.config.template` | NuGet 源配置 | .NET |
 | `language/{Name}.Tests.csproj.template` | .NET 测试项目（xUnit） | .NET |
+| `language/go.mod.template` | Go 模块定义 | Go |
 | `language/Dockerfile.template` | 通用容器化模板（multi-stage, Python/Node/.NET） | Docker |
 | `language/docker-compose.yml.template` | 开发环境编排（含健康检查） | Docker Compose |
 | `monorepo/AGENTS.md.template` | Monorepo 子目录级 AGENTS.md（子项目宪法） | Monorepo |

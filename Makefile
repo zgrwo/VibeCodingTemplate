@@ -4,7 +4,7 @@
 # 适用于 Linux/macOS/WSL 环境（Windows 用户可用 verify-all.ps1）
 # ============================================================================
 
-.PHONY: verify docs test init clean help
+.PHONY: verify docs test init clean help build lint format
 
 PYTHON ?= python
 
@@ -13,6 +13,9 @@ help:
 	@echo "  make verify  — 全量验证（构建+测试+文档一致性）"
 	@echo "  make docs    — 仅文档一致性验证"
 	@echo "  make test    — 仅运行测试"
+	@echo "  make build   — 构建项目"
+	@echo "  make lint    — 代码风格检查（ruff + prettier）"
+	@echo "  make format  — 自动格式化（ruff format + prettier）"
 	@echo "  make init    — 初始化新项目（需 TARGET=路径）"
 	@echo "  make clean   — 清理缓存"
 	@echo ""
@@ -34,6 +37,18 @@ test:
 init:
 	@if [ -z "$(TARGET)" ]; then echo "用法: make init TARGET=/path/to/project"; exit 1; fi
 	$(PYTHON) scripts/init-project.py $(TARGET) --git-init
+
+build:
+	@if [ -f pyproject.toml ]; then $(PYTHON) -m compileall -q src; fi
+	@if [ -f go.mod ]; then go build ./...; fi
+
+lint:
+	@if command -v ruff >/dev/null 2>&1; then ruff check scripts/ tests/; fi
+	@if command -v prettier >/dev/null 2>&1; then prettier --check "**/*.{md,yaml,yml,json}"; fi
+
+format:
+	@if command -v ruff >/dev/null 2>&1; then ruff format scripts/ tests/; fi
+	@if command -v prettier >/dev/null 2>&1; then prettier --write "**/*.{md,yaml,yml,json}"; fi
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true

@@ -1,0 +1,40 @@
+# ============================================================================
+# pyproject.toml — 模板仓库自身 Python 开发依赖
+#
+# 用途：为模板仓库的验证脚本和测试套件提供开发环境。
+#       初始化新项目时用 templates/language/pyproject.toml.template 替代本文件。
+#
+# 安装：pip install -e ".[dev]"
+# 测试：pytest tests/ -v
+# ============================================================================
+
+[project]
+name = "vibe-coding-template"
+version = "0.1.0"
+description = "AI coding governance template — project constitution, skills, verification scripts, CI scaffolding"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+readme = "README.md"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.4",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = ["-v", "--tb=short", "--strict-markers"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

@@ -89,6 +89,7 @@
 │   └── ...
 │
 ├── Makefile                      # 跨平台验证入口（Linux/macOS: make verify）
+├── pyproject.toml                # Python 项目配置（依赖、lint、格式化）
 ├── AGENTS.md                     # 项目宪法（AI 约束）
 ├── README.md                     # 用户入口（中文）
 ├── README.en.md                  # 用户入口（英文，国际化）

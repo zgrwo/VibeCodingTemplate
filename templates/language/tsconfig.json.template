@@ -1,0 +1,42 @@
+// ============================================================================
+// tsconfig.json — TypeScript 项目构建配置
+// 使用方式：复制到项目根目录，替换 {Module} 等占位符
+// 目标位置：tsconfig.json（项目根目录）
+// ============================================================================
+{
+  "compilerOptions": {
+    // --- 严格模式（强制，见 skills/typescript-SKILL.md 1）---
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true,
+    "noUncheckedIndexedAccess": true,
+
+    // --- 模块与输出 ---
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+
+    // --- 路径别名 ---
+    "baseUrl": ".",
+    "paths": {
+      "@{Module}/*": ["src/{Module}/*"]
+    },
+
+    // --- 质量 ---
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "tests"]
+}

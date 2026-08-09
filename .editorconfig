@@ -16,3 +16,13 @@ indent_size = 4
 [*.{yml,yaml,json}]
 indent_style = space
 indent_size = 2
+
+# TypeScript / JavaScript
+[*.{ts,tsx,js,mjs,cjs}]
+indent_style = space
+indent_size = 2
+
+# Go
+[*.go]
+indent_style = tab
+indent_size = 4

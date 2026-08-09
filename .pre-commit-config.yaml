@@ -38,6 +38,14 @@ repos:
       - id: check-added-large-files    # 大文件检测（防止误提交二进制）
         args: ['--maxkb=500']
 
+  # --- Markdown / YAML / JSON 通用格式化（prettier）---
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        files: '\.(md|ya?ml|json)$'
+        exclude: '\.github/ISSUE_TEMPLATE/.*\.yml$'
+
   # --- Python lint（ruff v0.15.20，与 pyproject.toml 一致）---
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.20

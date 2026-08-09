@@ -223,19 +223,25 @@
 
 ### 高频修复模式
 
+> 从 5 个项目（ExcelFormulaLabs / Excel-VBA-Libraries / EngSmartSuite / costsuite / DocAudit）的全量 commit 历史提炼。详细案例见 [cross-project-synthesis.md](rules/cross-project-synthesis.md)。
+
 | 模式 | 出现次数 | 根因 |
 |------|----------|------|
-| `{{PATTERN_1}}` | `{N}`+ | `{{ROOT_CAUSE_1}}` |
-| `{{PATTERN_2}}` | `{N}`+ | `{{ROOT_CAUSE_2}}` |
-
-> 初始化时从项目历史审查记录填充前 3-5 条；后续每次审查发现新高频模式即追加。
+| 注册/同步遗漏 | 5+ | 新增功能后忘记更新所有关联位置（_DISPATCH/TASK_REGISTRY/文档 6 处） |
+| 文档数字漂移 | 4+ | 函数计数、模块计数在多处硬编码，更新时遗漏 |
+| 交叉验证自校验 | 3+ | `check(name, X, X)` 永远 PASS，3 处 Bug 因此漏过 |
+| 配置流断裂 | 4+ | 规则/参数在配置中声明但链路某节点断裂导致功能静默失效 |
+| 初始实现防御不足 | 5×15轮 | 初始实现只考虑正常路径，未系统性考虑退化输入（每个项目平均经历 5-15 轮审查修复） |
 
 ### 关键设计经验
 
-- {{已验证的设计决策/架构约束（附来源 commit 或审查编号）}}
+- **Core 零依赖**（来源：ExcelFormulaLabs commit `1d06e3f`）：核心计算不引用 Excel-DNA/UI 框架，可独立单元测试。已固化为模板分层规则（UDF → Core → Foundation）。
+- **哨兵值优于异常**（来源：costsuite 性能回归）：数值计算中用 NaN 表示"无效"而非抛异常，热路径中避免 try-catch 开销。已固化为防错三原则之一。
+- **SSOT 收敛是持续战役**（来源：DocAudit 文档数字漂移 4 次复发）：仅设计 SSOT 不够，需 `verify-docs.py --strict` + CI 硬门禁持续守护。已固化为闭环验证强制 + quality-gate。
 
 ### 历史教训索引
 
+- 反模式案例库（8 类，含出现次数 + 真实项目案例）→ `rules/cross-project-synthesis.md`
 - 语言陷阱（Falsy / 封送 / 数组边界）→ `skills/`
 - 工具/脚本坑位（PowerShell / git / robocopy）→ `rules/tooling-pitfalls.md`
 - 架构决策与回退记录 → `rules/adr/`（ADR 编号递增）

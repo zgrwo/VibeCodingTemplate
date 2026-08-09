@@ -7,39 +7,42 @@
 
 ```
 examples/
-├── README.md           # 本文件（使用说明）
+├── README.md                    # 本文件
 ├── src/
 │   └── stats/
-│       ├── StatsCore.py     # 核心层（纯逻辑，零依赖）
-│       └── StatsUdf.py      # UDF 层（参数适配 + 错误包装）
+│       ├── StatsCore.py         # 核心层 Python
+│       ├── StatsCore.ts         # 核心层 TypeScript
+│       ├── StatsCore.go         # 核心层 Go
+│       └── StatsUdf.py          # UDF 层
 ├── tests/
-│   └── test_stats.py        # 单元测试（正常/边界/falsy/异常）
+│   ├── test_stats.py            # Python 单元测试（pytest，16 tests）
+│   ├── test_stats.ts            # TypeScript 单元测试（vitest，17 tests）
+│   └── test_stats.go            # Go 单元测试（table-driven，16 tests）
 └── scripts/
     └── crossval/
-        └── StatsCrossVal.py # 交叉验证（与 scipy 独立比对）
+        └── StatsCrossVal.py     # 交叉验证
 ```
 
 ## 运行示例
 
 ```bash
-# 进入示例目录
-cd examples
-
-# 安装依赖（仅 scipy/numpy 用于交叉验证）
+# Python 示例
 pip install scipy numpy pytest
+pytest examples/tests/test_stats.py -v  # 16 tests
 
-# 运行测试
-pytest tests/ -v
+# TypeScript 示例（需 Node.js 18+）
+npm install -g vitest
+npx vitest run examples/tests/test_stats.ts  # 17 tests
 
-# 运行交叉验证（回到模板根目录执行）
-cd .. && python scripts/verify-manual.py
+# Go 示例（需 Go 1.22+）
+cd examples && go mod init examples && go test ./tests/... -v  # 16 tests
 ```
 
 ## 设计要点
 
-1. **Core 零依赖**：`StatsCore.py` 不引用任何外部框架，可独立单元测试
+1. **Core 零依赖**：所有 Core 实现不引用外部框架，可独立单元测试
 2. **Falsy 守卫**：0 是有效值（均值=0 表示数据全为零），用 `is not None` 不用 `if x:`
-3. **哨兵契约**：空列表/NaN 输入返回 NaN，不抛异常
+3. **哨兵契约**：空/NaN 输入返回 NaN，不抛异常（三种语言一致）
 4. **闭环验证**：CrossVal 与 `scipy.stats` 独立比对，禁止自校验
 
 ## 与模板的对应关系
@@ -47,6 +50,9 @@ cd .. && python scripts/verify-manual.py
 | 示例文件 | 来源模板 |
 |----------|----------|
 | `src/stats/StatsCore.py` | `templates/NewModule/{Name}Core.py.template` |
-| `src/stats/StatsUdf.py` | `templates/NewModule/{Name}Udf.cs.template`（Python 变体） |
+| `src/stats/StatsCore.ts` | `templates/NewModule/{Name}Core.ts.template` |
+| `src/stats/StatsCore.go` | `templates/NewModule/{Name}Core.go.template` |
 | `tests/test_stats.py` | `templates/NewModule/test_{Name}Core.py.template` |
+| `tests/test_stats.ts` | `templates/NewModule/test_{Name}Core.ts.template` |
+| `tests/test_stats.go` | `templates/NewModule/{Name}Core_test.go.template` |
 | `scripts/crossval/StatsCrossVal.py` | `templates/NewModule/{Name}CrossVal.py.template` |

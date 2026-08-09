@@ -73,7 +73,7 @@ DOC_FILES = [
 # 注：logs/ 为运行时目录（.gitignore 排除、init-project 复制时跳过），不检查；
 #     .git/ 为 git 内部目录，无需声明；
 #     .claude/.codegraph/.qoder/ 为 AI 工具本地目录（.gitignore 已忽略、init-project 复制时跳过）
-EXCLUDED_DIRS = {"logs", ".git", ".claude", ".codegraph", ".qoder"}
+EXCLUDED_DIRS = {"logs", ".git", ".claude", ".codegraph", ".qoder", ".pytest_cache", ".ruff_cache", "__pycache__"}
 
 
 def _parse_top_dirs() -> list[str]:

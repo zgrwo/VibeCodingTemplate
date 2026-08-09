@@ -1,0 +1,37 @@
+# ============================================================================
+# detect-template.yml — 可复用工作流：检测仓库是否为模板仓库自身
+#
+# 用法（调用方 workflow）：
+#   jobs:
+#     detect:
+#       uses: ./.github/workflows/detect-template.yml
+#     build:
+#       needs: detect
+#       if: needs.detect.outputs.is_template != 'true'
+#       run: ...
+# ============================================================================
+name: Detect Template
+
+on:
+  workflow_call:
+    outputs:
+      is_template:
+        description: "true if AGENTS.md has unreplaced {{PROJECT_NAME}}"
+        value: ${{ jobs.check.outputs.is_template }}
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    outputs:
+      is_template: ${{ steps.detect.outputs.is_template }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Detect template mode
+        id: detect
+        run: |
+          if grep -rq "{{PROJECT_NAME}}" AGENTS.md 2>/dev/null; then
+            echo "is_template=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_template=false" >> "$GITHUB_OUTPUT"
+          fi
