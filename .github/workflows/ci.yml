@@ -54,7 +54,7 @@ jobs:
       - name: 检测是否为模板仓库自身
         id: detect
         run: |
-          if grep -rq "{{PROJECT_NAME}}" AGENTS.md 2>/dev/null; then
+          if grep -rq '{{' AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
@@ -106,7 +106,7 @@ jobs:
       - name: 检测是否为模板仓库自身
         id: detect
         run: |
-          if grep -rq "{{PROJECT_NAME}}" AGENTS.md 2>/dev/null; then
+          if grep -rq '{{' AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
@@ -131,7 +131,7 @@ jobs:
       - name: 检测是否为模板仓库自身
         id: detect
         run: |
-          if grep -rq "{{PROJECT_NAME}}" AGENTS.md 2>/dev/null; then
+          if grep -rq '{{' AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
@@ -174,14 +174,16 @@ jobs:
           python-version: "3.12"
       - name: 检测是否为模板仓库自身（存在未替换占位符）
         id: detect
+        shell: bash
         run: |
-          if grep -rq "{{PROJECT_NAME}}" AGENTS.md 2>/dev/null; then
+          if grep -rq '{{' AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
           fi
       - name: 模板守卫（NewModule 模板禁止引入双花括号占位符）
         if: steps.detect.outputs.is_template == 'true'
+        shell: bash
         run: |
           leaked=$(grep -rn "{{" templates/NewModule/ | grep -v ROOT_NAMESPACE || true)
           if [ -n "$leaked" ]; then
