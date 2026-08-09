@@ -146,8 +146,15 @@ class FalsyAuditor(ast.NodeVisitor):
     def _check_truthy(self, test: ast.expr, kind: str, lineno: int,
                       line_text: str) -> None:
         """检查 if/while 的条件是否为 falsy 风险。"""
-        # 跳过：is None / is not None / 比较 / 逻辑运算
-        if isinstance(test, (ast.Compare, ast.BoolOp)):
+        # 跳过：is None / is not None / 比较
+        if isinstance(test, ast.Compare):
+            return
+        # or 回退：if threshold or 0.05: 中 threshold 是风险点（0 被误判为假）
+        if isinstance(test, ast.BoolOp) and isinstance(test.op, ast.Or):
+            self._check_or_fallback(test, kind)
+            return
+        # 其余逻辑运算（and 等）跳过
+        if isinstance(test, ast.BoolOp):
             return
         # not x → 解包内层
         if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not):
@@ -205,13 +212,13 @@ class FalsyAuditor(ast.NodeVisitor):
 
     def visit_If(self, node: ast.If) -> None:
         """检查 if 条件。"""
-        line_text = f"if {ast.unparse(node.test)}:" if hasattr(ast, 'unparse') else "if ...:"
+        line_text = f"if {ast.unparse(node.test)}:"
         self._check_truthy(node.test, "if", node.lineno, line_text)
         self.generic_visit(node)
 
     def visit_While(self, node: ast.While) -> None:
         """检查 while 条件。"""
-        line_text = f"while {ast.unparse(node.test)}:" if hasattr(ast, 'unparse') else "while ...:"
+        line_text = f"while {ast.unparse(node.test)}:"
         self._check_truthy(node.test, "while", node.lineno, line_text)
         self.generic_visit(node)
 
@@ -255,7 +262,7 @@ def audit_file_regex(path: Path) -> list[tuple[str, str, int, str, str]]:
         m = regex.match(line)
         if not m:
             return
-        var = m.group(2) if m.lastindex == 2 else m.group(1)
+        var = m.group(2)  # IF/WHILE 正则第二组恒为变量名
         level = _classify(var)
         if level:
             findings.append((level, var, i, line.strip(), kind))

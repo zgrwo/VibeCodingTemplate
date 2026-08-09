@@ -38,7 +38,8 @@ class TestDetectBuildSystem:
         assert build_type == ".NET"
         assert build_cmd[0] == "dotnet"
         assert "build" in build_cmd
-        assert "App.sln" in build_cmd[2]
+        assert "Release" in build_cmd  # 与 verify-all.ps1 对齐（-c Release）
+        assert any("App.sln" in c for c in build_cmd)
 
     def test_no_build_system(self, tmp_path, monkeypatch):
         """无 .sln / pyproject.toml → None, [], []（显式跳过不假装通过）。"""

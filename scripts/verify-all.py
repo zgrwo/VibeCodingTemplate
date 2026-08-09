@@ -55,8 +55,8 @@ def detect_build_system() -> tuple[str | None, list[str], list[str]]:
     if sln_files:
         return (
             ".NET",
-            ["dotnet", "build", str(sln_files[0])],
-            ["dotnet", "test", str(sln_files[0])],
+            ["dotnet", "build", "-c", "Release", str(sln_files[0])],
+            ["dotnet", "test", "-c", "Release", str(sln_files[0])],
         )
 
     # Python

@@ -61,6 +61,10 @@ def cross_check(name: str, actual: float, expected: float, tol: float = 1e-10) -
         _FAIL += 1
         print(f"  [FAIL] {name}: 期望值缺失（疑似自校验或无参考实现）")
         return
+    if actual is None:
+        _FAIL += 1
+        print(f"  [FAIL] {name}: 实际值为 None（被测实现未返回有效结果）")
+        return
     scale = max(1.0, abs(float(expected)))
     if abs(float(actual) - float(expected)) <= tol * scale:
         _PASS += 1
