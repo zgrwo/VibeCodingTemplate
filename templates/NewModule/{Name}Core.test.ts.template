@@ -1,12 +1,15 @@
 // ============================================================================
-// test_{Name}Core.ts — 核心层单元测试
+// {Name}Core.test.ts — 核心层单元测试
 // 使用方式：将 {Name} 替换为模块名
-// 目标位置：tests/{Module}/test_{Name}Core.ts
-// 运行：npx vitest run tests/{Module}/test_{Name}Core.ts
+// 目标位置：tests/{Module}/{Name}Core.test.ts
+// 运行：npx vitest run tests/{Module}/
+// 注意：文件名后缀必须为 .test.ts（vitest/Jest 默认 glob **/*.{test,spec}.*），
+//       否则测试文件不会被测试运行器发现。
 // ============================================================================
 
 import { describe, it, expect } from "vitest";
-import { compute, process } from "{Module}/{Name}Core";
+// 相对导入 src/（tests/{Module}/ → src/{Module}/），避免裸 specifier 无法解析
+import { compute, process } from "../../src/{Module}/{Name}Core";
 
 describe("{Name}Core", () => {
   // ========== compute ==========
@@ -20,24 +23,24 @@ describe("{Name}Core", () => {
       expect(compute(0)).toBe(0);
     });
 
-    it("null 返回 null（哨兵契约）", () => {
-      expect(compute(null)).toBeNull();
+    it("null 返回 NaN（哨兵契约）", () => {
+      expect(Number.isNaN(compute(null))).toBe(true);
     });
 
-    it("undefined 返回 null（哨兵契约）", () => {
-      expect(compute(undefined)).toBeNull();
+    it("undefined 返回 NaN（哨兵契约）", () => {
+      expect(Number.isNaN(compute(undefined))).toBe(true);
     });
 
-    it("NaN 返回 null（防御性）", () => {
-      expect(compute(NaN)).toBeNull();
+    it("NaN 返回 NaN（防御性）", () => {
+      expect(Number.isNaN(compute(NaN))).toBe(true);
     });
 
-    it("Infinity 返回 null（防御性）", () => {
-      expect(compute(Infinity)).toBeNull();
+    it("Infinity 返回 NaN（防御性）", () => {
+      expect(Number.isNaN(compute(Infinity))).toBe(true);
     });
 
-    it("-Infinity 返回 null（防御性）", () => {
-      expect(compute(-Infinity)).toBeNull();
+    it("-Infinity 返回 NaN（防御性）", () => {
+      expect(Number.isNaN(compute(-Infinity))).toBe(true);
     });
   });
 

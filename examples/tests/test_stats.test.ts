@@ -1,7 +1,8 @@
 // ============================================================================
-// test_stats.ts — StatsCore 单元测试（TypeScript 示例）
-// 对应模板：templates/NewModule/test_{Name}Core.ts.template
-// 运行：npx vitest run examples/tests/test_stats.ts
+// test_stats.test.ts — StatsCore 单元测试（TypeScript 示例）
+// 对应模板：templates/NewModule/{Name}Core.test.ts.template
+// 运行：npx vitest run examples/tests/
+// 注意：文件名后缀 .test.ts 为 vitest/Jest 默认 glob（**/*.{test,spec}.*）要求
 // ============================================================================
 import { describe, it, expect } from "vitest";
 import { mean, weightedMean } from "../src/stats/StatsCore";
