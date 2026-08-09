@@ -5,6 +5,11 @@
       "category": "content",
       "prompt": ""
     },
+    "APP_PORT": {
+      "category": "core",
+      "prompt": "应用端口号（docker-compose 使用）",
+      "test": "8080"
+    },
     "AUTHOR": {
       "category": "core",
       "prompt": "作者姓名",
@@ -19,6 +24,11 @@
       "category": "content",
       "prompt": "",
       "test": "python -m build"
+    },
+    "BUILD_IMAGE": {
+      "category": "core",
+      "prompt": "Docker 构建镜像（如 python:3.12-slim）",
+      "test": "golang:1.22-alpine"
     },
     "CALLING_CONVENTION_NOTES": {
       "category": "content",
@@ -76,6 +86,21 @@
       "prompt": "日期",
       "test": "2026-01-01"
     },
+    "DB_NAME": {
+      "category": "core",
+      "prompt": "数据库名（docker-compose 使用）",
+      "test": "app_db"
+    },
+    "DB_PASSWORD": {
+      "category": "core",
+      "prompt": "数据库密码（docker-compose 使用）",
+      "test": "secret"
+    },
+    "DB_USER": {
+      "category": "core",
+      "prompt": "数据库用户（docker-compose 使用）",
+      "test": "app_user"
+    },
     "DEFAULT_2": {
       "category": "content",
       "prompt": ""
@@ -117,6 +142,11 @@
     "EMPTY_ERROR": {
       "category": "content",
       "prompt": ""
+    },
+    "ENTRY_CMD": {
+      "category": "core",
+      "prompt": "容器入口命令（Dockerfile CMD，如 python -m my_project）",
+      "test": "python -m my_project"
     },
     "ERROR_CONDITION_1": {
       "category": "content",
@@ -166,6 +196,11 @@
       "category": "content",
       "prompt": ""
     },
+    "FOUNDATION_PACKAGE": {
+      "category": "core",
+      "prompt": "Monorepo 基础包路径（如 Acme.Shared）",
+      "test": "Acme.Shared"
+    },
     "FULL_VERIFY_CMD": {
       "category": "core",
       "prompt": "全量验证命令",
@@ -182,6 +217,11 @@
     "FUNCTION_SIGNATURE": {
       "category": "content",
       "prompt": ""
+    },
+    "IMAGE_NAME": {
+      "category": "core",
+      "prompt": "Docker 镜像名（docker.yml.template 使用，如 my-app）",
+      "test": "my-app"
     },
     "INPUT_1": {
       "category": "content",
@@ -380,6 +420,11 @@
     "RETURN_TYPE": {
       "category": "content",
       "prompt": ""
+    },
+    "RUNTIME_IMAGE": {
+      "category": "core",
+      "prompt": "Docker 运行时镜像（如 gcr.io/distroless/python3）",
+      "test": "gcr.io/distroless/static-debian12"
     },
     "ROOT_CAUSE_1": {
       "category": "content",

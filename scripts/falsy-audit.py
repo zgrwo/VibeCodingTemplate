@@ -177,6 +177,17 @@ class FalsyAuditor(ast.NodeVisitor):
                 pass
         self.generic_visit(node)
 
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        """收集函数参数的类型注解：def f(x: bool) -> None"""
+        for arg in node.args.args + node.args.kwonlyargs:
+            if arg.annotation:
+                try:
+                    hint = ast.unparse(arg.annotation)
+                    self._type_hints[arg.arg] = hint
+                except Exception:
+                    pass
+        self.generic_visit(node)
+
     def visit_If(self, node: ast.If) -> None:
         """检查 if 条件。"""
         line_text = f"if {ast.unparse(node.test)}:" if hasattr(ast, 'unparse') else "if ...:"

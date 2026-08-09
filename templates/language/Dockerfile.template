@@ -1,7 +1,7 @@
 # ============================================================================
 # Dockerfile.template — 通用容器化模板
 # 使用方式：复制到项目根目录，替换 {{...}} 占位符
-# 适用语言：Python / Node.js / .NET（按需取消注释对应阶段）
+# 适用语言：Python / Node.js / .NET / Go（按需取消注释对应阶段）
 # 参考：Google Distroless 容器最佳实践（最小镜像 + 无 shell 攻击面）
 # ============================================================================
 
@@ -28,6 +28,12 @@ WORKDIR /app
 # COPY src/ ./src/
 # RUN dotnet publish -c Release -o /app/publish
 
+# --- Go 项目 ---
+# COPY go.mod go.sum ./
+# RUN go mod download
+# COPY . ./
+# RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /app/server ./cmd/...
+
 # ---- 运行阶段（distroless / minimal）----
 FROM {{RUNTIME_IMAGE}}
 
@@ -47,6 +53,9 @@ WORKDIR /app
 # --- .NET 运行时 ---
 # COPY --from=builder /app/publish ./
 
+# --- Go 运行时 ---
+# COPY --from=builder /app/server ./
+
 # 非 root 用户（安全最佳实践）
 RUN groupadd -r app && useradd -r -g app app
 USER app
@@ -59,4 +68,5 @@ USER app
 # Python:  CMD ["python", "-m", "{{PACKAGE_NAME}}"]
 # Node:   CMD ["node", "dist/index.js"]
 # .NET:    CMD ["dotnet", "{{PACKAGE_NAME}}.dll"]
+# Go:     CMD ["./server"]
 CMD ["{{ENTRY_CMD}}"]

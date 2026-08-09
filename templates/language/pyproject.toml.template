@@ -44,8 +44,9 @@ dev = [
 web = []  # 按需补充（flask/streamlit 等）
 report = []  # 按需补充（reportlab/openpyxl 等）
 
-[project.scripts]
-{{PACKAGE_NAME}} = "{{PACKAGE_NAME}}.cli:main"
+# [project.scripts]
+# 如项目有 CLI 入口，取消注释并补全 cli.py（含 main 函数）：
+# {{PACKAGE_NAME}} = "{{PACKAGE_NAME}}.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
