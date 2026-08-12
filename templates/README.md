@@ -130,3 +130,30 @@
 - **禁止自校验**：CrossVal 必须与独立实现（scipy/numpy）比对，`check(name, X, X)` 无效
 - **Core 零依赖**：不引用 Excel-DNA / UI 框架，可独立单元测试
 - **Udf 无业务逻辑**：业务逻辑在 Core，Udf 只做参数适配与错误包装
+
+## 治理脚本速查（本模板自举能力）
+
+> 这些脚本是本模板从 5 个子项目反哺吸收的自举门禁（见 `docs/absorption-plan-2026-08.md`），
+> 初始化后在新项目中**自动保留**，作为项目治理基线。
+
+> **离线安装**：`language/offline-setup.py.template` 提供零依赖离线安装工具
+> （download/install/`--print-cmd` 干跑），复制后使用。
+
+| 脚本 | 作用 | 何时运行 |
+|------|------|---------|
+| `scripts/verify-registries.py` | 多注册表键集一致性（防注册遗漏） | `make verify` / CI |
+| `scripts/gen-doc-counts.py --check` | 文档计数自动注入（防数字漂移） | `make verify` / CI |
+| `scripts/verify-docs.py --strict` | 链接/目录树/语义一致性 | `make verify` / CI |
+| `scripts/verify-manual.py` | 手册一致性 + CrossVal 执行器 | `make verify` / CI |
+| `scripts/test-quality-guard.py` | 测试质量守卫（弱断言/缺测/命名） | `make verify` / CI |
+| `scripts/doctor.py` | 环境就绪诊断（新开发者第一步） | `make doctor` |
+
+### 技能创作约定（来源：跨项目共识）
+
+- **决策树格式**（来源：工程分析 analysis-decision-tree / 成本分析线程策略）：领域知识
+  编码为 if-then 路由（"用户想 X？→ 用方法 Y"），AI 可据此路由请求到正确实现。
+- **术语治理**（来源：文档审查 glossary/vocab）：`rules/context.md` 定义术语后，如需机器执行，
+  建 `vocab/accept.txt`/`reject.txt` 词表 + 校验脚本（模板提供模式，不强制部署）。
+- **双 AI 工具格式**（来源：成本分析 skills/+.qoder/skills/）：同一技能维护
+  `skills/*.md`（人类/Claude 可读）与 `.qoder/skills/*/SKILL.md`（机器解析格式）
+  两份；模板默认 `skills/` 即可，`.qoder/` 按需。

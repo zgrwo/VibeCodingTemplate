@@ -54,6 +54,7 @@ DOC_FILES = [
     "rules/adr-template.md",
     "rules/falsy-pitfalls.md",
     "rules/tooling-pitfalls.md",
+    "rules/sentinel-contract.md",
     # skills/ AI 技能文件
     "skills/csharp-SKILL.md",
     "skills/python-SKILL.md",
@@ -389,6 +390,88 @@ def check_subdir_undeclared(strict: bool) -> list[str]:
     return problems
 
 
+def check_semantic_consistency() -> list[str]:
+    """语义交叉检查（来源：ExcelAddin verify-docs.sh 8 向量中语言无关部分）。
+
+    模板的红线规则要求"无裸 catch/except"，但该自检原为提交前 grep，不属
+    verify-docs 硬门禁。此处将最易遗漏的 3 个语言无关向量纳入 CI：
+      1. 源码无裸 `catch {`（C#）/ 无裸 `except:`（Python）
+      2. 文档无未闭合 TODO/FIXME 残留（易被误以为已处理）
+      3. scripts/*.py 无裸 `input()`（CI 无 TTY 时挂起）
+    """
+    problems: list[str] = []
+
+    # 向量 1：裸异常捕获（仅扫 src/ 生产代码；tests/ 常含教学字符串会被误判，
+    # 且模板红线"grep catch{ src/" 本就只扫 src/）
+    bare_patterns = [
+        (r"catch\s*\{", "{csharp} 裸 catch {", ("src",)),
+        (r"except\s*:", "{python} 裸 except:", ("src",)),
+    ]
+    for pattern, label, roots in bare_patterns:
+        for root in roots:
+            base = ROOT / root
+            if not base.exists():
+                continue
+            for p in base.rglob("*"):
+                if not p.is_file() or p.suffix.lower() not in {".cs", ".py"}:
+                    continue
+                if any(part in EXCLUDED_DIRS for part in p.relative_to(ROOT).parts):
+                    continue
+                try:
+                    text = p.read_text(encoding="utf-8", errors="replace")
+                except OSError:
+                    continue
+                if re.search(pattern, text):
+                    problems.append(
+                        f"[语义检查] {label} 残留于 {p.relative_to(ROOT)}"
+                        "（防错三原则：统一排除不可恢复异常，禁止裸捕获）"
+                    )
+
+    # 向量 2：文档中的 TODO/FIXME 残留（未闭合的待办易被当作已完成）
+    for doc in DOC_FILES:
+        p = ROOT / doc
+        if not p.exists():
+            continue
+        try:
+            text = p.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        # 仅匹配行首待办标记（如 "- TODO: ..."），排除教学性提及
+        # （如审查规则里"注释说 TODO: 未来优化"作为反模式示例）
+        for m in re.finditer(r"^\s*(?:[-*]?\s*)?(TODO|FIXME)\s*[:：]", text, re.MULTILINE):
+            problems.append(
+                f"[语义检查] {doc} 含未闭合 {m.group(1)} 待办（第 "
+                f"{text[:m.start()].count(chr(10)) + 1} 行）——已完成请移除，未完成请登记"
+            )
+
+    # 向量 3：CI 调用的验证脚本禁裸 input()（CI 无 TTY 时挂起）。
+    # 仅扫非交互验证脚本（verify-* / falsy-audit / gen-doc-counts），
+    # init-project.* 本为交互工具且有 --non-interactive，不在 CI 直跑，豁免。
+    ci_scripts = [
+        p for p in (ROOT / "scripts").glob("*.py")
+        if p.name.startswith(("verify-", "falsy-", "gen-doc-"))
+    ]
+    for p in sorted(ci_scripts):
+        try:
+            text = p.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        # 仅匹配真正的调用：跳过注释行，且跳过含正则模式字面量的行（检查逻辑自身，
+        # 如本函数里 `input|raw_input` 是正则串而非调用）
+        for line_no, line in enumerate(text.splitlines(), start=1):
+            stripped = line.split("#", 1)[0]
+            if "input|raw_input" in stripped or "re.search" in stripped:
+                continue
+            call = re.search(r"(?:^|\s)(input|raw_input)\s*\(", stripped)
+            if call:
+                problems.append(
+                    f"[语义检查] {p.name} 第 {line_no} 行含裸 {call.group(1)} 调用"
+                    "——CI 无交互环境会挂起，请改为参数/环境变量/--non-interactive"
+                )
+
+    return problems
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="文档一致性验证")
     parser.add_argument("--strict", action="store_true", help="含未声明文件检查")
@@ -399,6 +482,7 @@ def main() -> int:
         + check_backtick_paths()
         + check_dirs()
         + check_agents_tree()
+        + check_semantic_consistency()
         + check_subdir_undeclared(args.strict)
         + check_undeclared(args.strict)
     )

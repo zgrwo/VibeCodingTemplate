@@ -176,7 +176,13 @@ Phase 0 审计结果 → 决策：
 | 设计原则（SSOT/配置驱动/YAGNI/优雅降级） | [AGENTS.md 核心准则](../AGENTS.md) + [specification.md](specification.md) |
 | 架构层级与单向依赖 | [project-structure.md](project-structure.md) |
 | 闭环验证体系（交叉验证/黄金测试/差分测试） | [AGENTS.md 闭环验证强制](../AGENTS.md) + [verify-manual.py](../scripts/verify-manual.py) |
-| 防御编程（哨兵契约/异常过滤器/NaN 守卫） | [AGENTS.md 防错三原则](../AGENTS.md) + [skills/csharp-SKILL.md](../skills/csharp-SKILL.md) |
+| 分类型比较器 / 容差分层（数组/字典/标量） | [verify-manual.py compare](../scripts/verify-manual.py) |
+| 测试有效性（弱断言/缺测/命名守卫） | [test-quality-guard.py](../scripts/test-quality-guard.py) |
+| 防御编程（哨兵契约/异常过滤器/NaN 守卫） | [AGENTS.md 防错三原则](../AGENTS.md) + [sentinel-contract.md](sentinel-contract.md) + [skills/csharp-SKILL.md](../skills/csharp-SKILL.md) |
+| 环境就绪诊断（新开发者第一步） | [doctor.py](../scripts/doctor.py) |
+| 多注册表一致性（防注册遗漏） | [verify-registries.py](../scripts/verify-registries.py) |
+| 文档计数自动注入（防数字漂移） | [gen-doc-counts.py](../scripts/gen-doc-counts.py) |
+| YAGNI 移除文档（为什么移除 X + git 引用） | [specification.md](specification.md) + [adr-template.md](adr-template.md) |
 | 文档职责体系 | [documentation.md](documentation.md)（唯一权威） |
 | 会话管理（5 文件/20 轮/跨会话接力） | [AGENTS.md 会话管理](../AGENTS.md) |
 | 版本管理（SemVer + 发版流程） | [CONTRIBUTING.md 发版规范](../CONTRIBUTING.md) + [release.yml](../.github/workflows/release.yml)（release-please 自动） |

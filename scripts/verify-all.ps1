@@ -67,6 +67,12 @@ try {
                 if ($LASTEXITCODE) { throw "verify-manual.py 失败 (退出码 $LASTEXITCODE)" }
                 python "$root\scripts\falsy-audit.py"
                 if ($LASTEXITCODE) { throw "falsy-audit.py 失败 (退出码 $LASTEXITCODE)" }
+                python "$root\scripts\verify-registries.py"
+                if ($LASTEXITCODE) { throw "verify-registries.py 失败 (退出码 $LASTEXITCODE)" }
+                python "$root\scripts\gen-doc-counts.py" --check
+                if ($LASTEXITCODE) { throw "gen-doc-counts.py 失败 (退出码 $LASTEXITCODE)" }
+                python "$root\scripts\test-quality-guard.py"
+                if ($LASTEXITCODE) { throw "test-quality-guard.py 失败 (退出码 $LASTEXITCODE)" }
             }
         }
     }

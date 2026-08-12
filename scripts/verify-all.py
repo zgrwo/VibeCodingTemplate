@@ -91,6 +91,9 @@ def main() -> int:
         steps.append(("文档一致性", [py, "scripts/verify-docs.py", "--strict"]))
         steps.append(("手册一致性", [py, "scripts/verify-manual.py"]))
         steps.append(("Falsy 审计", [py, "scripts/falsy-audit.py"]))
+        steps.append(("注册表一致性", [py, "scripts/verify-registries.py"]))
+        steps.append(("文档计数一致性", [py, "scripts/gen-doc-counts.py", "--check"]))
+        steps.append(("测试质量守卫", [py, "scripts/test-quality-guard.py"]))
 
     all_passed = True
     for name, cmd in steps:

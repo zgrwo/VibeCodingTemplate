@@ -190,3 +190,87 @@ class TestMainCLI:
         with redirect_stdout(out):
             code = vm.main()
         assert code == 0
+
+
+class TestManualCheck:
+    """测试手册声称值比对（档 A-A4 run-and-compare 模式）。"""
+
+    def _setup_manual(self, tmp_path, content: str):
+        manual = tmp_path / "user-manual.md"
+        manual.write_text(content, encoding="utf-8")
+        return manual
+
+    def test_load_claims_extracts_values(self, tmp_path):
+        vm.MANUAL = self._setup_manual(
+            tmp_path,
+            "均值: <!-- CLAIM:MEAN_ZERO -->0.0<!-- /CLAIM:MEAN_ZERO -->\n"
+            "阈值: <!-- CLAIM:ALPHA -->0.05<!-- /CLAIM:ALPHA -->\n",
+        )
+        assert vm.load_claims() == {"MEAN_ZERO": 0.0, "ALPHA": 0.05}
+
+    def test_load_claims_skips_non_numeric(self, tmp_path):
+        vm.MANUAL = self._setup_manual(tmp_path, "<!-- CLAIM:EMPTY --><!-- /CLAIM:EMPTY -->")
+        assert vm.load_claims() == {}
+
+    def test_manual_check_pass_when_match(self, tmp_path):
+        vm.MANUAL = self._setup_manual(tmp_path, "<!-- CLAIM:X -->1.5<!-- /CLAIM:X -->")
+        vm._PASS = vm._FAIL = 0
+        vm.manual_check("X", 1.5)
+        assert vm._PASS == 1 and vm._FAIL == 0
+
+    def test_manual_check_fail_when_mismatch(self, tmp_path):
+        vm.MANUAL = self._setup_manual(tmp_path, "<!-- CLAIM:X -->1.5<!-- /CLAIM:X -->")
+        vm._PASS = vm._FAIL = 0
+        vm.manual_check("X", 9.9)
+        assert vm._FAIL == 1
+
+    def test_manual_check_fail_when_claim_missing(self, tmp_path):
+        vm.MANUAL = self._setup_manual(tmp_path, "<!-- CLAIM:X -->1.5<!-- /CLAIM:X -->")
+        vm._PASS = vm._FAIL = 0
+        vm.manual_check("NOT_THERE", 1.0)
+        assert vm._FAIL == 1
+        assert vm._PASS == 0
+
+
+class TestCompareAndTiers:
+    """测试分类型比较器与容差分层（档 B-B2 CrossVal runner 骨架）。"""
+
+    def test_compare_array_pass(self):
+        vm._PASS = vm._FAIL = 0
+        vm.compare("ARRAY_OK", [1.0, 2.0], [1.0, 2.0])
+        assert vm._PASS == 1 and vm._FAIL == 0
+
+    def test_compare_array_length_mismatch(self):
+        vm._PASS = vm._FAIL = 0
+        vm.compare("ARRAY_LEN", [1.0], [1.0, 2.0])
+        assert vm._FAIL == 1
+
+    def test_compare_array_element_mismatch(self):
+        vm._PASS = vm._FAIL = 0
+        vm.compare("ARRAY_EL", [1.0, 2.5], [1.0, 2.0])
+        assert vm._FAIL == 1
+
+    def test_compare_dict_keys(self):
+        vm._PASS = vm._FAIL = 0
+        vm.compare("DICT_OK", {"a": 1}, {"a": 2})  # 仅比键集合
+        assert vm._PASS == 1 and vm._FAIL == 0
+        vm.compare("DICT_BAD", {"a": 1}, {"b": 2})
+        assert vm._FAIL == 1
+
+    def test_compare_scalar_delegates(self):
+        vm._PASS = vm._FAIL = 0
+        vm.compare("SCALAR", 3.0, 3.0)
+        assert vm._PASS == 1 and vm._FAIL == 0
+
+    def test_compare_string(self):
+        vm._PASS = vm._FAIL = 0
+        vm.compare("STR_OK", "abc", "abc")
+        vm.compare("STR_BAD", "abc", "abd")
+        assert vm._PASS == 1 and vm._FAIL == 1
+
+    def test_tolerance_tiers_defined(self):
+        assert set(vm.TOLERANCE_TIERS) == {
+            "exact", "standard", "numeric", "loose", "stats", "physical",
+        }
+        assert vm.TOLERANCE_TIERS["standard"] == 1e-10
+        assert vm.TOLERANCE_TIERS["stats"] == 1e-2

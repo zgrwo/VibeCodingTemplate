@@ -32,6 +32,7 @@
 │   ├── adr-template.md           # ADR 模板（编号与格式）
 │   ├── falsy-pitfalls.md         # Python falsy 陷阱清单
 │   ├── tooling-pitfalls.md       # 工具/脚本坑位清单
+│   ├── sentinel-contract.md      # 哨兵契约 L1-L5 与 NaN/Inf 守卫清单
 │   └── adr/                      # ADR 决策记录（0001-xxx.md，编号递增）
 │
 ├── skills/                       # AI 编码技能文件
@@ -46,6 +47,14 @@
 │
 ├── scripts/                      # 构建/验证脚本
 │   ├── placeholders.json         # 占位符清单（唯一真相源：分类/默认值/测试值）
+│   ├── registries.json           # 注册表一致性门禁配置（registry 键集对声明）
+│   ├── verify-registries.py      # 多注册表键集一致性门禁（防注册遗漏）
+│   ├── doc-counts.json           # 文档计数源配置（AUTO_COUNTS 标记注入）
+│   ├── gen-doc-counts.py         # 文档计数自动注入（防文档数字漂移）
+│   ├── doctor.py                 # 环境就绪性诊断（新开发者第一步）
+│   ├── test-quality-guard.py     # 测试质量守卫（弱断言/缺测/命名）
+│   ├── run-affected-tests.py     # 影响范围测试路由（git-diff → 受影响测试）
+│   ├── retry.py                  # 瞬态错误重试装饰器（@retry_transient）
 │   ├── placeholder-utils.ps1     # 占位符 manifest 读取工具（init/test 共用）
 │   ├── validate-commit-msg.sh    # Conventional Commits 校验（commit hook 与 CI 共用）
 │   ├── git-hooks/                # git hooks（commit-msg → core.hooksPath）
@@ -81,7 +90,8 @@
 │
 ├── docs/                         # 用户文档（补充材料）
 │   ├── README.md                 # 文档目录说明（与 rules/ 的分工）
-│   └── architecture.md           # 架构设计（ADR 决策记录）
+│   ├── architecture.md           # 架构设计（ADR 决策记录）
+│   └── absorption-plan-2026-08.md # 子项目高价值点吸收计划（跨会话执行依据）
 │
 ├── build/                        # 构建配置（按需裁剪）
 │   └── ...

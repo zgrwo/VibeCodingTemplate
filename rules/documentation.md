@@ -18,6 +18,7 @@
 | `rules/adr-template.md` + `rules/adr/` | AI + 人类 | "这个架构决策为什么这么做？"（决策历史） | 新增/推翻架构决策 |
 | `rules/falsy-pitfalls.md` | AI 编码 | "Python 中 0 被当作 False？" | 发现新 falsy 误判案例 |
 | `rules/tooling-pitfalls.md` | AI + 人类 | "PowerShell/git 有什么坑？" | 新踩坑并验证修复后 |
+| `rules/sentinel-contract.md` | AI 编码 | "无效输入返回什么？哨兵还是异常？" | 哨兵契约或守卫清单变更 |
 | `CONTRIBUTING.md` | 贡献者 | "怎么开发/提 PR/发版？" | 流程变更 |
 | `CHANGELOG.md` | 用户/维护者 | "这个版本改了什么？" | 每次发版 |
 | `SECURITY.md` | 安全报告者 | "怎么报告漏洞？" | 安全政策变更 |
@@ -69,6 +70,11 @@
 
 新踩工具/脚本坑位
   → rules/tooling-pitfalls.md（附真实案例）
+
+新增治理脚本（本模板自举门禁）
+  → rules/project-structure.md 目录树登记（verify-docs --strict 强制）
+  → scripts/verify-all.py/.ps1 + Makefile docs target + ci.yml quality-gate 接入
+  → templates/README.md「治理脚本速查」表 + cross-project-synthesis 索引表登记
 
 发版（release-please 自动）
   → 提交遵循 Conventional Commits（scripts/validate-commit-msg.sh 强制）

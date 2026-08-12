@@ -163,3 +163,34 @@ class TestCheckFunctionsDetection:
         )
         problems = vd.check_agents_tree()
         assert not any("目录树漂移" in p for p in problems)
+
+
+class TestSemanticConsistency:
+    """测试语义交叉检查（档 A-A3：裸 catch / TODO / input 向量）。"""
+
+    def test_bare_catch_detected(self, tmp_path, monkeypatch):
+        """src/ 下含裸 catch { 的 C# 文件必须被检出。"""
+        src = tmp_path / "src"
+        src.mkdir()
+        (src / "bad.cs").write_text("try {} catch {}", encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        problems = vd.check_semantic_consistency()
+        assert any("裸 catch" in p and "bad.cs" in p for p in problems)
+
+    def test_todo_in_doc_detected(self, tmp_path, monkeypatch):
+        """文档中行首 TODO: 待办必须被检出。"""
+        doc = tmp_path / "README.md"
+        doc.write_text("# 标题\n\n- TODO: 未完成事项\n", encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        monkeypatch.setattr(vd, "DOC_FILES", ["README.md"])
+        problems = vd.check_semantic_consistency()
+        assert any("TODO" in p for p in problems)
+
+    def test_input_in_ci_script_detected(self, tmp_path, monkeypatch):
+        """CI 验证脚本中裸 input() 必须被检出。"""
+        scripts = tmp_path / "scripts"
+        scripts.mkdir()
+        (scripts / "verify-x.py").write_text('x = input(">")', encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        problems = vd.check_semantic_consistency()
+        assert any("input" in p for p in problems)

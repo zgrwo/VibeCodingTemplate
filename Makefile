@@ -4,7 +4,7 @@
 # 适用于 Linux/macOS/WSL 环境（Windows 用户可用 verify-all.ps1）
 # ============================================================================
 
-.PHONY: verify docs test init clean help build lint format
+.PHONY: verify docs test init clean help build lint format doctor
 
 PYTHON ?= python
 
@@ -30,6 +30,11 @@ docs:
 	$(PYTHON) scripts/verify-docs.py --strict
 	$(PYTHON) scripts/verify-manual.py
 	$(PYTHON) scripts/falsy-audit.py
+	$(PYTHON) scripts/verify-registries.py
+	$(PYTHON) scripts/gen-doc-counts.py --check
+
+doctor:
+	$(PYTHON) scripts/doctor.py
 
 test:
 	$(PYTHON) scripts/verify-all.py --quick

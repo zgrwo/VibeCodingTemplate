@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+"""
+test-quality-guard.py — 测试质量守卫（弱断言/缺测/命名）
+
+背景（来源：成本分析套件 tools/test-quality-guard.ps1 五阶段检测）：
+  lint 与覆盖率只保证"测试存在"，不保证"测试有效"。本脚本检测三类测试质量问题：
+    1. 弱断言：`assert x is not None` / `assert len(x) > 0` 等作为**唯一**断言的测试方法
+       （验证了"不是空"，但没有验证具体值，任何非空结果都能通过——形同虚设）
+    2. 缺测：src/ 下公共函数无对应测试引用（源码改动了测试没跟上）
+    3. 命名：测试方法名非描述性（test_<数字> / test_caseN 等无意义名）
+
+用法：
+  python scripts/test-quality-guard.py            # 基础检查
+  python scripts/test-quality-guard.py --src src --tests tests
+
+退出码：0 = 通过（弱断言仅 WARN）；1 = 存在 FAIL（缺测/命名）
+"""
+import argparse
+import ast
+import contextlib
+import re
+import sys
+from pathlib import Path
+
+with contextlib.suppress(AttributeError, ValueError):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+ROOT = Path(__file__).resolve().parent.parent
+
+# 弱断言模式：只有这类断言，无具体值验证
+_WEAK_ASSERT_RE = re.compile(
+    r"assert\s+\w+\s+is\s+not\s+None"       # assert x is not None
+    r"|assert\s+len\([^)]*\)\s*[><]=?\s*0"  # assert len(x) > 0
+    r"|assert\s+\w+\s*!=\s*None"             # assert x != None
+    r"|assert\s+bool\("                       # assert bool(x)
+)
+# 真实断言（验证具体值）
+_STRONG_ASSERT_RE = re.compile(
+    r"assert\s+\w+\s*[=!]=\s*\w+"            # assert a == b
+    r"|assert\s+\w+\s*in\s+"                  # assert x in ...
+    r"|assert\s+\w+\s*[<>]=?\s*\w+"           # assert a < b
+    r"|assert\s+\w+\s*is\s+True"              # assert x is True
+    r"|assert\s+\w+\s*is\s+False"
+    r"|pytest\.raises"                         # 异常断言
+)
+# 无意义测试名：test_<纯数字/序号/caseN>
+_BAD_NAME_RE = re.compile(
+    r"test_(?:\d+|case\d+|test\d+|a|b|c|foo|bar|dummy)$"
+)
+
+
+def _rel(path: Path) -> str:
+    """输出相对路径；位于仓库外时回退绝对路径（防 relative_to ValueError）。"""
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
+def _extract_test_methods(path: Path) -> list[tuple[str, str]]:
+    """解析 Python 测试文件，返回 [(方法名, 方法源码)]。"""
+    try:
+        text = path.read_text(encoding="utf-8")
+        tree = ast.parse(text)
+    except (OSError, SyntaxError):
+        return []
+    methods: list[tuple[str, str]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
+            src = ast.get_source_segment(text, node) or ""
+            methods.append((node.name, src))
+    return methods
+
+
+def _method_has_strong_assert(src: str) -> bool:
+    """方法体是否含真实断言（排除注释）。"""
+    for line in src.splitlines():
+        stripped = line.split("#", 1)[0]
+        if _STRONG_ASSERT_RE.search(stripped):
+            return True
+    return False
+
+
+def _method_is_weak_only(src: str) -> bool:
+    """方法只有弱断言（且无强断言）→ 视为弱。"""
+    return bool(_WEAK_ASSERT_RE.search(src)) and not _method_has_strong_assert(src)
+
+
+def check_weak_asserts(tests_dir: Path) -> list[str]:
+    """检测弱断言测试方法。"""
+    problems: list[str] = []
+    if not tests_dir.is_dir():
+        return problems
+    for p in sorted(tests_dir.rglob("test_*.py")):
+        for name, src in _extract_test_methods(p):
+            if _method_is_weak_only(src):
+                rel = _rel(p)
+                problems.append(
+                    f"[WARN] {rel}:{name} 仅弱断言（is not None / len>0 / bool()），"
+                    "不验证具体值——任何非空结果都能通过，请补真实断言"
+                )
+    return problems
+
+
+def check_naming(tests_dir: Path) -> list[str]:
+    """检测无意义测试命名。"""
+    problems: list[str] = []
+    if not tests_dir.is_dir():
+        return problems
+    for p in sorted(tests_dir.rglob("test_*.py")):
+        for name, _ in _extract_test_methods(p):
+            if _BAD_NAME_RE.search(name):
+                rel = _rel(p)
+                problems.append(
+                    f"[FAIL] {rel}:{name} 无意义测试名——请改为描述性名称"
+                    "（如 test_divide_by_zero_returns_nan）"
+                )
+    return problems
+
+
+def check_missing_tests(src_dir: Path, tests_dir: Path) -> list[str]:
+    """src/ 公共函数 vs tests/ 测试引用对应检测（防"改代码没更测试"）。"""
+    problems: list[str] = []
+    if not src_dir.is_dir() or not tests_dir.is_dir():
+        return problems
+    tested: set[str] = set()
+    for p in tests_dir.rglob("test_*.py"):
+        try:
+            text = p.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        tested.update(re.findall(r"\b(\w+)\(", text))
+    for p in sorted(src_dir.rglob("*.py")):
+        if p.name.startswith("__"):
+            continue
+        try:
+            tree = ast.parse(p.read_text(encoding="utf-8"))
+        except (OSError, SyntaxError):
+            continue
+        for node in tree.body:
+            is_public = isinstance(node, ast.FunctionDef) and not node.name.startswith("_")
+            if is_public and node.name not in tested:
+                    rel = _rel(p)
+                    problems.append(
+                        f"[FAIL] {rel}:{node.name} 无对应测试引用——新增公共函数必须配测试"
+                    )
+    return problems
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="测试质量守卫")
+    parser.add_argument("--src", default="src", help="源码目录（默认 src）")
+    parser.add_argument("--tests", default="tests", help="测试目录（默认 tests）")
+    args = parser.parse_args(argv)
+
+    src_dir = ROOT / args.src
+    tests_dir = ROOT / args.tests
+
+    problems: list[str] = []
+    problems += check_weak_asserts(tests_dir)
+    problems += check_naming(tests_dir)
+    problems += check_missing_tests(src_dir, tests_dir)
+
+    if not problems:
+        print("[OK] 测试质量守卫通过")
+        return 0
+    for p in problems:
+        print(p)
+    if any(p.startswith("[FAIL]") for p in problems):
+        return 1
+    print("[OK] 测试质量守卫通过（仅弱断言 WARN，已提示）")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

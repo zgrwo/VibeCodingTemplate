@@ -71,6 +71,10 @@ def cross_check(
 
     禁止自校验：actual 与 expected 必须来自两条独立路径
     （如 Python/scipy 独立实现 vs C#/VBA 被测实现的 CLI 输出）。
+
+    tol 支持分层语义（来源：ExcelVBA build_common.py 容差分层）：
+      精确 1e-10 基本运算 / 数值 1e-6 迭代算法 / 宽松 1e-5 SVD /
+      统计 1e-2 高阶矩 / 物理 0.1 物理常数。调用方可按算法类型选档。
     """
     global _PASS, _FAIL
     if expected is None:
@@ -90,6 +94,76 @@ def cross_check(
         print(f"  [FAIL] {name}: {actual} != {expected} (tol={tol})")
 
 
+# 容差分层常量（来源：ExcelVBA build_common.py）——供 crossval 脚本按算法类型选档
+TOLERANCE_TIERS = {
+    "exact": 0.0,        # 精确：字符串/布尔结果
+    "standard": 1e-10,   # 基本运算/排序/数组操作
+    "numeric": 1e-6,     # 迭代算法（PolyFit/矩阵分解）
+    "loose": 1e-5,       # SVD 奇异值（迭代收敛）
+    "stats": 1e-2,       # 高阶矩（偏度/峰度）
+    "physical": 0.1,     # 物理常数（分子量/单位换算）
+}
+
+
+def compare(name: str, actual: object, expected: object, tol: float = 1e-10) -> None:
+    """分类型比较器：按结果类型选择比对策略（数组/标量/字符串/字典键）。
+
+    来源：ExcelVBA build_common.py 分类型比较器。crossval 脚本用它验证
+    非标量结果（数组、字典、字符串列表）的一致性。
+    """
+    import math
+
+    global _PASS, _FAIL
+    if actual is None or expected is None:
+        _FAIL += 1
+        print(f"  [FAIL] {name}: actual/expected 含 None")
+        return
+    # 数组/序列：逐元素比对，任一分量超差即 FAIL
+    if isinstance(expected, (list, tuple)) and not isinstance(expected, str):
+        try:
+            if len(actual) != len(expected):
+                _FAIL += 1
+                print(f"  [FAIL] {name}: 长度 {len(actual)} != {len(expected)}")
+                return
+            for i, (a, e) in enumerate(zip(actual, expected, strict=True)):
+                if isinstance(e, (int, float)) and not isinstance(e, bool):
+                    scale = max(1.0, abs(float(e)))
+                    if not math.isfinite(float(a)) or abs(float(a) - float(e)) > tol * scale:
+                        _FAIL += 1
+                        print(f"  [FAIL] {name}[{i}]: {a} != {e} (tol={tol})")
+                        return
+                elif a != e:
+                    _FAIL += 1
+                    print(f"  [FAIL] {name}[{i}]: {a!r} != {e!r}")
+                    return
+            _PASS += 1
+            print(f"  [OK] {name}: 序列一致 ({len(actual)} 项)")
+        except TypeError:
+            _FAIL += 1
+            print(f"  [FAIL] {name}: actual 非序列（{type(actual).__name__}）")
+        return
+    # 字典：比对键集合一致
+    if isinstance(expected, dict):
+        if isinstance(actual, dict) and set(actual.keys()) == set(expected.keys()):
+            _PASS += 1
+            print(f"  [OK] {name}: 字典键集合一致 ({len(expected)} 键)")
+        else:
+            _FAIL += 1
+            print(f"  [FAIL] {name}: 字典键集合不一致")
+        return
+    # 数值标量：走 cross_check 语义
+    if isinstance(expected, (int, float)) and not isinstance(expected, bool):
+        cross_check(name, actual, expected, tol)
+        return
+    # 其余（字符串/布尔）：确定性相等
+    if actual == expected:
+        _PASS += 1
+        print(f"  [OK] {name}: {actual}")
+    else:
+        _FAIL += 1
+        print(f"  [FAIL] {name}: {actual!r} != {expected!r}")
+
+
 def check(name: str, actual: object, expected: object) -> None:
     """确定性结果比对：actual vs 硬编码期望值（非自校验）。"""
     global _PASS, _FAIL
@@ -99,6 +173,46 @@ def check(name: str, actual: object, expected: object) -> None:
     else:
         _FAIL += 1
         print(f"  [FAIL] {name}: {actual!r} != {expected!r}")
+
+
+# 手册声称值标记：`<!-- CLAIM:NAME --><值><!-- /CLAIM:NAME -->`
+# 值定义在 user-manual.md（SSOT），crossval 脚本用 manual_check() 实跑代码比对。
+_CLAIM_RE = re.compile(
+    r"<!--\s*CLAIM:([A-Z0-9_]+)\s*-->\s*"
+    r"([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*"
+    r"<!--\s*/CLAIM:\1\s*-->"
+)
+
+
+def load_claims() -> dict[str, float]:
+    """从 user-manual.md 提取全部手册声称值，返回 {NAME: 数值}。"""
+    claims: dict[str, float] = {}
+    if not MANUAL.exists():
+        return claims
+    text = MANUAL.read_text(encoding="utf-8")
+    for name, value in _CLAIM_RE.findall(text):
+        try:
+            claims[name] = float(value)
+        except ValueError:
+            continue
+    return claims
+
+
+def manual_check(name: str, actual: float | None, tol: float = 1e-10) -> None:
+    """实跑比对：将实际计算结果与 user-manual.md 中声称值（CLAIM:NAME 标记）比对。
+
+    防文档数字漂移：手册里写的数值（effect size、阈值、均值等）由真实运行验证，
+    而非静态核对文本。声称值来源 SSOT（user-manual.md），crossval 脚本不硬编码。
+    """
+    global _PASS, _FAIL
+    claims = load_claims()
+    expected = claims.get(name)
+    if expected is None:
+        _FAIL += 1
+        print(f"  [FAIL] {name}: user-manual.md 无对应 `<!-- CLAIM:{name} -->` 声称值"
+              "（请先在手册标注该数值）")
+        return
+    cross_check(name, actual, expected, tol)
 
 
 def run_crossval() -> bool:

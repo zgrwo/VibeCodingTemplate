@@ -248,3 +248,30 @@ class TestMainCLI:
         code, out = self._run(monkeypatch, ["--path", str(tmp_path)])
         assert code == 0
         assert "未发现" in out
+
+
+class TestMediumRisk:
+    """测试 MEDIUM 风险档（档 C-C3：排序/排名类量，0 可为有效值）。"""
+
+    def test_medium_classify(self):
+        assert fa._classify("rank") == "MEDIUM"
+        assert fa._classify("user_rank") == "MEDIUM"
+        assert fa._classify("priority") == "MEDIUM"
+        assert fa._classify("mean") == "HIGH"   # 统计量仍是 HIGH
+        assert fa._classify("ratio") == "LOW"   # 领域量仍是 LOW
+
+    def test_medium_reported_as_warn_not_fail(self, tmp_path, monkeypatch):
+        # 含 rank 变量的 if x: 应归 MEDIUM → WARN 不硬失败
+        target = tmp_path / "src"
+        target.mkdir()
+        (target / "mod.py").write_text(
+            "def f(rank):\n    if rank:\n        return rank\n", encoding="utf-8"
+        )
+        monkeypatch.setattr(fa, "ROOT", tmp_path)
+        orig = fa.DEFAULT_SCOPE
+        fa.DEFAULT_SCOPE = "src"
+        try:
+            code = fa.main(["--path", "src"])
+            assert code == 0  # MEDIUM 不阻塞
+        finally:
+            fa.DEFAULT_SCOPE = orig

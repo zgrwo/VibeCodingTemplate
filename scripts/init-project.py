@@ -373,7 +373,11 @@ def strip_template_only_sections(target: Path) -> int:
         if new_raw != raw:
             f.write_bytes(new_raw)
             modified += 1
-        if b"<!-- TEMPLATE_ONLY_START -->" in new_raw and b"<!-- TEMPLATE_ONLY_END -->" not in new_raw:
+        unclosed = (
+            b"<!-- TEMPLATE_ONLY_START -->" in new_raw
+            and b"<!-- TEMPLATE_ONLY_END -->" not in new_raw
+        )
+        if unclosed:
             try:
                 rel = f.relative_to(target)
             except ValueError:

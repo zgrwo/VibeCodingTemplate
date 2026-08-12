@@ -18,8 +18,12 @@ AGENTS.md              项目宪法（四条核心准则、红线规则、防幻
 ├── templates/         模块脚手架（NewModule + language + monorepo）
 ├── scripts/           验证脚本（AST 审计 + 初始化 + commit 校验）
 ├── examples/          示例项目（Python/TypeScript/Go）
-└── tests/             验证脚本自测（68 tests，见 tests/scripts/）
+└── tests/             验证脚本自测（<!-- AUTO_COUNTS:TESTS_START -->162<!-- AUTO_COUNTS:TESTS_END --> tests，见 tests/scripts/）
 ```
+
+## 演进计划
+
+- **吸收计划**：`docs/absorption-plan-2026-08.md` 记录从 5 个子项目反哺模板的高价值点（多注册表门禁 / 文档计数注入 / 跨语言验证 runner / 环境医生 / 测试质量门禁等），是跨会话执行的唯一依据。
 
 ## 关键设计决策
 

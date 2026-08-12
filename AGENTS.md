@@ -340,6 +340,7 @@
 | [adr-template.md](rules/adr-template.md) | ADR 模板 | 架构决策记录格式与编号规则 |
 | [falsy-pitfalls.md](rules/falsy-pitfalls.md) | 陷阱清单 | Python falsy 值误判检查清单 |
 | [tooling-pitfalls.md](rules/tooling-pitfalls.md) | 陷阱清单 | Windows/PowerShell/git 脚本坑位 |
+| [sentinel-contract.md](rules/sentinel-contract.md) | 防御契约 | 哨兵契约 L1-L5 与 NaN/Inf 守卫清单 |
 | [templates/README.md](templates/README.md) | 脚手架说明 | 新增模块/构建配置的使用方式 |
 | [examples/README.md](examples/README.md) | 示例项目 | 最小可运行的完整实践演示 |
 | [README.en.md](README.en.md) | 英文入口 | 国际用户入口 |

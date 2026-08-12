@@ -56,6 +56,12 @@ HIGH_RISK_PATTERNS = [
     r"\b\w*_scale\b",
 ]
 
+# 中风险（WARN，需人工确认）：0 是有效值的排序/排名类量（介于 HIGH 硬失败与 LOW 提示间）
+MEDIUM_RISK_PATTERNS = [
+    r"\b\w*_(?:score|rank|rank_value|index|idx)\b",
+    r"\b(?:rank|order|priority)\b",
+]
+
 # 低风险（需人工确认）：0 可能是有效值的领域量
 LOW_RISK_PATTERNS = [
     r"\b\w*_(?:ratio|rate|index|level|num|size|weight|percent|pct)\b",
@@ -68,6 +74,7 @@ WHILE_TRUTHY_RE = re.compile(r"^\s*while\s+(not\s+)?([\w.]+)\s*:")
 OR_FALLBACK_RE = re.compile(r"(?:=\s*|return\s+)([\w.]+)\s+or\s+")
 
 HIGH_RISK_RE = [re.compile(p) for p in HIGH_RISK_PATTERNS]
+MEDIUM_RISK_RE = [re.compile(p) for p in MEDIUM_RISK_PATTERNS]
 LOW_RISK_RE = [re.compile(p) for p in LOW_RISK_PATTERNS]
 
 # 安全类型注解：如果变量有这些类型注解，`if x:` 是安全的
@@ -95,10 +102,13 @@ def _top_type_name(ann: ast.expr) -> str:
 
 
 def _classify(var: str) -> str:
-    """返回 'HIGH' / 'LOW' / ''（名单外）。"""
+    """返回 'HIGH' / 'MEDIUM' / 'LOW' / ''（名单外）。"""
     for pattern in HIGH_RISK_RE:
         if pattern.search(var):
             return "HIGH"
+    for pattern in MEDIUM_RISK_RE:
+        if pattern.search(var):
+            return "MEDIUM"
     for pattern in LOW_RISK_RE:
         if pattern.search(var):
             return "LOW"
@@ -288,11 +298,11 @@ def audit_file(path: Path, use_ast: bool = True) -> list[tuple[str, str, int, st
     return audit_file_regex(path)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Falsy 陷阱审计（AST 增强版）")
     parser.add_argument("--path", default=DEFAULT_SCOPE, help="扫描目录")
     parser.add_argument("--no-ast", action="store_true", help="禁用 AST（回退纯正则模式）")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     scope = ROOT / args.path
     if not scope.exists():
@@ -305,10 +315,11 @@ def main() -> int:
 
     use_ast = not args.no_ast
     high: list[tuple[str, str, int, str, str]] = []
+    medium: list[tuple[str, str, int, str, str]] = []
     low: list[tuple[str, str, int, str, str]] = []
     for p in sorted(scope.rglob("*.py")):
         for level, var, lineno, code, kind in audit_file(p, use_ast=use_ast):
-            target = (high if level == "HIGH" else low)
+            target = (high if level == "HIGH" else medium if level == "MEDIUM" else low)
             try:
                 rel = str(p.relative_to(ROOT))
             except ValueError:
@@ -320,6 +331,10 @@ def main() -> int:
         for path, _var, lineno, code, kind in high:
             print(f"  {path}:{lineno} [{kind}] {code} — 数值 0 可能被误判为 False，"
                   f"应改为 `is not None`")
+    if medium:
+        print(f"[WARN] {len(medium)} 个 MEDIUM 风险（排序/排名量，需人工确认 0 是否有效）：")
+        for path, var, lineno, code, _kind in medium:
+            print(f"  {path}:{lineno} {code} — 变量 `{var}` 的 0 可能为有效值")
     if low:
         print(f"[WARN] {len(low)} 个 LOW 风险（需人工确认 0 是否为有效值）：")
         for path, var, lineno, code, kind in low:

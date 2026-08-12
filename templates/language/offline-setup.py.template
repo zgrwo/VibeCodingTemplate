@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""
+offline-setup.py — 离线依赖安装工具（模板）
+
+背景（来源：工程分析套件 setup_offline.py / 文档审查套件 common.py）：
+  受限网络/内网环境无法 `pip install`，本模板提供零依赖（仅 stdlib）的离线安装流程：
+    1. download  在联网机下载 wheel 到本地目录
+    2. install   从本地 wheel 目录离线安装
+    3. --print-cmd 干跑模式：打印将执行的命令而不执行（特权操作安全门）
+
+用法：
+  python offline-setup.py download -r requirements.txt --dest wheels/
+  python offline-setup.py install --src wheels/
+  python offline-setup.py install --src wheels/ --print-cmd
+
+设计：
+  - 仅用标准库（在依赖安装前即可运行）
+  - run_or_print() 统一门：所有改动系统的命令都经此函数（--print-cmd 拦截）
+  - 显式退出码：0=成功，1=失败（CI 可调用）
+"""
+import argparse
+import subprocess
+import sys
+from pathlib import Path
+
+PRINT_ONLY = False  # --print-cmd 时置 True，仅打印不执行
+
+
+def run_or_print(cmd: list[str]) -> int:
+    """统一执行门：--print-cmd 时打印命令而不执行（特权操作安全模式）。"""
+    if PRINT_ONLY:
+        print(f"  [DRY-RUN] {' '.join(cmd)}")
+        return 0
+    print(f"  [RUN] {' '.join(cmd)}")
+    r = subprocess.run(cmd)
+    return r.returncode
+
+
+def cmd_download(args) -> int:
+    req = Path(args.requirements)
+    if not req.exists():
+        print(f"[FAIL] requirements 文件不存在: {req}")
+        return 1
+    dest = Path(args.dest)
+    dest.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        sys.executable, "-m", "pip", "download",
+        "-r", str(req), "-d", str(dest),
+    ]
+    return run_or_print(cmd)
+
+
+def cmd_install(args) -> int:
+    src = Path(args.src)
+    if not src.is_dir():
+        print(f"[FAIL] wheel 目录不存在: {src}")
+        return 1
+    cmd = [
+        sys.executable, "-m", "pip", "install",
+        "--no-index", "--find-links", str(src),
+    ]
+    if args.requirements:
+        cmd += ["-r", str(args.requirements)]
+    else:
+        wheels = sorted(src.glob("*.whl"))
+        if not wheels:
+            print(f"[FAIL] {src} 下无 wheel 文件")
+            return 1
+        cmd += [str(w) for w in wheels]
+    return run_or_print(cmd)
+
+
+def main(argv: list[str] | None = None) -> int:
+    global PRINT_ONLY
+    parser = argparse.ArgumentParser(description="离线依赖安装工具")
+    parser.add_argument("--print-cmd", action="store_true",
+                        help="干跑模式：打印将执行的命令而不执行（安全门）")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    p_dl = sub.add_parser("download", help="下载 wheel 到本地目录")
+    p_dl.add_argument("-r", "--requirements", required=True)
+    p_dl.add_argument("--dest", default="wheels")
+    p_dl.set_defaults(func=cmd_download)
+
+    p_in = sub.add_parser("install", help="从本地 wheel 离线安装")
+    p_in.add_argument("--src", required=True)
+    p_in.add_argument("-r", "--requirements", default="")
+    p_in.set_defaults(func=cmd_install)
+
+    args = parser.parse_args(argv)
+    PRINT_ONLY = args.print_cmd
+    code = args.func(args)
+    return 0 if code == 0 else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "groups": [
+    {
+      "name": "占位符注册表",
+      "registries": [
+        {
+          "name": "placeholders.json manifest",
+          "type": "json_keys",
+          "path": "scripts/placeholders.json",
+          "key_path": "placeholders"
+        },
+        {
+          "name": "模板文件 {{...}} 引用",
+          "type": "placeholder_scan",
+          "roots": ["."]
+        }
+      ]
+    }
+  ]
+}

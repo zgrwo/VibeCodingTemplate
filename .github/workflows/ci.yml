@@ -156,6 +156,10 @@ jobs:
         run: python scripts/falsy-audit.py
       - name: 文档与结构一致性（断链/目录树/未声明文件）
         run: python scripts/verify-docs.py --strict
+      - name: 注册表一致性（多注册表键集比对）
+        run: python scripts/verify-registries.py
+      - name: 文档计数一致性（AUTO_COUNTS 标记比对）
+        run: python scripts/gen-doc-counts.py --check
       - name: 代码风格
         # Python: ruff check src/ scripts/
         # C#:    dotnet format --verify-no-changes
@@ -164,8 +168,11 @@ jobs:
       - name: 覆盖率门禁
         # Python: pytest --cov=src --cov-fail-under=80（需 dev 依赖 pytest-cov）
         # C#:    dotnet test --collect:"XPlat Code Coverage"（需 coverlet.collector）
+        # 覆盖率数据缺失时须显式警告而非静默通过（防门禁说谎；来源：成本分析套件）
         if: steps.detect.outputs.is_template != 'true'
-        run: "{{COVERAGE_CMD}}"
+        run: |
+          {{COVERAGE_CMD}} || { echo "::error::覆盖率门禁失败"; exit 1; }
+          echo "::warning::覆盖率门禁通过（若未见覆盖率摘要说明数据缺失，请检查测试是否收集 coverage）"
 
   # ============ template-self-test：模板仓库自测 ============
   # 仅模板仓库运行（检测到 AGENTS.md 中未替换的 '{{' 占位符即视为模板）。
