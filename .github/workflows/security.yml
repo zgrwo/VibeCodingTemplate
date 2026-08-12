@@ -35,21 +35,25 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - name: 依赖漏洞扫描（pip-audit）
         # 检查项目已解析依赖是否含已知 CVE（补 CodeQL 静态分析盲区；来源：工程分析套件）。
-        # 关键：必须先安装项目依赖再 audit（否则审计的是 runner 环境而非项目依赖 = no-op）。
+        # 关键：先安装项目依赖再 audit（否则审计的是 runner 环境而非项目依赖 = no-op）。
+        # ⚠️ 不能 `python -m pip_audit` 审计整个环境：runner 预装系统包（pip/wheel 等）会报
+        # 几十个与本项目无关的 CVE 假阳性。必须定向审计项目声明依赖（requirements.txt 或 pyproject 提取）。
         # 无依赖清单 / 安装失败 → 显式失败（exit 1），不用 `|| true` 吞掉——否则"已扫描"是假象。
         if: matrix.language == 'python'
         run: |
-          if [ ! -f pyproject.toml ] && [ ! -f requirements.txt ]; then
-            echo "::error::未找到 pyproject.toml 或 requirements.txt，pip-audit 无法审计项目依赖"
-            exit 1
-          fi
           python -m pip install pip-audit
           python -m pip install -e ".[dev]" || { echo "::error::项目依赖安装失败，无法审计"; exit 1; }
-          # 定向审计项目依赖而非整个 runner 环境：有 requirements.txt 按清单，无则审计当前环境（已装项目依赖）
           if [ -f requirements.txt ]; then
             python -m pip_audit -r requirements.txt || { echo "::error::pip-audit 发现已知 CVE 依赖，请升级"; exit 1; }
+          elif [ -f pyproject.toml ]; then
+            # 提取项目声明的 dependencies + dev extra 定向审计（不含 runner 预装系统包）；
+            # 单行 python -c（避免 YAML block scalar 内多行缩进破坏解析）
+            python -c "import tomllib;d=tomllib.load(open('pyproject.toml','rb'));p=d.get('project',{});print('\n'.join(list(p.get('dependencies') or [])+list(p.get('optional-dependencies',{}).get('dev') or [])))" > pip-audit-deps.txt
+            python -m pip_audit -r pip-audit-deps.txt || { echo "::error::pip-audit 发现已知 CVE 依赖，请升级"; exit 1; }
+            rm -f pip-audit-deps.txt
           else
-            python -m pip_audit || { echo "::error::pip-audit 发现已知 CVE 依赖，请升级"; exit 1; }
+            echo "::error::未找到 pyproject.toml 或 requirements.txt，pip-audit 无法审计项目依赖"
+            exit 1
           fi
       - uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3 # v4.37.6
         with:
