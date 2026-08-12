@@ -168,11 +168,13 @@ jobs:
       - name: 覆盖率门禁
         # Python: pytest --cov=src --cov-fail-under=80（需 dev 依赖 pytest-cov）
         # C#:    dotnet test --collect:"XPlat Code Coverage"（需 coverlet.collector）
-        # 覆盖率数据缺失时须显式警告而非静默通过（防门禁说谎；来源：成本分析套件）
+        # 覆盖率数据缺失时须显式失败而非静默通过（防门禁说谎；来源：成本分析套件）。
+        # set -o pipefail 防管道尾命令吞掉 pytest 失败（如 `pytest ... | tee`）。
         if: steps.detect.outputs.is_template != 'true'
+        shell: bash
         run: |
-          {{COVERAGE_CMD}} || { echo "::error::覆盖率门禁失败"; exit 1; }
-          echo "::warning::覆盖率门禁通过（若未见覆盖率摘要说明数据缺失，请检查测试是否收集 coverage）"
+          set -o pipefail
+          {{COVERAGE_CMD}}
 
   # ============ template-self-test：模板仓库自测 ============
   # 仅模板仓库运行（检测到 AGENTS.md 中未替换的 '{{' 占位符即视为模板）。

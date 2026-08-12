@@ -31,17 +31,44 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def get_changed_files(base: str) -> list[str]:
-    """返回 base..HEAD 变更的文件相对路径列表。"""
+    """返回变更的文件相对路径列表：base..HEAD 提交 + 未提交工作区改动。
+
+    默认 base=HEAD~1 只含已提交变更，会漏掉开发者最关心的未提交工作区改动，
+    导致工具在核心场景（改完代码跑增量测试）静默 SKIP。这里显式合并
+    `git diff --name-only`（未暂存+已暂存）以覆盖工作区。
+    """
     try:
-        r = subprocess.run(
+        results = []
+        # 已提交变更：base..HEAD
+        r1 = subprocess.run(
             ["git", "diff", "--name-only", base, "HEAD"],
             capture_output=True, text=True, timeout=15, cwd=ROOT,
         )
+        if r1.returncode == 0:
+            results.extend(r1.stdout.splitlines())
+        # 未提交工作区改动（未暂存 + 已暂存）
+        r2 = subprocess.run(
+            ["git", "diff", "--name-only"],
+            capture_output=True, text=True, timeout=15, cwd=ROOT,
+        )
+        if r2.returncode == 0:
+            results.extend(r2.stdout.splitlines())
+        r3 = subprocess.run(
+            ["git", "diff", "--cached", "--name-only"],
+            capture_output=True, text=True, timeout=15, cwd=ROOT,
+        )
+        if r3.returncode == 0:
+            results.extend(r3.stdout.splitlines())
     except (FileNotFoundError, subprocess.TimeoutExpired):
         return []
-    if r.returncode != 0:
-        return []
-    return [line.strip() for line in r.stdout.splitlines() if line.strip()]
+    seen: set[str] = set()
+    out = []
+    for line in results:
+        line = line.strip()
+        if line and line not in seen:
+            seen.add(line)
+            out.append(line)
+    return out
 
 
 def source_stem(path: str) -> str:
@@ -79,9 +106,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     changed = get_changed_files(args.base)
-    src_changes = [f for f in changed if f.startswith("src/")]
+    # 纳入 src/ 与 scripts/ 变更（scripts/ 是本模板治理逻辑所在，src/ 可能为空）
+    src_changes = [f for f in changed
+                   if f.startswith(("src/", "scripts/"))]
     if not src_changes:
-        print("[SKIP] 无 src/ 变更（影响范围测试路由无需运行）")
+        print("[SKIP] 无 src/ 或 scripts/ 变更（影响范围测试路由无需运行）")
         return 0
 
     tests_dir = ROOT / "tests"

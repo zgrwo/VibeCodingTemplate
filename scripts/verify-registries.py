@@ -54,6 +54,10 @@ EXCLUDED_DIRS = {
     ".git", ".claude", ".codegraph", ".qoder",
     "logs", "build", "benchmarks",
     "__pycache__", ".pytest_cache", ".ruff_cache",
+    # tests/ 含教学/夹具 token（{{FOO}}/{{A}} 等）——计入"已使用"会：
+    #   (a) 每次运行输出大量未声明 WARN 淹没真实信号
+    #   (b) 夹具引用使死条目被误判为已使用，削弱 FAIL 检测
+    "tests",
 }
 
 _PLACEHOLDER_RE = re.compile(r"\{\{([A-Z0-9_]+)\}\}")

@@ -86,12 +86,18 @@ def _method_is_weak_only(src: str) -> bool:
     return bool(_WEAK_ASSERT_RE.search(src)) and not _method_has_strong_assert(src)
 
 
+# 自测夹具文件：刻意含弱断言以验证守卫逻辑，不应触发自 WARN（告警疲劳）
+SELF_TEST_FILES = {"test_test_quality_guard.py"}
+
+
 def check_weak_asserts(tests_dir: Path) -> list[str]:
     """检测弱断言测试方法。"""
     problems: list[str] = []
     if not tests_dir.is_dir():
         return problems
     for p in sorted(tests_dir.rglob("test_*.py")):
+        if p.name in SELF_TEST_FILES:
+            continue
         for name, src in _extract_test_methods(p):
             if _method_is_weak_only(src):
                 rel = _rel(p)

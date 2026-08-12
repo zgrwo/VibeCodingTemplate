@@ -116,26 +116,46 @@ def update_doc(path: Path, values: dict[str, int], check_only: bool) -> list[str
             i += 1
             continue
         key = m.group(1)
-        # 支持两种形态：
-        #   (a) START 与 END 同行（内联标记，`68` 在两标记间）
-        #   (b) START 单独一行，END 在后续行（块状标记）
-        inline_end = _MARK_END.search(line)
-        if inline_end:
-            # 内联形态：START 与 END 同行，重写中间值并保留行首尾
-            seg = line[m.end():inline_end.start()]
-            expected = values.get(key)
-            if expected is None or expected < 0:
-                problems.append(f"[配置错误] 文档引用未定义的计数源 `{key}`")
-                out.append(line)
-            else:
+        # 内联形态：START 与 END 同行（可能一行含多个标记对，须循环处理全部）。
+        # 逐对替换并保留行内前后缀，直到行内无剩余 START。
+        if _MARK_END.search(line):
+            # 关键：替换生成的 `<!-- AUTO_COUNTS:X_START -->` 文本本身也匹配 _MARK_START，
+            # 若从行首重新搜索会死循环。改用 pos 游标，每次从替换处之后继续搜索。
+            new_line = line
+            pos = 0
+            while True:
+                sm = _MARK_START.search(new_line, pos)
+                if not sm:
+                    break
+                em = _MARK_END.search(new_line, sm.end())
+                if not em:
+                    problems.append(
+                        f"[错误] {path} 内联 {sm.group(1)}_START 无对应 END（未闭合标记）"
+                    )
+                    break
+                seg = new_line[sm.end():em.start()]
+                expected = values.get(sm.group(1))
+                if expected is None or expected < 0:
+                    problems.append(
+                        f"[配置错误] 文档引用未定义的计数源 `{sm.group(1)}`"
+                    )
+                    # 值未定义：跳过该对标记（保留原样），从 em.end() 后继续
+                    pos = em.end()
+                    continue
                 if seg != str(expected):
                     changed = True
-                out.append(line[:m.start()] + f"<!-- AUTO_COUNTS:{key}_START -->"
-                           + str(expected) + f"<!-- AUTO_COUNTS:{key}_END -->"
-                           + line[inline_end.end():])
+                replacement = (
+                    f"<!-- AUTO_COUNTS:{sm.group(1)}_START -->"
+                    + str(expected)
+                    + f"<!-- AUTO_COUNTS:{sm.group(1)}_END -->"
+                )
+                new_line = new_line[:sm.start()] + replacement + new_line[em.end():]
+                pos = sm.start() + len(replacement)
+            out.append(new_line)
             i += 1
             continue
-        # 块状形态：找后续行的 END
+        # 块状形态：START 单独一行，END 在后续行。保留 START 行前导缩进与前缀文本，
+        # 值行沿用相同缩进，避免破坏所在代码块/列表结构。
         j = i + 1
         block_lines: list[str] = []
         found_end = False
@@ -157,9 +177,14 @@ def update_doc(path: Path, values: dict[str, int], check_only: bool) -> list[str
             current_text = "".join(block_lines).strip()
             if current_text != str(expected):
                 changed = True
-            out.append(f"<!-- AUTO_COUNTS:{key}_START -->\n")
-            out.append(f"{expected}\n")
-            out.append(f"<!-- AUTO_COUNTS:{key}_END -->\n")
+            # 提取 START 行的缩进与前缀（`    <!-- AUTO_COUNTS:X_START --> 文字`）
+            indent_match = re.match(r"^(\s*)", line)
+            indent = indent_match.group(1) if indent_match else ""
+            prefix = line[:m.start()]  # START 前文本（含缩进）
+            suffix = line[m.end():].split("-->", 1)[1] if "-->" in line[m.end():] else ""
+            out.append(f"{prefix}<!-- AUTO_COUNTS:{key}_START -->{suffix}\n")
+            out.append(f"{indent}{expected}\n")
+            out.append(f"{indent}<!-- AUTO_COUNTS:{key}_END -->\n")
         i = j + 1
 
     if check_only:

@@ -18,7 +18,7 @@ AGENTS.md              项目宪法（四条核心准则、红线规则、防幻
 ├── templates/         模块脚手架（NewModule + language + monorepo）
 ├── scripts/           验证脚本（AST 审计 + 初始化 + commit 校验）
 ├── examples/          示例项目（Python/TypeScript/Go）
-└── tests/             验证脚本自测（<!-- AUTO_COUNTS:TESTS_START -->162<!-- AUTO_COUNTS:TESTS_END --> tests，见 tests/scripts/）
+└── tests/             验证脚本自测（<!-- AUTO_COUNTS:TESTS_START -->164<!-- AUTO_COUNTS:TESTS_END --> tests，见 tests/scripts/）
 ```
 
 ## 演进计划

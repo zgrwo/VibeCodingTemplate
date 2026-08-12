@@ -101,3 +101,30 @@ class TestMainCLI:
     def test_check_consistent_returns_zero(self):
         # 真实配置下所有标记块应一致（前一步已 update）
         assert gdc.main(["--check"]) == 0
+
+
+class TestInlineMultiMarker:
+    """测试一行含多个内联标记对（档 C 修复 6：避免只处理第一个）。"""
+
+    def test_two_inline_markers_checked(self, tmp_path):
+        p = tmp_path / "doc.md"
+        p.write_text(
+            "<!-- AUTO_COUNTS:A_START -->5<!-- AUTO_COUNTS:A_END --> "
+            "<!-- AUTO_COUNTS:B_START -->7<!-- AUTO_COUNTS:B_END -->",
+            encoding="utf-8",
+        )
+        # B 漂移为 9 → --check 必须检出（不能静默跳过第二个标记）
+        problems = gdc.update_doc(p, {"A": 5, "B": 9}, check_only=True)
+        assert any("已过时" in pr for pr in problems)
+
+    def test_two_inline_markers_both_updated(self, tmp_path):
+        p = tmp_path / "doc.md"
+        p.write_text(
+            "<!-- AUTO_COUNTS:A_START -->5<!-- AUTO_COUNTS:A_END --> "
+            "<!-- AUTO_COUNTS:B_START -->7<!-- AUTO_COUNTS:B_END -->",
+            encoding="utf-8",
+        )
+        gdc.update_doc(p, {"A": 5, "B": 9}, check_only=False)
+        out = p.read_text(encoding="utf-8")
+        assert "A_START -->5<!--" in out
+        assert "B_START -->9<!--" in out
