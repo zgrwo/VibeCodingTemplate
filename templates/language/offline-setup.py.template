@@ -9,9 +9,10 @@ offline-setup.py — 离线依赖安装工具（模板）
     3. --print-cmd 干跑模式：打印将执行的命令而不执行（特权操作安全门）
 
 用法：
-  python offline-setup.py download -r requirements.txt --dest wheels/
-  python offline-setup.py install --src wheels/
-  python offline-setup.py install --src wheels/ --print-cmd
+  python offline-setup.py download -r requirements.txt --dest wheels/ [--print-cmd]
+  python offline-setup.py install --src wheels/ [--print-cmd]
+  # --print-cmd 放在子命令之前或之后均可（main() 中先于 argparse 提取）：
+  python offline-setup.py --print-cmd install --src wheels/
 
 设计：
   - 仅用标准库（在依赖安装前即可运行）
@@ -72,6 +73,14 @@ def cmd_install(args) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     global PRINT_ONLY
+    argv = list(sys.argv[1:] if argv is None else argv)
+    # --print-cmd 与子命令的前后顺序均可：argparse 的 subparser 在 parents 共享
+    # 同名选项时会把主解析器已解析的值重置为默认（已知坑），故这里先手动提取置位，
+    # 再交给 argparse；主解析器仍定义该选项以便 --help 可见。
+    if "--print-cmd" in argv:
+        PRINT_ONLY = True
+        argv.remove("--print-cmd")
+
     parser = argparse.ArgumentParser(description="离线依赖安装工具")
     parser.add_argument("--print-cmd", action="store_true",
                         help="干跑模式：打印将执行的命令而不执行（安全门）")
@@ -88,7 +97,6 @@ def main(argv: list[str] | None = None) -> int:
     p_in.set_defaults(func=cmd_install)
 
     args = parser.parse_args(argv)
-    PRINT_ONLY = args.print_cmd
     code = args.func(args)
     return 0 if code == 0 else 1
 

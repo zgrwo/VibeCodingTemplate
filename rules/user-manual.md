@@ -2,6 +2,21 @@
 
 > 面向最终用户的操作指南。每个函数/功能提供：场景说明 → 语法 → 参数 → 示例 → 结果解读。
 
+## 手册数值声称值（CLAIM 标记）
+
+> 手册中的**关键数值**（effect size、阈值、均值等）用 CLAIM 标记圈定，由
+> `scripts/verify-manual.py` 的 `manual_check()` 实跑代码比对，防文档数字漂移
+> （数值 SSOT 在本文档，CrossVal 脚本不硬编码）。语法：
+
+```html
+<!-- CLAIM:MEAN_DIFF -->0.42<!-- /CLAIM:MEAN_DIFF -->
+```
+
+- 标记名 `CLAIM:NAME` 须为大写 token（`[A-Z0-9_]+`），与 `manual_check("MEAN_DIFF", actual)` 的名称一一对应
+- 标记值为十进制数（含小数/指数）；标记须成对闭合
+- CrossVal 脚本用法：`from verify_manual import manual_check` →
+  `manual_check("MEAN_DIFF", 实际值)`，实际值缺失/不匹配时 verify-manual 报 FAIL
+
 ## 快速开始
 
 {{QUICK_START_GUIDE}}

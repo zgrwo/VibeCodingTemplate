@@ -231,6 +231,13 @@ def replace_placeholders(
     remaining = 0
     pattern = re.compile(r"\{\{([A-Z0-9_]+)\}\}")
 
+    # 替换值合法性检查（P3-21，纵深防御）：值由运行者本人提供（非权限边界），
+    # 但含换行/花括号（含 GH Actions `${{ }}`）的值会直接改写生成项目的 CI 工作流或代码语义。
+    for name, val in replacements.items():
+        if ("\n" in val) or ("\r" in val) or ("{{" in val):
+            print(f"[WARN] 占位符 {name} 的值含换行/花括号等特殊字符，"
+                  f"可能破坏目标文件语义: {val[:40]!r}")
+
     for f in target.rglob("*"):
         if not f.is_file() or _in_skip_dirs(f, target):
             continue
@@ -449,6 +456,11 @@ def main() -> int:
         if any(target.iterdir()) and not args.force:
             print(f"[ERROR] 目标目录非空: {target}（如确需覆盖请加 --force）")
             return 1
+    # target 不能在模板仓库内或等于模板根：copy_template 会先把 target 自身（含已创建的
+    # 子目录）再拷进 target，copytree 嵌套污染模板树（P3-20）
+    if target == TEMPLATE_ROOT or target.is_relative_to(TEMPLATE_ROOT):
+        print(f"[ERROR] target 不能在模板仓库内: {target}")
+        return 1
 
     print(f"==> 复制模板到 {target}")
     copied = copy_template(target)

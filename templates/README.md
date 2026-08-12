@@ -28,6 +28,7 @@
 | `language/go.mod.template` | Go 模块定义 | Go |
 | `language/Dockerfile.template` | 通用容器化模板（multi-stage, Python/Node/.NET） | Docker |
 | `language/docker-compose.yml.template` | 开发环境编排（含健康检查） | Docker Compose |
+| `language/offline-setup.py.template` | 离线安装工具（零依赖，含 `--print-cmd` 干跑安全门） | Python |
 | `monorepo/AGENTS.md.template` | Monorepo 子目录级 AGENTS.md（子项目宪法） | Monorepo |
 | `monorepo/README.md` | Monorepo 使用说明与依赖规则 | Monorepo |
 
@@ -42,11 +43,11 @@
 
 **为什么用两种语法？**
 
-`{{}}` 双花括号 → init-project 的正则 `\{\{(\w+)\}\}` 匹配，初始化时自动替换。
+`{{}}` 双花括号 → init-project 的正则 `\{\{([A-Z0-9_]+)\}\}`（仅大写 token）匹配，初始化时自动替换。
 `{}` 单花括号 → 不被 init-project 匹配，复制到 `src/` 后仍保留，等开发者创建新模块时替换。
 
 **如果误混用**：
-- `{{Name}}` 出现在 NewModule 模板中 → init-project 会误替换为 `name`（小写占位）
+- `{{Name}}`（含小写）出现在 NewModule 模板中 → init-project 不匹配（正则仅大写 `[A-Z0-9_]`），原样保留；泄漏由 ci.yml 模板守卫（grep `{{` templates/NewModule/）兜底
 - `{PROJECT_NAME}` 出现在根目录文档中 → init-project 不会匹配，占位符残留
 
 → CI 中有 `模板守卫` step 检测 NewModule 模板中的 `{{` 泄漏（见 ci.yml）。
@@ -58,6 +59,8 @@
 | `{module}` | Go 包名（小写，源码 `package` 声明用） | `stats` |
 | `{module_path}` | Go 模块路径（go.mod `module` 指令用） | `github.com/org/repo` |
 | `{PREFIX}` | UDF 前缀（大写） | `WEATHER` |
+| `{N}` | CrossVal 示例用例序号（section 标题） | `2` |
+| `{模块说明}` | 模块功能一句话说明（CrossVal 头部） | `温度转换` |
 | `{{ROOT_NAMESPACE}}` | 项目根命名空间（初始化时确定） | `Acme.Stats` |
 
 ## 新增模块流程（按语言选择对应模板）
@@ -66,6 +69,8 @@
 ```
 1. 复制 Core/Udf/Foundation/Tests/CrossVal 五个文件到目标目录（按需裁剪）
 2. 复制 language/{Name}.Tests.csproj.template 到 tests/{Module}.Tests/（.NET 项目）
+2b. 新建 src/{Module}/{Module}.csproj（classlib——Tests.csproj 的 ProjectReference 指向它），
+    并复制 language/Directory.Build.props.template 到仓库根（全局属性）
 3. 替换 {Name}/{Module}/{PREFIX}/{{ROOT_NAMESPACE}}
 4. Core 实现纯计算逻辑（哨兵契约 L1-L5）；Udf 仅做分发（MapOver + WrapError）
 5. 测试覆盖：正常路径 + 哨兵契约 + 边界值
@@ -146,6 +151,7 @@
 | `scripts/verify-docs.py --strict` | 链接/目录树/语义一致性 | `make verify` / CI |
 | `scripts/verify-manual.py` | 手册一致性 + CrossVal 执行器 | `make verify` / CI |
 | `scripts/test-quality-guard.py` | 测试质量守卫（弱断言/缺测/命名） | `make verify` / CI |
+| `scripts/run-affected-tests.py` | 影响范围测试路由（git diff → 受影响测试，增量 CI） | `make test` / 开发增量 |
 | `scripts/doctor.py` | 环境就绪诊断（新开发者第一步） | `make doctor` |
 
 ### 技能创作约定（来源：跨项目共识）

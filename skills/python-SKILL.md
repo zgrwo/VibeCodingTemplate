@@ -7,6 +7,7 @@ argument-hint: "[修改的 .py 文件/模块] [--context 新增分析函数 | �
 # Python 编码技能
 
 > 从 EngSmartSuite + DocAudit 历史 diff 中提炼的 Python 易错点与最佳实践。修改 .py 前必读。
+> **SSOT 防御契约**：无效输入返回什么（NaN 哨兵 vs 异常）见 [rules/sentinel-contract.md](../rules/sentinel-contract.md)。
 
 ## 1. Falsy 陷阱（最高频错误）
 

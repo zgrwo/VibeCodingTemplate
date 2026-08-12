@@ -17,7 +17,9 @@ namespace {{ROOT_NAMESPACE}}.{Module}.Tests
 
         [Fact]
         public void Compute_normal_input()
-            => {Name}Core.Compute(1.0).Should().Be(/* {期望值} */);
+            // 注意：{Name}Core.Compute 当前实现返回输入值（见 {Name}Core.cs 核心逻辑），
+            // 期望值须与实现语义一致；替换实现后同步调整此处断言。
+            => {Name}Core.Compute(1.0).Should().Be(1.0);
 
         [Fact]
         public void Process_normal_input()
@@ -58,27 +60,28 @@ namespace {{ROOT_NAMESPACE}}.{Module}.Tests
         [Fact]
         public void Compute_max_value()
         {
-            var result = {Name}Core.Compute(double.MaxValue);
-            // 应返回有效值或 NaN，不应抛异常
-            (double.IsNaN(result) || !double.IsInfinity(result)).Should().BeTrue();
+            // 当前实现 Compute 透传非 NaN/Inf 输入（见 {Name}Core.cs）。
+            // L4 溢出守卫（结果 IsInfinity → NaN）在实现引入溢出算术时生效；
+            // 若实现加了溢出检测，此处应同步为 .Should().Be(double.NaN)。
+            {Name}Core.Compute(double.MaxValue).Should().Be(double.MaxValue);
         }
 
         [Fact]
         public void Compute_min_value()
         {
-            var result = {Name}Core.Compute(double.MinValue);
-            (double.IsNaN(result) || !double.IsInfinity(result)).Should().BeTrue();
+            {Name}Core.Compute(double.MinValue).Should().Be(double.MinValue);
         }
 
         // ====================================================================
-        // 异常路径测试（L5：未知类型 Convert 失败 → throw）
+        // 异常路径测试（L5：未知类型转换失败 → throw，不静默替代）
         // ====================================================================
 
-        // [Fact]
-        // public void Compute_invalid_type_throws()
-        // {
-        //     var act = () => {Name}Core.Compute(/* invalid */);
-        //     act.Should().Throw<ArgumentException>();
-        // }
+        [Fact]
+        public void Compute_invalid_type_throws()
+        {
+            // "not-a-number" 无法转换 → ArgumentException（见 {Name}Core.cs Compute(object) 重载）
+            var act = () => {Name}Core.Compute("not-a-number");
+            act.Should().Throw<ArgumentException>();
+        }
     }
 }

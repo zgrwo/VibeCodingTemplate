@@ -25,9 +25,9 @@
     "sourceMap": true,
 
     // --- 路径别名 ---
-    "baseUrl": ".",
+    // 注意：baseUrl 在 TS 6/7 已被移除（TS5090），paths 目标必须是相对路径。
     "paths": {
-      "@{Module}/*": ["src/{Module}/*"]
+      "@{Module}/*": ["./src/{Module}/*"]
     },
 
     // --- 质量 ---

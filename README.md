@@ -111,9 +111,11 @@
 | [AGENTS.md](AGENTS.md) | 项目宪法 | 架构分层、红线规则、开发流程 |
 | [ADR 记录](rules/adr-template.md) | 决策历史 | 架构决策记录（编号递增） |
 | [审查模板](rules/code-review-prompt.md) | 审查工具 | Min/Standard/Max 三级代码审查 Prompt |
+| [发行审查](rules/pre-release-review.md) | 审查模板 | 发行前穷尽审计 Prompt（Min/Med/Max） |
 | [跨项目经验](rules/cross-project-synthesis.md) | 方法论 | 反模式案例库、重构方法论、对标清单 |
 | [重构计划](rules/refactoring-plan.md) | 路线图 | 从"能用"到"卓越"的重构模板 |
 | [陷阱清单](rules/falsy-pitfalls.md) | 避坑手册 | Falsy 值误判等高频陷阱 |
+| [哨兵契约](rules/sentinel-contract.md) | 防御契约 | L1-L5 哨兵契约与 NaN/Inf 守卫清单 |
 | [工具坑位](rules/tooling-pitfalls.md) | 避坑手册 | PowerShell/git 脚本坑位 |
 | [贡献指南](CONTRIBUTING.md) | 贡献入口 | 开发/PR/发版流程 |
 | [变更记录](CHANGELOG.md) | 版本历史 | keepachangelog 格式 |

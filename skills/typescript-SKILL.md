@@ -7,6 +7,7 @@ argument-hint: "[修改的 .ts/.tsx 文件/模块] [--context 新增功能 | 修
 # TypeScript 编码技能
 
 > 适用于 TypeScript 5.x + Node.js 18+。修改 .ts/.tsx 前必读。
+> **SSOT 防御契约**：无效输入返回什么（NaN 哨兵 vs 异常 / Result 模式）见 [rules/sentinel-contract.md](../rules/sentinel-contract.md)。
 
 ## 1. strict 模式强制
 

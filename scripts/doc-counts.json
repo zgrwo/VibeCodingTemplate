@@ -5,22 +5,10 @@
       "pattern": "^\\s*def test_",
       "glob": "tests/**/*.py"
     },
-    "scripts": {
-      "type": "file_count",
-      "glob": "scripts/*.py"
-    },
     "placeholders": {
       "type": "json_keys",
       "path": "scripts/placeholders.json",
       "key_path": "placeholders"
-    },
-    "rules": {
-      "type": "file_count",
-      "glob": "rules/*.md"
-    },
-    "skills": {
-      "type": "file_count",
-      "glob": "skills/*.md"
     }
   },
   "docs": [

@@ -10,7 +10,7 @@
 
 ## 一、反模式案例库（唯一权威内容）
 
-> 以下 8 类问题在 5 个项目中反复出现。**出现次数与根因是本文件独有的验证数据**，对策则已固化为 AGENTS.md 红线或验证脚本，链接引用。
+> 以下 10 类问题在 5 个项目中反复出现。**出现次数与根因是本文件独有的验证数据**，对策则已固化为 AGENTS.md 红线或验证脚本，链接引用。
 
 ### 1. 注册/同步遗漏
 
@@ -79,6 +79,13 @@
 - TypeScript：`test_Stats.ts` 不匹配 vitest/Jest 默认 glob `**/*.{test,spec}.*` → `npx vitest run tests/` 输出 "No test files found" 且 exit 0（本模板示例曾如此）
 - 后果：CI 显示绿但测试从未执行，退化输入回归无检测
 **对策**：→ 已固化为 [tooling-pitfalls.md](tooling-pitfalls.md) #21（后缀用框架默认匹配，如 TS `.test.ts`；或显式配置 include）。
+
+### 10. 文件命名分隔符不一致（连字符 vs 下划线）
+
+**现象**：源文件用连字符（`gen-doc-counts.py`），测试文件用下划线（`test_gen_doc_counts.py`）；工具按命名约定做子串匹配映射时未归一化分隔符，映射静默失效。
+**案例**：
+- VibeCodingTemplate：run-affected-tests 对 4 个本有测试的连字符脚本全报"疑似缺测"（`verify-docs.py`→`test_verify_docs.py` 等），工具 docstring「防门禁说谎」自相矛盾
+**对策**：→ 工具比较前统一 `replace('-', '_')` 再子串匹配；见 [tooling-pitfalls.md](tooling-pitfalls.md) #24。
 
 ---
 
@@ -178,6 +185,7 @@ Phase 0 审计结果 → 决策：
 | 闭环验证体系（交叉验证/黄金测试/差分测试） | [AGENTS.md 闭环验证强制](../AGENTS.md) + [verify-manual.py](../scripts/verify-manual.py) |
 | 分类型比较器 / 容差分层（数组/字典/标量） | [verify-manual.py compare](../scripts/verify-manual.py) |
 | 测试有效性（弱断言/缺测/命名守卫） | [test-quality-guard.py](../scripts/test-quality-guard.py) |
+| 影响范围测试路由（git diff → 受影响测试） | [run-affected-tests.py](../scripts/run-affected-tests.py) |
 | 防御编程（哨兵契约/异常过滤器/NaN 守卫） | [AGENTS.md 防错三原则](../AGENTS.md) + [sentinel-contract.md](sentinel-contract.md) + [skills/csharp-SKILL.md](../skills/csharp-SKILL.md) |
 | 环境就绪诊断（新开发者第一步） | [doctor.py](../scripts/doctor.py) |
 | 多注册表一致性（防注册遗漏） | [verify-registries.py](../scripts/verify-registries.py) |

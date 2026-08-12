@@ -62,6 +62,13 @@ EXCLUDED_DIRS = {
 
 _PLACEHOLDER_RE = re.compile(r"\{\{([A-Z0-9_]+)\}\}")
 
+# 教学转义 token 白名单：源码注释/docstring 示例与 AGENTS.md 教学文字中的占位符
+# （{{A}}/{{FOO}}/{{NAME}}/{{X}} 等），不计入"未声明" WARN——
+# 否则每次运行恒定输出噪声，淹没真实未登记占位符信号（与 EXCLUDED_DIRS 排除 tests/ 的设计理由一致）
+TEACHING_TOKENS = {
+    "A", "FOO", "NAME", "UPPER", "UPPER_CASE", "X", "X1_",
+}
+
 
 def _iter_files(roots: list[str]) -> list[Path]:
     """展开 roots（相对 ROOT）为文件列表，跳过排除目录与二进制。"""
@@ -113,17 +120,25 @@ def collect_keys(reg: dict) -> tuple[set[str], list[str]]:
             except OSError:
                 continue
             found.update(_PLACEHOLDER_RE.findall(text))
-        return found, problems
+        # 剔除教学转义 token（见 TEACHING_TOKENS），避免恒定 WARN 噪声
+        return found - TEACHING_TOKENS, problems
 
     if rtype == "regex_extract":
         pattern = re.compile(reg.get("pattern", ""))
+        # 多捕获组时 findall 返回 tuple（与 json_keys 的字符串键比较产生垃圾输出）：
+        # 统一只取第 1 个捕获组，无捕获组则取整段匹配。
+        groups = pattern.groups
         found: set[str] = set()
         for p in _iter_files(reg.get("roots", ["."])):
             try:
                 text = p.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue
-            found.update(pattern.findall(text))
+            for m in pattern.finditer(text):
+                if groups == 0:
+                    found.add(m.group(0))
+                elif m.group(1) is not None:
+                    found.add(m.group(1))
         return found, problems
 
     return set(), [f"[配置错误] 未知 registry 类型: {rtype}"]

@@ -28,6 +28,11 @@ retry.py — 瞬态错误重试装饰器
 """
 import functools
 import time
+from collections.abc import Callable
+from typing import ParamSpec, TypeVar
+
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
 
 
 def _default_classifier(exc: BaseException) -> bool:
@@ -39,8 +44,8 @@ def retry_transient(
     max_attempts: int = 3,
     delay: float = 0.5,
     backoff: float = 2.0,
-    classifier=None,
-):
+    classifier: Callable[[BaseException], bool] | None = None,
+) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """瞬态错误重试装饰器。
 
     Args:

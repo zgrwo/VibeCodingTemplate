@@ -54,10 +54,20 @@ class TestCollectKeys:
     def test_placeholder_scan_finds_tokens(self, tmp_path):
         # 在临时目录建文件，绕过 EXCLUDED_DIRS
         f = tmp_path / "sample.md"
-        f.write_text("参考 {{FOO}} 与 {{BAR}} 两个占位符", encoding="utf-8")
+        f.write_text("参考 {{FOOX}} 与 {{BAR}} 两个占位符", encoding="utf-8")
         keys, errs = vr.collect_keys({"type": "placeholder_scan", "roots": [tmp_path.as_posix()]})
         assert errs == []
-        assert keys == {"FOO", "BAR"}
+        assert keys == {"FOOX", "BAR"}
+
+    def test_placeholder_scan_excludes_teaching_tokens(self, tmp_path):
+        # 教学转义 token（A/FOO/NAME/X 等）不计入已使用集合，避免恒定 WARN 噪声（P3-2）
+        f = tmp_path / "sample.md"
+        f.write_text("参考 {{FOO}}、{{NAME}}、{{BAR}} 三个占位符", encoding="utf-8")
+        keys, errs = vr.collect_keys({"type": "placeholder_scan", "roots": [tmp_path.as_posix()]})
+        assert errs == []
+        assert "FOO" not in keys
+        assert "NAME" not in keys
+        assert keys == {"BAR"}
 
     def test_unknown_type(self):
         keys, errs = vr.collect_keys({"type": "bogus"})

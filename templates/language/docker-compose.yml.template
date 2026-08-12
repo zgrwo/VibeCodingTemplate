@@ -20,9 +20,11 @@ services:
       - ./src:/app/src:ro
     restart: unless-stopped
     healthcheck:
-      # 注：运行时镜像为 distroless（无 curl），用 python urllib 探测
-      #     （与 Dockerfile.template 注释的健康检查一致）。
-      #     Node/Go 项目可改用 Node 或语言原生探测，或为镜像加装 curl。
+      # 注：此 healthcheck 依赖运行时镜像含 Python（distroless 无 curl，故用 urllib 探测；
+      #     与 Dockerfile.template 注释的健康检查一致）。
+      # ⚠️ 若 RUNTIME_IMAGE 为非 Python 基础镜像（如 gcr.io/distroless/static-debian12，
+      #     无 python），此探测会失败——Go/Node 项目改用语言原生探测（wget/curl 加装，或
+      #     Go 编译进镜像的自建 health 端点），勿在非 Python 运行时保留 python -c。
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8080/health').status==200 else sys.exit(1)"]
       interval: 30s
       timeout: 3s

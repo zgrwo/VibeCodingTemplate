@@ -1,5 +1,8 @@
 # VibeCodingTemplate 吸收计划（A+B+C 档 · 自举为主 · bump 0.2.0）
 
+> **状态：已执行完成（2026-08-12）**。下文基线数字（68 tests / 62% / 33 DOC_FILES / ~117 占位符）为**执行前快照**，
+> 当前实际值见 `docs/architecture.md`（AUTO_COUNTS:TESTS）与 `scripts/verify-all.py` 输出。
+
 > **本文件是唯一执行依据** —— 中断后新会话可直接照此执行，不依赖原对话上下文。
 > 所有来源路径、目标约定、验证步骤均已写入。执行时先读本文，再按阶段推进。
 > 执行第一阶段前应把本计划复制到仓库内 `VibeCodingTemplate/docs/absorption-plan-2026-08.md` 持久化。

@@ -168,7 +168,7 @@ All notable changes to VibeCodingTemplate.
 - `security.yml`：codeql-action 由 v3 升级至 v4.37.6（v3 将于 2026-12 弃用；统一三处 SHA 避免 dependabot 部分更新导致的版本混用）
 - `test-template.ps1` / `init-project.ps1`：占位符扫描加 `-Force`（pwsh 7 的 `Get-ChildItem -Recurse` 不递归 `.github` 等隐藏目录，Windows PS 5.1 会），修复 CI（pwsh/Linux）漏扫 ci.yml 的 `{{LINT_CMD}}` 导致死条目误报与初始化后占位符残留
 
-## [0.1.0] - {{DATE}}
+## [0.1.0] - 2026-08-07
 
 ### Added
 

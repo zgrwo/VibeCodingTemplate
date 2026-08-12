@@ -128,7 +128,14 @@ def compare(name: str, actual: object, expected: object, tol: float = 1e-10) -> 
             for i, (a, e) in enumerate(zip(actual, expected, strict=True)):
                 if isinstance(e, (int, float)) and not isinstance(e, bool):
                     scale = max(1.0, abs(float(e)))
-                    if not math.isfinite(float(a)) or abs(float(a) - float(e)) > tol * scale:
+                    try:
+                        a_f = float(a)
+                    except (TypeError, ValueError):
+                        _FAIL += 1
+                        print(f"  [FAIL] {name}[{i}]: 类型不匹配——期望数值 {e!r}，"
+                              f"实际 {a!r} 无法转数值")
+                        return
+                    if not math.isfinite(a_f) or abs(a_f - float(e)) > tol * scale:
                         _FAIL += 1
                         print(f"  [FAIL] {name}[{i}]: {a} != {e} (tol={tol})")
                         return
@@ -198,14 +205,20 @@ def load_claims() -> dict[str, float]:
     return claims
 
 
+# CLAIM 声称值缓存：manual_check 多次调用时避免每次重读重扫 user-manual.md（P3-12）
+_CLAIMS_CACHE: dict[str, float] | None = None
+
+
 def manual_check(name: str, actual: float | None, tol: float = 1e-10) -> None:
     """实跑比对：将实际计算结果与 user-manual.md 中声称值（CLAIM:NAME 标记）比对。
 
     防文档数字漂移：手册里写的数值（effect size、阈值、均值等）由真实运行验证，
     而非静态核对文本。声称值来源 SSOT（user-manual.md），crossval 脚本不硬编码。
     """
-    global _PASS, _FAIL
-    claims = load_claims()
+    global _PASS, _FAIL, _CLAIMS_CACHE
+    if _CLAIMS_CACHE is None:
+        _CLAIMS_CACHE = load_claims()
+    claims = _CLAIMS_CACHE
     expected = claims.get(name)
     if expected is None:
         _FAIL += 1

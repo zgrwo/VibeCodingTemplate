@@ -42,20 +42,23 @@ def get_changed_files(base: str) -> list[str]:
         # 已提交变更：base..HEAD
         r1 = subprocess.run(
             ["git", "diff", "--name-only", base, "HEAD"],
-            capture_output=True, text=True, timeout=15, cwd=ROOT,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=15, cwd=ROOT,
         )
         if r1.returncode == 0:
             results.extend(r1.stdout.splitlines())
         # 未提交工作区改动（未暂存 + 已暂存）
         r2 = subprocess.run(
             ["git", "diff", "--name-only"],
-            capture_output=True, text=True, timeout=15, cwd=ROOT,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=15, cwd=ROOT,
         )
         if r2.returncode == 0:
             results.extend(r2.stdout.splitlines())
         r3 = subprocess.run(
             ["git", "diff", "--cached", "--name-only"],
-            capture_output=True, text=True, timeout=15, cwd=ROOT,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=15, cwd=ROOT,
         )
         if r3.returncode == 0:
             results.extend(r3.stdout.splitlines())
@@ -85,16 +88,21 @@ def _rel(path: Path) -> str:
 
 
 def find_tests_for(source: str, tests_dir: Path) -> list[str]:
-    """按命名约定把源文件映射到测试文件。"""
+    """按命名约定把源文件映射到测试文件。
+
+    命名分隔符归一化：源文件连字符命名（如 gen-doc-counts.py）须能命中
+    下划线命名的测试（test_gen_doc_counts.py），否则子串匹配失效、门禁谎报缺测。
+    """
     stem = source_stem(source)
     if not stem or stem.startswith("__"):
         return []
+    stem_n = stem.lower().replace("-", "_")
     candidates = []
     for p in tests_dir.rglob("test_*.py"):
-        if stem.lower() in p.name.lower():
+        if stem_n in p.name.lower():
             candidates.append(_rel(p))
     for p in tests_dir.rglob("*Tests.cs"):
-        if stem.lower() in p.name.lower():
+        if stem_n in p.name.lower():
             candidates.append(_rel(p))
     return candidates
 
@@ -134,7 +142,13 @@ def main(argv: list[str] | None = None) -> int:
     for t in target_tests:
         print(f"  {t}")
     if unmatched:
-        print(f"（{len(unmatched)} 个源文件无测试映射，见上 FAIL 提示）")
+        # 混合场景：部分源文件有测试、部分没有。逐个输出缺测文件，并返回非零，
+        # 使提示与实际退出码一致（不再出现"见上 FAIL 提示"却无 FAIL 块、退出码为 0 的谎报）。
+        print(f"[FAIL] {len(unmatched)} 个源文件无对应测试——疑似缺测，请补测试"
+              "（或确认由 E2E/CI 覆盖并登记豁免）：")
+        for f in unmatched:
+            print(f"  - {f}")
+        return 1
 
     if args.dry_run:
         print("\n[dry-run] 完成，未实际运行")

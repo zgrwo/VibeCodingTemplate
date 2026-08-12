@@ -35,12 +35,14 @@ _WEAK_ASSERT_RE = re.compile(
     r"|assert\s+bool\("                       # assert bool(x)
 )
 # 真实断言（验证具体值）
+# expr 支持下标/属性/方法调用（df["col"].sum() == 5）、len(...)==N/!=N 形式
 _STRONG_ASSERT_RE = re.compile(
-    r"assert\s+\w+\s*[=!]=\s*\w+"            # assert a == b
+    r"assert\s+\w+(?:\[.*?\]|\.\w+(?:\(.*?\))?)*\s*[=!]=\s*\w+(?:\(.*?\))?"
     r"|assert\s+\w+\s*in\s+"                  # assert x in ...
-    r"|assert\s+\w+\s*[<>]=?\s*\w+"           # assert a < b
+    r"|assert\s+\w+(?:\[.*?\]|\.\w+(?:\(.*?\))?)*\s*[<>]=?\s*\w+(?:\(.*?\))?"
     r"|assert\s+\w+\s*is\s+True"              # assert x is True
     r"|assert\s+\w+\s*is\s+False"
+    r"|assert\s+len\([^)]*\)\s*[=!]=\s*\S+"    # assert len(x) == N / != N
     r"|pytest\.raises"                         # 异常断言
 )
 # 无意义测试名：test_<纯数字/序号/caseN>
@@ -146,10 +148,10 @@ def check_missing_tests(src_dir: Path, tests_dir: Path) -> list[str]:
         for node in tree.body:
             is_public = isinstance(node, ast.FunctionDef) and not node.name.startswith("_")
             if is_public and node.name not in tested:
-                    rel = _rel(p)
-                    problems.append(
-                        f"[FAIL] {rel}:{node.name} 无对应测试引用——新增公共函数必须配测试"
-                    )
+                rel = _rel(p)
+                problems.append(
+                    f"[FAIL] {rel}:{node.name} 无对应测试引用——新增公共函数必须配测试"
+                )
     return problems
 
 

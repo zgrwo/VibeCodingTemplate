@@ -53,6 +53,7 @@
 | 21 | **测试文件命名不匹配测试框架默认 glob**（`test_X.ts` vs vitest/Jest `**/*.{test,spec}.*`）→ 测试永不运行、CI 静默通过 | 后缀用框架默认匹配（TS `.test.ts`）；或显式配置 include glob |
 | 22 | **配置流断裂（声明→解析→传递→读取→使用任一环断开）**（来源：文档审查套件 STR-004 在 4 节点断裂；cross-project-synthesis #4）→ 规则/参数在配置中声明但链路某节点静默失效，报错时已在用点 | 防御模式：回退路径的 config 键集**必须与主路径一致**（文档审查套件 `_resolve_auditor_config()` 注释"陷阱 #4：回退路径 config 键集必须与 build_auditors 一致"）；新增注册点后立即用 `verify-registries.py`（档 A-A1）断言多注册表键集一致 |
 | 23 | **ruff per-file ignore 无理由注释**（来源：工程分析套件 pyproject.toml）→ 后人 copy-paste 忽略规则，无上下文 | 每条 per-file-ignores/noqa 必须带中文理由注释（如 `"N806" 大写变量是有意的 SPC 常量 A2/D3/D4`）；新增规则类别需先确认非"覆盖问题"而是"约定豁免" |
+| 24 | **工具命名映射未归一化连字符/下划线**（源文件 `gen-doc-counts.py` 用连字符、测试 `test_gen_doc_counts.py` 用下划线，工具 `stem in name` 子串匹配失效）→ 门禁谎报"缺测"（run-affected-tests 对 4 个本有测试的脚本全报 FAIL） | 比较前统一分隔符：`stem.replace('-', '_')`（两边都归一化到 `_`）再子串匹配；补 kebab-case 源文件 → snake_case 测试的回归用例 |
 
 ## 提交前自查
 

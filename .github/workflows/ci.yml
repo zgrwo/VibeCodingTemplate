@@ -160,6 +160,15 @@ jobs:
         run: python scripts/verify-registries.py
       - name: 文档计数一致性（AUTO_COUNTS 标记比对）
         run: python scripts/gen-doc-counts.py --check
+      - name: 测试质量守卫（弱断言/缺测/无意义命名）
+        run: python scripts/test-quality-guard.py
+      - name: 安装门禁依赖（LINT/COVERAGE 所需）
+        # Python：pip install -e ".[dev]"（含 ruff、pytest、pytest-cov）
+        # C#：   actions/setup-dotnet + dotnet restore（按实际工具链替换）
+        # 缺依赖时 LINT/COVERAGE 会因"工具未安装"而红，报错与代码质量无关，
+        # 开发者无法区分环境问题与质量问题，故须在此显式安装（显式 step 而非塞进占位符，便于排障）。
+        if: steps.detect.outputs.is_template != 'true'
+        run: python -m pip install -e ".[dev]"
       - name: 代码风格
         # Python: ruff check src/ scripts/
         # C#:    dotnet format --verify-no-changes
@@ -209,7 +218,9 @@ jobs:
         if: steps.detect.outputs.is_template == 'true'
         shell: bash
         run: |
-          leaked=$(grep -rn "{{" templates/NewModule/ | grep -v ROOT_NAMESPACE || true)
+          # 按占位符粒度过滤：先提取全部 {{...}}，再剔除恰为 {{ROOT_NAMESPACE}} 的合法 token，
+          # 避免行级 grep -v 把"同行含合法与泄漏占位符"的整行剔除而隐藏泄漏（P3-9）
+          leaked=$(grep -rn -o "{{[A-Za-z_]*}}" templates/NewModule/ | grep -v '{{ROOT_NAMESPACE}}' || true)
           if [ -n "$leaked" ]; then
             echo "❌ 模板引入双花括号占位符（会被 init 扫描替换，应改用单花括号 {Name}）："
             echo "$leaked"

@@ -60,11 +60,12 @@ if (Test-Path $Target) { Get-ChildItem $Target -Force | Remove-Item -Recurse -Fo
 New-Item -ItemType Directory -Path $Target -Force | Out-Null
 # .claude/.codegraph/.qoder 为 AI 工具本地目录（.gitignore 已忽略，不应进入新项目，
 # 否则开发者本地 AI 设置随初始化泄漏，且 verify-docs.py --strict 会将其视为未声明目录）
-Get-ChildItem $template -Force | Where-Object { $_.Name -notin @(".git", "logs", ".claude", ".codegraph", ".qoder") } | ForEach-Object {
+Get-ChildItem $template -Force | Where-Object { $_.Name -notin @(".git", "logs", ".claude", ".codegraph", ".qoder", ".coverage") } | ForEach-Object {
     Copy-Item $_.FullName $Target -Recurse -Force
 }
-# 清理被复制进来的垃圾/构建目录（__pycache__/bin/obj 等不入库，也不应进入新项目）
-foreach ($junk in @("__pycache__", ".venv", "node_modules", "bin", "obj")) {
+# 清理被复制进来的垃圾/构建目录（__pycache__/bin/obj 等不入库，也不应进入新项目；
+# 清单与 init-project.py 的 CLEANUP_DIRS 对齐）
+foreach ($junk in @("__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache", ".venv", "venv", "env", "node_modules", "bin", "obj", "dist", "TestResults")) {
     Get-ChildItem $Target -Recurse -Force -Directory -Filter $junk -ErrorAction SilentlyContinue |
         Remove-Item -Recurse -Force
 }
@@ -148,8 +149,9 @@ Get-ChildItem $Target -Recurse -File -Force | Where-Object {
 $placeholderRe = [regex]::new("\{\{([A-Z0-9_]+)\}\}")
 $found = @{}
 # -Force：pwsh 7 的 Get-ChildItem -Recurse 不递归 .github 等隐藏目录，漏扫会导致 CI 下占位符未替换
+# 跳过 tests/：测试夹具 token（{{A}}/{{B}}/{{FOO}} 等）是 scanner 测试输入，不能被替换或计入未替换检查（与 init-project.py 的 SKIP_PLACEHOLDER_DIRS 对齐）
 Get-ChildItem $Target -Recurse -File -Force | Where-Object {
-    $_.Extension -notin @(".dll", ".exe", ".pdb")
+    $_.Extension -notin @(".dll", ".exe", ".pdb") -and $_.FullName -notmatch "[\\/]tests([\\/]|$)"
 } | ForEach-Object {
     $content = Get-Content $_.FullName -Encoding UTF8 -Raw -ErrorAction SilentlyContinue
     if ($content) {
@@ -230,7 +232,8 @@ if ($found.Count -eq 0) {
     foreach ($paths in $found.Values) {
         foreach ($p in $paths) { $files += $p }
     }
-    $files = @($files | Sort-Object -Unique)
+    # 防御性跳过 tests/（扫描已排除，此处双保险，避免路径来源差异引入夹具文件）
+    $files = @($files | Where-Object { $_ -notmatch "[\\/]tests([\\/]|$)" } | Sort-Object -Unique)
     foreach ($file in $files) {
         $content = Get-Content $file -Encoding UTF8 -Raw
         $new = $content
@@ -276,8 +279,9 @@ Write-Host "==> CHANGELOG.md 已重置为新项目初始态" -ForegroundColor Gr
 # ----------------------------------------------------------------------------
 $remaining = @{}
 # -Force：同上，避免漏扫隐藏目录中的未替换占位符（如 .github/workflows/*.yml）
+# 跳过 tests/：测试夹具 token 不应计入"未替换"（与扫描/替换对齐，见步骤 3）
 Get-ChildItem $Target -Recurse -File -Force | Where-Object {
-    $_.Extension -notin @(".dll", ".exe", ".pdb")
+    $_.Extension -notin @(".dll", ".exe", ".pdb") -and $_.FullName -notmatch "[\\/]tests([\\/]|$)"
 } | ForEach-Object {
     $content = Get-Content $_.FullName -Encoding UTF8 -Raw -ErrorAction SilentlyContinue
     if ($content) {

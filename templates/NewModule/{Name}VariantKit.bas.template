@@ -21,21 +21,26 @@ Public Function NormalizeInput(v As Variant, Optional flattenColumn As Boolean =
     ' 1. Range → 二维数组（v.Value 按单元格矩阵返回）
     If TypeOf v Is Range Then
         arr = v.Value
-        ' 2. 单列/单行展平（UDF 逐元素计算时用一维更自然）
-        If flattenColumn Then
-            If IsArray(arr) Then
-                ' 注意 LBound/UBound：Range.Value 固定 1-based（vba-SKILL §3.1）
-                If UBound(arr, 1) = 1 And UBound(arr, 2) > 1 Then
-                    arr = TransposeRow(arr)
-                ElseIf UBound(arr, 2) = 1 And UBound(arr, 1) > 1 Then
-                    arr = TransposeColumn(arr)
-                End If
+        If Not IsArray(arr) Then
+            ' 2. 单格 Range：Value 为标量（非数组）→ 包成单元素数组（与 Else 分支同构）。
+            '    否则 Udf.bas 的 IsArrayEmpty 守卫对非数组执行 UBound 触发运行时错误 9，
+            '    On Error Resume Next 下被误判为空数组 → CVErr(xlErrValue)，单格引用返回 #VALUE!。
+            Dim cellVal(0 To 0) As Variant
+            cellVal(0) = arr
+            arr = cellVal
+        ElseIf flattenColumn Then
+            ' 3. 单列/单行展平（UDF 逐元素计算时用一维更自然）
+            ' 注意 LBound/UBound：Range.Value 固定 1-based（vba-SKILL §3.1）
+            If UBound(arr, 1) = 1 And UBound(arr, 2) > 1 Then
+                arr = TransposeRow(arr)
+            ElseIf UBound(arr, 2) = 1 And UBound(arr, 1) > 1 Then
+                arr = TransposeColumn(arr)
             End If
         End If
     ElseIf IsArray(v) Then
         arr = v
     Else
-        ' 3. 单值 → 单元素数组（统一为数组，调用方无需分支）
+        ' 4. 单值 → 单元素数组（统一为数组，调用方无需分支）
         Dim singleVal(0 To 0) As Variant
         singleVal(0) = v
         arr = singleVal

@@ -18,7 +18,7 @@ AGENTS.md              项目宪法（四条核心准则、红线规则、防幻
 ├── templates/         模块脚手架（NewModule + language + monorepo）
 ├── scripts/           验证脚本（AST 审计 + 初始化 + commit 校验）
 ├── examples/          示例项目（Python/TypeScript/Go）
-└── tests/             验证脚本自测（<!-- AUTO_COUNTS:TESTS_START -->164<!-- AUTO_COUNTS:TESTS_END --> tests，见 tests/scripts/）
+└── tests/             验证脚本自测（<!-- AUTO_COUNTS:TESTS_START -->169<!-- AUTO_COUNTS:TESTS_END --> tests，见 tests/scripts/）
 ```
 
 ## 演进计划
@@ -28,7 +28,7 @@ AGENTS.md              项目宪法（四条核心准则、红线规则、防幻
 ## 关键设计决策
 
 ### ADR-0001：占位符双语法
-- `{{...}}` → 项目级，init-project 自动替换（正则 `\{\{(\w+)\}\}`）
+- `{{...}}` → 项目级，init-project 自动替换（正则 `\{\{([A-Z0-9_]+)\}\}`，仅匹配大写 token）
 - {PascalCase} → 模块级，开发者手动替换（不被 init 匹配，避免误伤）
 
 ### ADR-0002：模板自举检测

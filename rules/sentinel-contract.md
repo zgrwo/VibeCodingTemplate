@@ -78,6 +78,9 @@ grep -rn "except:" src/ --include="*.py" || echo OK
 
 # 数值类型默认值静默替代检查（L2/L5 违规信号）
 grep -rn "return default(" src/ --include="*.cs" || echo OK
+
+# 手册声称值实跑验证（CLAIM 标记 → manual_check()，见 user-manual.md）
+python scripts/verify-manual.py
 ```
 
 ## 维护规则

@@ -238,6 +238,7 @@
 | 文档数字漂移 | 6+ | 函数计数、模块计数在多处硬编码，更新时遗漏（占位符数 109→118 第 5 次复发；2026-08 第 6 次：docs/architecture.md 硬编码「34 tests」实际 68） |
 | 元占位符污染 | 2 | 描述占位符机制的教学文字（`{{X}}`/`{{UPPER}}`/`{{UPPER_CASE}}`）被 init 按未登记 token 替换为小写（H3 修复仅覆盖 ps1 未覆盖 .py 移植版与文档，第 2 次复发；修复：init 对未登记 token 保留原样 + 文档统一 `{{...}}` 转义） |
 | 测试文件命名与框架 glob 不匹配 | 1 | 测试文件 `test_X.ts` 不匹配 vitest/Jest 默认 glob `**/*.{test,spec}.*`，测试套件永不运行却静默通过（命名后缀需按测试框架要求） |
+| 工具命名映射未归一化分隔符 | 1 | 源文件连字符命名（`gen-doc-counts.py`）vs 测试下划线命名（`test_gen_doc_counts.py`），工具子串匹配未归一化 `-`/`_` → 门禁谎报缺测（run-affected-tests 对 4 个本有测试的脚本全报 FAIL；见 tooling-pitfalls #24） |
 | 交叉验证自校验 | 3+ | `check(name, X, X)` 永远 PASS，3 处 Bug 因此漏过（2026-08 新增：自校验正则误伤 docstring 反例教学文字，需跳过注释行） |
 | 配置流断裂 | 4+ | 规则/参数在配置中声明但链路某节点断裂导致功能静默失效（PATTERN_1/2、ROOT_CAUSE_1/2 死条目：内容已固化文档但 manifest 未清理；2026-08 新增 CrossVal sys.path 层级错误致 `from src.stats` 无法解析） |
 | 初始实现防御不足 | 5×15轮 | 初始实现只考虑正常路径，未系统性考虑退化输入（每个项目平均经历 5-15 轮审查修复） |
@@ -250,7 +251,7 @@
 
 ### 历史教训索引
 
-- 反模式案例库（8 类，含出现次数 + 真实项目案例）→ `rules/cross-project-synthesis.md`
+- 反模式案例库（10 类，含出现次数 + 真实项目案例）→ `rules/cross-project-synthesis.md`
 - 语言陷阱（Falsy / 封送 / 数组边界）→ `skills/`
 - 工具/脚本坑位（PowerShell / git / robocopy）→ `rules/tooling-pitfalls.md`
 - 架构决策与回退记录 → `rules/adr/`（ADR 编号递增）

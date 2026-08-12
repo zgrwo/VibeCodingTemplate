@@ -53,6 +53,30 @@ namespace {{ROOT_NAMESPACE}}.{Module}
         }
 
         /// <summary>
+        /// 未知类型转换入口（Udf 层把 Variant 传入后走此重载）。
+        /// 哨兵契约 L5：无法转换为 double → throw ArgumentException（不静默替代）。
+        /// </summary>
+        /// <param name="input">未知类型输入</param>
+        /// <returns>转换后的数值结果</returns>
+        internal static double Compute(object input)
+        {
+            if (input is double d)
+                return Compute(d);
+            if (input is IConvertible conv)
+            {
+                try
+                {
+                    return Compute(Convert.ToDouble(conv));
+                }
+                catch (Exception e) when (e is FormatException or InvalidCastException or OverflowException)
+                {
+                    throw new ArgumentException("输入无法转换为数值", nameof(input), e);
+                }
+            }
+            throw new ArgumentException("输入不是数值类型", nameof(input));
+        }
+
+        /// <summary>
         /// {字符串处理功能}
         /// </summary>
         /// <param name="text">输入文本</param>

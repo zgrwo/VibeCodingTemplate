@@ -182,9 +182,11 @@ def update_doc(path: Path, values: dict[str, int], check_only: bool) -> list[str
             indent = indent_match.group(1) if indent_match else ""
             prefix = line[:m.start()]  # START 前文本（含缩进）
             suffix = line[m.end():].split("-->", 1)[1] if "-->" in line[m.end():] else ""
-            out.append(f"{prefix}<!-- AUTO_COUNTS:{key}_START -->{suffix}\n")
-            out.append(f"{indent}{expected}\n")
-            out.append(f"{indent}<!-- AUTO_COUNTS:{key}_END -->\n")
+            # 沿用原行尾（CRLF/LF），避免混合行尾触发 eol=lf / mixed-line-ending 门禁
+            term = "\r\n" if line.endswith("\r\n") else "\n"
+            out.append(f"{prefix}<!-- AUTO_COUNTS:{key}_START -->{suffix}{term}")
+            out.append(f"{indent}{expected}{term}")
+            out.append(f"{indent}<!-- AUTO_COUNTS:{key}_END -->{term}")
         i = j + 1
 
     if check_only:

@@ -29,13 +29,16 @@ return err
 return fmt.Errorf("compute mean: %w", err)
 ```
 
-### 错误哨兵值
+### 哨兵契约（L2 哨兵：NaN 表示无效）
+
+> 术语统一：SSOT 定义为「哨兵契约」（见 [rules/sentinel-contract.md](../rules/sentinel-contract.md)，
+> L1-L5 各语言落地映射）。
 
 ```go
 // 数值计算中 0 是有效值（均值=0、计数=0）
 // 用 NaN 表示"无效"，不用 error 表示"计算结果为 0"
 
-// ✅ 哨兵值模式
+// ✅ 哨兵契约模式
 func Mean(values []float64) float64 {
     if len(values) == 0 {
         return math.NaN() // 哨兵：空输入 → NaN

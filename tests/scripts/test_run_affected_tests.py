@@ -42,6 +42,12 @@ class TestFindTestsFor:
         found = rat.find_tests_for("src/foo/bar.cs", tmp_path)
         assert any("BarTests.cs" in f for f in found)
 
+    def test_matches_kebab_case_py(self, tmp_path):
+        # 连字符命名的源脚本须命中下划线命名的测试（P1-8/P1-11 回归防护）
+        (tmp_path / "test_gen_doc_counts.py").write_text("", encoding="utf-8")
+        found = rat.find_tests_for("scripts/gen-doc-counts.py", tmp_path)
+        assert any("test_gen_doc_counts.py" in f for f in found)
+
     def test_no_match(self, tmp_path):
         found = rat.find_tests_for("src/foo/xyz.py", tmp_path)
         assert found == []

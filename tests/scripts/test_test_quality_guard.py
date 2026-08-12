@@ -55,6 +55,24 @@ class TestWeakAsserts:
         problems = tq.check_weak_asserts(tmp_path / "tests")
         assert problems == []
 
+    def test_strong_subscript_not_flagged(self, tmp_path):
+        # 下标访问断言视为真实断言（P2-10）
+        _make_test(tmp_path, "test_e", 'result = foo()\n    assert result["key"] == 5')
+        problems = tq.check_weak_asserts(tmp_path / "tests")
+        assert problems == []
+
+    def test_strong_len_eq_not_flagged(self, tmp_path):
+        # len(...)==N 视为真实断言（P2-10）
+        _make_test(tmp_path, "test_f", "items = foo()\n    assert len(items) == 2")
+        problems = tq.check_weak_asserts(tmp_path / "tests")
+        assert problems == []
+
+    def test_strong_attr_call_not_flagged(self, tmp_path):
+        # 属性/方法调用断言视为真实断言（P2-10）
+        _make_test(tmp_path, "test_g", 'df = foo()\n    assert df["col"].sum() == 5')
+        problems = tq.check_weak_asserts(tmp_path / "tests")
+        assert problems == []
+
 
 class TestNaming:
     """测试命名规范检测。"""

@@ -188,9 +188,9 @@ class FalsyAuditor(ast.NodeVisitor):
         self.findings.append((level, var, lineno, line_text, kind))
 
     def _check_or_fallback(self, node: ast.AST, kind: str) -> None:
-        """检查 x or default 模式。只检查第一个可命名的操作数（值操作数），
-        default 是安全回退。第一个操作数非变量（如函数调用）时继续扫描下一个，
-        避免 compute() or threshold 漏检 threshold。
+        """检查 x or default 模式。default 是安全回退，已分类的变量操作数即值操作数
+        （检查后停止）；未命中名单的变量操作数（如 `result or threshold or 0.05` 的
+        result）继续扫描后续操作数，避免漏检 HIGH/MEDIUM 风险名。
         """
         if not (isinstance(node, ast.BoolOp) and isinstance(node.op, ast.Or)):
             return
@@ -205,12 +205,19 @@ class FalsyAuditor(ast.NodeVisitor):
                     self.findings.append(
                         (level, var, node.lineno, ast.unparse(node), kind)
                     )
-            break  # 第一个可命名的操作数即值操作数，检查后停止
+                break  # 已分类操作数即值操作数，检查后停止
+            # 未命中名单的变量操作数：继续扫描后续操作数（与函数调用操作数一致）
 
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
-        """收集类型注解：var: Type = value"""
+        """收集类型注解：var: Type = value；同时检查注解赋值的 or 回退。
+
+        `total: int = count or 0` 与 visit_Assign 的 `result = x or default` 同构，
+        只在 visit_Assign 检查会漏掉带类型注解的赋值。
+        """
         if isinstance(node.target, ast.Name) and node.annotation:
             self._type_hints[node.target.id] = node.annotation
+        if node.value and isinstance(node.value, ast.BoolOp):
+            self._check_or_fallback(node.value, "assign or")
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:

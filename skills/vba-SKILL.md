@@ -7,6 +7,7 @@ argument-hint: "[修改的 .bas/.cls 文件/模块] [--context 新增 UDF | 修�
 # VBA 编码技能
 
 > 从 5 个项目的历史 diff 中提炼的 VBA 易错点与最佳实践。修改 .bas/.cls 前必读。
+> **SSOT 防御契约**：无效输入返回什么（CVErr 哨兵 vs Err.Raise）见 [rules/sentinel-contract.md](../rules/sentinel-contract.md)。
 
 ## 1. 参数类型陷阱（最高频错误）
 

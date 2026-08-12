@@ -111,7 +111,8 @@ try {
     $steps = @(
         @{ Name = "verify-docs.py --strict"; Cmd = { python scripts/verify-docs.py --strict } },
         @{ Name = "verify-manual.py";        Cmd = { python scripts/verify-manual.py } },
-        @{ Name = "falsy-audit.py";          Cmd = { python scripts/falsy-audit.py } }
+        @{ Name = "falsy-audit.py";          Cmd = { python scripts/falsy-audit.py } },
+        @{ Name = "test-quality-guard.py";   Cmd = { python scripts/test-quality-guard.py } }
     )
     foreach ($s in $steps) {
         Write-Host "`n=== $($s.Name) ===" -ForegroundColor Cyan

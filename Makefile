@@ -32,6 +32,7 @@ docs:
 	$(PYTHON) scripts/falsy-audit.py
 	$(PYTHON) scripts/verify-registries.py
 	$(PYTHON) scripts/gen-doc-counts.py --check
+	$(PYTHON) scripts/test-quality-guard.py
 
 doctor:
 	$(PYTHON) scripts/doctor.py
