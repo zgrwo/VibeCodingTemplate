@@ -55,9 +55,9 @@ if (-not $Force -and (Test-Path $Target) -and (Get-ChildItem $Target -Force | Se
 # target 不能在模板仓库内或等于模板根：下方 Remove-Item 会先递归删除模板源码再自我复制，
 # 造成模板树被自身覆盖销毁（镜像 init-project.py 的同名守卫）。
 $resolvedTarget = [System.IO.Path]::GetFullPath($Target)
-$resolvedTemplate = [System.IO.Path]::GetFullPath($template).TrimEnd('', '/')
+$resolvedTemplate = [System.IO.Path]::GetFullPath($template).TrimEnd('/', '\')
 if ($resolvedTarget -eq $resolvedTemplate -or
-    $resolvedTarget.StartsWith($resolvedTemplate + '', [System.StringComparison]::OrdinalIgnoreCase)) {
+    $resolvedTarget.StartsWith($resolvedTemplate + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) {
     throw "target 不能在模板仓库内或等于模板根：$Target"
 }
 
