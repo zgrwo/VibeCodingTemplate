@@ -33,9 +33,11 @@ ROOT = Path(__file__).resolve().parent.parent
 MANUAL = ROOT / "rules" / "user-manual.md"
 CROSSVAL_DIR = ROOT / "scripts" / "crossval"
 
-# 自校验模式：check(name, X, X) —— 永远 PASS，无验证价值
+# 自校验模式：check(name, X, X) —— 永远 PASS，无验证价值。
+# 操作数用 [^\s,]+ 而非 \w+：须覆盖 self.mean / obj.attr / d["k"] / mean(...)
+# 等属性访问、下标、调用形态，否则此类自校验可绕过「禁止自校验」红线。
 SELF_CHECK_RE = re.compile(
-    r"check\s*\(\s*['\"]?[^,]+['\"]?\s*,\s*(\w+)\s*,\s*\1\s*\)"
+    r"check\s*\(\s*['\"]?[^,]+['\"]?\s*,\s*([^\s,]+)\s*,\s*\1\s*\)"
 )
 
 

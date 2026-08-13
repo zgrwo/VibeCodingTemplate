@@ -17,9 +17,9 @@ namespace {{ROOT_NAMESPACE}}.{Module}.Tests
 
         [Fact]
         public void Compute_normal_input()
-            // 注意：{Name}Core.Compute 当前实现返回输入值（见 {Name}Core.cs 核心逻辑），
+            // 注意：{Name}Core.Compute 当前实现返回输入 ×2.0（见 {Name}Core.cs 核心逻辑），
             // 期望值须与实现语义一致；替换实现后同步调整此处断言。
-            => {Name}Core.Compute(1.0).Should().Be(1.0);
+            => {Name}Core.Compute(1.0).Should().Be(2.0);
 
         [Fact]
         public void Process_normal_input()
@@ -60,16 +60,16 @@ namespace {{ROOT_NAMESPACE}}.{Module}.Tests
         [Fact]
         public void Compute_max_value()
         {
-            // 当前实现 Compute 透传非 NaN/Inf 输入（见 {Name}Core.cs）。
-            // L4 溢出守卫（结果 IsInfinity → NaN）在实现引入溢出算术时生效；
-            // 若实现加了溢出检测，此处应同步为 .Should().Be(double.NaN)。
-            {Name}Core.Compute(double.MaxValue).Should().Be(double.MaxValue);
+            // 当前实现 Compute 对非 NaN/Inf 输入 ×2.0（见 {Name}Core.cs）。
+            // MaxValue×2 溢出为 Inf，触发 L4 结果守卫 → NaN。
+            {Name}Core.Compute(double.MaxValue).Should().Be(double.NaN);
         }
 
         [Fact]
         public void Compute_min_value()
         {
-            {Name}Core.Compute(double.MinValue).Should().Be(double.MinValue);
+            // MinValue×2 溢出为 -Inf，触发 L4 结果守卫 → NaN。
+            {Name}Core.Compute(double.MinValue).Should().Be(double.NaN);
         }
 
         // ====================================================================

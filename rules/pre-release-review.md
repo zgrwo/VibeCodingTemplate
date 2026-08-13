@@ -80,7 +80,7 @@ VibeCodingTemplate 是一个 **元项目模板**——不是具体应用，
 ## 1. 门禁全绿
 - `python scripts/verify-all.py` 全部通过
 - `python -m ruff check scripts/ tests/` 零违规
-- `python -m pytest tests/ -v` 全部 34 项通过
+- `python -m pytest tests/ -v` 全部 169 项通过
 - `git status` 干净
 
 ## 2. 占位符系统完整性
@@ -128,7 +128,7 @@ VibeCodingTemplate 是一个 **元项目模板**——不是具体应用，
 - examples/tests/ 测试覆盖边界（空输入/NaN/Inf/负权重/溢出）
 
 ## 8. 测试完备性
-- scripts/ 核心函数有测试覆盖（当前 34 tests）
+- scripts/ 核心函数有测试覆盖（当前 169 tests）
 - falsy-audit 的 AST 模式和正则兜底均有测试
 - verify-docs 的各检查函数有行为测试（非仅 return type 检查）
 - 关键错误路径有测试（文件不存在/JSON 解析失败/路径越界）
@@ -266,7 +266,7 @@ VibeCodingTemplate 是一个 **元项目模板**——不是具体应用，
 
 ### 8. 测试穷尽审计
 - 覆盖率报告：`pytest --cov=scripts --cov-fail-under=40`
-  - 当前基线 35%，目标每次发行提升 5%
+  - 当前基线 79%，目标每次发行提升 5%
   - 识别覆盖率最低的模块并标记
 - 边界测试完整性：
   - falsy-audit: --path 越界/SyntaxError/binary file

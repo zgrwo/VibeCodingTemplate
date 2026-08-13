@@ -15,7 +15,7 @@
 | `NewModule/{Name}Core.py.template` | 核心逻辑（纯函数 + 类型注解 + falsy 守卫） | Python |
 | `NewModule/test_{Name}Core.py.template` | 单元测试（正常/边界/falsy/异常） | Python (pytest) |
 | `NewModule/{Name}Udf.bas.template` | UDF 入口（Variant 参数 + 错误三模式） | VBA |
-| `NewModule/{Name}VariantKit.bas.template` | Variant 输入归一化基础层（Range/数组统一入口） | VBA |
+| `NewModule/VariantKit.bas.template` | Variant 输入归一化基础层（Range/数组统一入口，固定名） | VBA |
 | `NewModule/{Name}Core.ts.template` | 核心逻辑（纯函数 + strict null check + Result 模式） | TypeScript |
 | `NewModule/{Name}Core.test.ts.template` | 单元测试（正常/边界/null/NaN） | TypeScript (vitest) |
 | `NewModule/{Name}Core.go.template` | 核心逻辑（哨兵值 NaN + error 包装 + 零 panic） | Go |
@@ -88,7 +88,7 @@
 
 **VBA（无构建系统，模块复制进 VBE）**
 ```
-1. 复制 {Name}Udf.bas + {Name}VariantKit.bas 到 src/{Module}/，导入 VBE（文件 → 导入文件）
+1. 复制 {Name}Udf.bas + VariantKit.bas 到 src/{Module}/，导入 VBE（文件 → 导入文件）
 2. 替换 {Name}/{PREFIX}；VariantKit 提供 NormalizeInput（Range/数组统一入口），
    首次使用即复制，后续模块共用
 3. Public 参数一律 As Variant；错误三模式（CVErr / Err.Raise / Cleanup）

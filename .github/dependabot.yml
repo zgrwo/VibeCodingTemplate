@@ -4,7 +4,8 @@
 # 注意：package-ecosystem 必须与仓库实际文件匹配，否则 GitHub 报错
 #   - pip:   需要 pyproject.toml / requirements*.txt
 #   - nuget: 需要 *.sln / *.csproj / packages.config
-# 模板仓库自身无语言清单文件，故仅启用 github-actions（workflow 文件存在）。
+# 模板仓库根目录含 pyproject.toml（Python 清单），如需 pip 自动更新可取消注释下方
+# pip 条目；现默认仅启用 github-actions（workflow 文件存在）。
 # ============================================================================
 version: 2
 updates:

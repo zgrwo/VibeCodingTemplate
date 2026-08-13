@@ -33,6 +33,7 @@ func Mean(values []float64) float64 {
 }
 
 // WeightedMean 计算加权均值。nil/空/长度不匹配/权重全零返回 NaN。
+// 与 Mean 对齐：逐对过滤非有限（NaN/Inf）值及其配对权重，否则 NaN 会毒化整个结果。
 func WeightedMean(values, weights []float64) float64 {
 	if values == nil || weights == nil ||
 		len(values) == 0 || len(weights) == 0 ||
@@ -40,15 +41,17 @@ func WeightedMean(values, weights []float64) float64 {
 		return math.NaN()
 	}
 	totalWeight := 0.0
-	for _, w := range weights {
-		totalWeight += w
+	sum := 0.0
+	for i, v := range values {
+		if math.IsNaN(v) || math.IsInf(v, 0) ||
+			math.IsNaN(weights[i]) || math.IsInf(weights[i], 0) {
+			continue
+		}
+		totalWeight += weights[i]
+		sum += v * weights[i]
 	}
 	if totalWeight == 0 {
 		return math.NaN()
-	}
-	sum := 0.0
-	for i, v := range values {
-		sum += v * weights[i]
 	}
 	result := sum / totalWeight
 	if math.IsInf(result, 0) || math.IsNaN(result) {

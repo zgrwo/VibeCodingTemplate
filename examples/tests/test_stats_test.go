@@ -1,5 +1,5 @@
 // ============================================================================
-// test_stats.go — StatsCore 单元测试（Go 示例）
+// test_stats_test.go — StatsCore 单元测试（Go 示例）
 // 对应模板：templates/NewModule/{Name}Core_test.go.template
 // 运行：cd examples && go test ./tests/... -v
 // ============================================================================

@@ -2,7 +2,7 @@
 ' {Name}Udf.bas — VBA 模块 UDF 入口
 ' 使用方式：将 {Name} 替换为模块名（PascalCase），{PREFIX} 替换为 UDF 前缀（大写，如 WEATHER）
 ' 目标位置：src/{Module}/{Name}Udf.bas（VBA 无命名空间，用 {PREFIX}_ 前缀区分模块）
-' 依赖：{Name}VariantKit 模块的 NormalizeInput（VBA 模块名随文件名，故引用须含 {Name} 前缀，见 skills/vba-SKILL.md §1.2）
+' 依赖：VariantKit 基础层模块的 NormalizeInput（VariantKit 为固定名基础设施模块，见 skills/vba-SKILL.md §1.2）
 ' ============================================================================
 Option Explicit
 
@@ -25,8 +25,8 @@ Public Function {PREFIX}_COMPUTE(value As Variant) As Variant
     Dim i As Long
 
     ' 1. 输入归一化：Range 或数组统一为数组（vba-SKILL §1.2）
-    '    模块名随文件名（{Name}VariantKit），引用须含前缀，导入 VBE 后模块名才是 {Name}VariantKit
-    arr = {Name}VariantKit.NormalizeInput(value, flattenColumn:=True)
+    '    VariantKit 为固定名基础层模块（见 skills/vba-SKILL.md §1.2），引用固定名 VariantKit
+    arr = VariantKit.NormalizeInput(value, flattenColumn:=True)
 
     ' 2. 空数组守卫（vba-SKILL §3.2：UBound 对未初始化数组抛异常）
     If IsArrayEmpty(arr) Then

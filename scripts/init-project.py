@@ -141,6 +141,12 @@ def copy_template(target: Path) -> list[str]:
       - 跳过顶级目录（.git / logs / AI 工具目录）
       - 复制后递归清理构建产物/缓存目录
     """
+    # 安全护栏：禁止复制到模板仓库自身内部（递归清理会摧毁模板源文件）。
+    resolved_target = target.resolve()
+    resolved_template = TEMPLATE_ROOT.resolve()
+    if resolved_target == resolved_template or resolved_template in resolved_target.parents:
+        raise SystemExit(f"[FATAL] 目标目录 {target} 位于模板仓库内部，拒绝复制（防自删除）")
+
     if target.exists():
         for item in target.iterdir():
             if item.is_dir():

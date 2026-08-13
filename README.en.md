@@ -116,7 +116,8 @@ Project Plan Reviewer (post-execution) → Did the plan work?
 | `security.yml` | CodeQL scanning (PR + scheduled) |
 | `release.yml` | release-please auto-release (Conventional Commits driven) |
 | `stale.yml` | Auto-close stale Issues/PRs |
-| `dependabot.yml` | Dependency auto-update |
+| `detect-template.yml` | Reusable template self-bootstrap detection |
+| `dependabot.yml` | Dependency auto-update (config, not a workflow) |
 
 ## License
 

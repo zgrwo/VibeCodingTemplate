@@ -221,11 +221,19 @@ class FalsyAuditor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        """收集函数参数的类型注解：def f(x: bool) -> None"""
+        """收集函数参数的类型注解：def f(x: bool) -> None
+
+        作用域隔离：进入函数时快照并继承外层（模块级）注解，退出时恢复。
+        否则 `def f(count: bool)` 的注解会泄漏到后续无注解的 `def g(count)`，
+        使 g 的 `if count:` 被误判为安全类型而静默跳过（CI 硬门禁假阴性）。
+        """
+        saved = self._type_hints
+        self._type_hints = dict(saved)
         for arg in node.args.args + node.args.kwonlyargs:
             if arg.annotation:
                 self._type_hints[arg.arg] = arg.annotation
         self.generic_visit(node)
+        self._type_hints = saved
 
     def visit_If(self, node: ast.If) -> None:
         """检查 if 条件。"""

@@ -46,7 +46,7 @@ def _run(cmd: list[str]) -> subprocess.CompletedProcess:
     try:
         return subprocess.run(cmd, capture_output=True, text=True, timeout=10)
     except (FileNotFoundError, subprocess.TimeoutExpired) as e:
-        return subprocess.CompletedProcess(cmd, 127, str(e), "")
+        return subprocess.CompletedProcess(cmd, 127, "", str(e))
 
 
 def check_python() -> tuple[bool, str]:

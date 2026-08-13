@@ -4,59 +4,6 @@ All notable changes to VibeCodingTemplate.
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
-## [0.1.2](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.1.1...v0.1.2) (2026-08-09)
-
-
-### ✨ 新功能
-
-* **init-project:** 初始化时裁剪 TEMPLATE_ONLY 模板专属段落 ([ddf0d11](https://github.com/zgrwo/VibeCodingTemplate/commit/ddf0d11a2bd92ca725e4f35fcec9e342f26213fa))
-
-## [0.1.1](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.1.0...v0.1.1) (2026-08-09)
-
-
-### ✨ 新功能
-
-* VibeCodingTemplate 初始提交（AI 编码治理模板仓库） ([e9a2b27](https://github.com/zgrwo/VibeCodingTemplate/commit/e9a2b2773df911382667ca226a4d5f6836586fc9))
-* 模板卓越化增强——占位符SSOT/commit校验/release-please/跨语言脚手架 ([1d06e3f](https://github.com/zgrwo/VibeCodingTemplate/commit/1d06e3fa717f2542951e418de2bc06f5eda6e44f))
-* 跨平台脚本/TypeScript+Go Skill/Docker/Monorepo/AST审计/示例项目/验证脚本测试 ([de6d94e](https://github.com/zgrwo/VibeCodingTemplate/commit/de6d94ee262bba8bb8e74045b3378f76701bdab2))
-
-
-### 🐛 Bug 修复
-
-* **ci:** security.yml 补 csharp CodeQL、detect-template 权限加固 ([693b0f7](https://github.com/zgrwo/VibeCodingTemplate/commit/693b0f7c981f5f840661a1c8687ae2d7321204f1))
-* **ci:** 修复 CI 失败——跨平台临时目录与 CodeQL v4 升级 ([6d96fed](https://github.com/zgrwo/VibeCodingTemplate/commit/6d96fed9754962ad89c5f9917f2b9f303da9dc9d))
-* **ci:** 占位符扫描加 -Force，修复 pwsh 7 漏扫 .github 隐藏目录导致死条目误报 ([26fb174](https://github.com/zgrwo/VibeCodingTemplate/commit/26fb17422b23aeaaf1cbe0de6ed708dfb00cae0d))
-* **placeholders:** 为 55 个 content 占位符补 sample test 值 ([2e6e5e1](https://github.com/zgrwo/VibeCodingTemplate/commit/2e6e5e12747b19b7fca7c1c38cfd6ef33a5f8353))
-* **scripts:** 修复占位符污染/门禁说谎与 init 功能对等缺口 ([f916c36](https://github.com/zgrwo/VibeCodingTemplate/commit/f916c36eb3f5cd377b8f6f636201c8514ca8090b))
-* **templates,ci:** 修复模板哨兵契约/可运行性与 CI 门禁 ([5a9639d](https://github.com/zgrwo/VibeCodingTemplate/commit/5a9639d30527a4699fe2ffba6877013044246be9))
-* **templates:** 修复 C# 模板 CS0122 编译失败与 ToT 哨兵违约 ([4d741b5](https://github.com/zgrwo/VibeCodingTemplate/commit/4d741b5c0d2e03dc08b96a41c8be6ee8a36574d6))
-* 修复 4 个 CI HIGH 严重性缺陷——审计发现 ([04f156d](https://github.com/zgrwo/VibeCodingTemplate/commit/04f156de634ff2d864c9d97e5efe8deac2a75a84))
-* 修复 6 个 HIGH 严重性缺陷——审计发现 ([f124055](https://github.com/zgrwo/VibeCodingTemplate/commit/f12405503a9f79b49a819e0fd3081e7c42a1dd3e))
-* 修复 7 个 MEDIUM 严重性缺陷——审计发现 ([077889f](https://github.com/zgrwo/VibeCodingTemplate/commit/077889f14074a4c894f3108b6809992f6cc25d1e))
-* 修复 falsy-audit/verify-docs/init-project 审查发现 ([d8c2b1a](https://github.com/zgrwo/VibeCodingTemplate/commit/d8c2b1a252e3f0b76da3353b233c509589909299))
-* 修复 go-SKILL Mean 分母 bug 与 examples 缺陷 ([55fca3a](https://github.com/zgrwo/VibeCodingTemplate/commit/55fca3a50aa33aaf8b448b573d83749aa788e4ce))
-* 修复二次评估发现的 M1/M2/M3/L1/L3 问题 ([064c945](https://github.com/zgrwo/VibeCodingTemplate/commit/064c9457b0b44b7f108a9d241f2776f81b06ebca))
-* 修复余下 P3 审查项 ([c40baea](https://github.com/zgrwo/VibeCodingTemplate/commit/c40baea29a26bb309cf0dd59567030d46fe97b66))
-* 修复审计发现的剩余 MEDIUM 缺陷 ([66686b9](https://github.com/zgrwo/VibeCodingTemplate/commit/66686b9c2980bfc7b00842abbc8853774e4644e9))
-* 修复成熟度评估发现的 H1/H2/M1/M2/M3/L1-L4 全部问题 ([bd476c6](https://github.com/zgrwo/VibeCodingTemplate/commit/bd476c6bd07214d7378227ba9fc8ad1cd74731fe))
-* 修复模板审查发现的高中低问题并升级 Issue Forms ([66d2dc5](https://github.com/zgrwo/VibeCodingTemplate/commit/66d2dc56572778adb116ab6a6693d35cd1aa13a1))
-* 修复模板评估发现的高中低问题（P-A 至 P-T） ([7f12009](https://github.com/zgrwo/VibeCodingTemplate/commit/7f12009b11701a07ed53ae3feda4585539daa5b6))
-* 实施 P1-P3 全面修复——模板卓越化增强 ([b02b792](https://github.com/zgrwo/VibeCodingTemplate/commit/b02b792d30645c3df545df2a16ff3695c3433a08))
-* 清理 placeholders.json 死条目（PATTERN_1/2、ROOT_CAUSE_1/2），修复 CI template-self-test 阻断 ([853e650](https://github.com/zgrwo/VibeCodingTemplate/commit/853e6504f7fd961d9be5933acb2f7163e59b6217))
-
-
-### 📄 文档
-
-* P4 文档目录树同步——补齐新文件声明 ([8a9dee4](https://github.com/zgrwo/VibeCodingTemplate/commit/8a9dee40c725c7f5b3f98b3cccf0e80a066d95d6))
-* 修复文档漂移与注册遗漏，登记 pre-release-review ([1f29d90](https://github.com/zgrwo/VibeCodingTemplate/commit/1f29d907b52f5623b6030317a160d8f63c4d24e3))
-* 元占位符转义 + 文档漂移修复 + 审查知识库更新 ([aaeb90d](https://github.com/zgrwo/VibeCodingTemplate/commit/aaeb90da9aafed0edf174c421612edd46d5435ec))
-* 同步 TS 测试文件重命名后的头部说明 ([141c6bb](https://github.com/zgrwo/VibeCodingTemplate/commit/141c6bb237b0579919c181372f4fc9ac6f34698a))
-
-
-### ✅ 测试
-
-* 三个核心脚本测试覆盖 0%→62% ([55504c4](https://github.com/zgrwo/VibeCodingTemplate/commit/55504c481a83ae31309a8fae55ec707a850fcac0))
-
 ## [Unreleased]
 
 > 本模板自身的变更记录（新项目初始化时请重置为项目自己的变更历史）。
@@ -167,6 +114,59 @@ All notable changes to VibeCodingTemplate.
 - `test-template.ps1`：临时目录改用 `[System.IO.Path]::GetTempPath()`，修复 Linux runner 上 `$env:TEMP` 为 null 导致 CI 模板自测必败
 - `security.yml`：codeql-action 由 v3 升级至 v4.37.6（v3 将于 2026-12 弃用；统一三处 SHA 避免 dependabot 部分更新导致的版本混用）
 - `test-template.ps1` / `init-project.ps1`：占位符扫描加 `-Force`（pwsh 7 的 `Get-ChildItem -Recurse` 不递归 `.github` 等隐藏目录，Windows PS 5.1 会），修复 CI（pwsh/Linux）漏扫 ci.yml 的 `{{LINT_CMD}}` 导致死条目误报与初始化后占位符残留
+
+## [0.1.2](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.1.1...v0.1.2) (2026-08-09)
+
+
+### ✨ 新功能
+
+* **init-project:** 初始化时裁剪 TEMPLATE_ONLY 模板专属段落 ([ddf0d11](https://github.com/zgrwo/VibeCodingTemplate/commit/ddf0d11a2bd92ca725e4f35fcec9e342f26213fa))
+
+## [0.1.1](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.1.0...v0.1.1) (2026-08-09)
+
+
+### ✨ 新功能
+
+* VibeCodingTemplate 初始提交（AI 编码治理模板仓库） ([e9a2b27](https://github.com/zgrwo/VibeCodingTemplate/commit/e9a2b2773df911382667ca226a4d5f6836586fc9))
+* 模板卓越化增强——占位符SSOT/commit校验/release-please/跨语言脚手架 ([1d06e3f](https://github.com/zgrwo/VibeCodingTemplate/commit/1d06e3fa717f2542951e418de2bc06f5eda6e44f))
+* 跨平台脚本/TypeScript+Go Skill/Docker/Monorepo/AST审计/示例项目/验证脚本测试 ([de6d94e](https://github.com/zgrwo/VibeCodingTemplate/commit/de6d94ee262bba8bb8e74045b3378f76701bdab2))
+
+
+### 🐛 Bug 修复
+
+* **ci:** security.yml 补 csharp CodeQL、detect-template 权限加固 ([693b0f7](https://github.com/zgrwo/VibeCodingTemplate/commit/693b0f7c981f5f840661a1c8687ae2d7321204f1))
+* **ci:** 修复 CI 失败——跨平台临时目录与 CodeQL v4 升级 ([6d96fed](https://github.com/zgrwo/VibeCodingTemplate/commit/6d96fed9754962ad89c5f9917f2b9f303da9dc9d))
+* **ci:** 占位符扫描加 -Force，修复 pwsh 7 漏扫 .github 隐藏目录导致死条目误报 ([26fb174](https://github.com/zgrwo/VibeCodingTemplate/commit/26fb17422b23aeaaf1cbe0de6ed708dfb00cae0d))
+* **placeholders:** 为 55 个 content 占位符补 sample test 值 ([2e6e5e1](https://github.com/zgrwo/VibeCodingTemplate/commit/2e6e5e12747b19b7fca7c1c38cfd6ef33a5f8353))
+* **scripts:** 修复占位符污染/门禁说谎与 init 功能对等缺口 ([f916c36](https://github.com/zgrwo/VibeCodingTemplate/commit/f916c36eb3f5cd377b8f6f636201c8514ca8090b))
+* **templates,ci:** 修复模板哨兵契约/可运行性与 CI 门禁 ([5a9639d](https://github.com/zgrwo/VibeCodingTemplate/commit/5a9639d30527a4699fe2ffba6877013044246be9))
+* **templates:** 修复 C# 模板 CS0122 编译失败与 ToT 哨兵违约 ([4d741b5](https://github.com/zgrwo/VibeCodingTemplate/commit/4d741b5c0d2e03dc08b96a41c8be6ee8a36574d6))
+* 修复 4 个 CI HIGH 严重性缺陷——审计发现 ([04f156d](https://github.com/zgrwo/VibeCodingTemplate/commit/04f156de634ff2d864c9d97e5efe8deac2a75a84))
+* 修复 6 个 HIGH 严重性缺陷——审计发现 ([f124055](https://github.com/zgrwo/VibeCodingTemplate/commit/f12405503a9f79b49a819e0fd3081e7c42a1dd3e))
+* 修复 7 个 MEDIUM 严重性缺陷——审计发现 ([077889f](https://github.com/zgrwo/VibeCodingTemplate/commit/077889f14074a4c894f3108b6809992f6cc25d1e))
+* 修复 falsy-audit/verify-docs/init-project 审查发现 ([d8c2b1a](https://github.com/zgrwo/VibeCodingTemplate/commit/d8c2b1a252e3f0b76da3353b233c509589909299))
+* 修复 go-SKILL Mean 分母 bug 与 examples 缺陷 ([55fca3a](https://github.com/zgrwo/VibeCodingTemplate/commit/55fca3a50aa33aaf8b448b573d83749aa788e4ce))
+* 修复二次评估发现的 M1/M2/M3/L1/L3 问题 ([064c945](https://github.com/zgrwo/VibeCodingTemplate/commit/064c9457b0b44b7f108a9d241f2776f81b06ebca))
+* 修复余下 P3 审查项 ([c40baea](https://github.com/zgrwo/VibeCodingTemplate/commit/c40baea29a26bb309cf0dd59567030d46fe97b66))
+* 修复审计发现的剩余 MEDIUM 缺陷 ([66686b9](https://github.com/zgrwo/VibeCodingTemplate/commit/66686b9c2980bfc7b00842abbc8853774e4644e9))
+* 修复成熟度评估发现的 H1/H2/M1/M2/M3/L1-L4 全部问题 ([bd476c6](https://github.com/zgrwo/VibeCodingTemplate/commit/bd476c6bd07214d7378227ba9fc8ad1cd74731fe))
+* 修复模板审查发现的高中低问题并升级 Issue Forms ([66d2dc5](https://github.com/zgrwo/VibeCodingTemplate/commit/66d2dc56572778adb116ab6a6693d35cd1aa13a1))
+* 修复模板评估发现的高中低问题（P-A 至 P-T） ([7f12009](https://github.com/zgrwo/VibeCodingTemplate/commit/7f12009b11701a07ed53ae3feda4585539daa5b6))
+* 实施 P1-P3 全面修复——模板卓越化增强 ([b02b792](https://github.com/zgrwo/VibeCodingTemplate/commit/b02b792d30645c3df545df2a16ff3695c3433a08))
+* 清理 placeholders.json 死条目（PATTERN_1/2、ROOT_CAUSE_1/2），修复 CI template-self-test 阻断 ([853e650](https://github.com/zgrwo/VibeCodingTemplate/commit/853e6504f7fd961d9be5933acb2f7163e59b6217))
+
+
+### 📄 文档
+
+* P4 文档目录树同步——补齐新文件声明 ([8a9dee4](https://github.com/zgrwo/VibeCodingTemplate/commit/8a9dee40c725c7f5b3f98b3cccf0e80a066d95d6))
+* 修复文档漂移与注册遗漏，登记 pre-release-review ([1f29d90](https://github.com/zgrwo/VibeCodingTemplate/commit/1f29d907b52f5623b6030317a160d8f63c4d24e3))
+* 元占位符转义 + 文档漂移修复 + 审查知识库更新 ([aaeb90d](https://github.com/zgrwo/VibeCodingTemplate/commit/aaeb90da9aafed0edf174c421612edd46d5435ec))
+* 同步 TS 测试文件重命名后的头部说明 ([141c6bb](https://github.com/zgrwo/VibeCodingTemplate/commit/141c6bb237b0579919c181372f4fc9ac6f34698a))
+
+
+### ✅ 测试
+
+* 三个核心脚本测试覆盖 0%→62% ([55504c4](https://github.com/zgrwo/VibeCodingTemplate/commit/55504c481a83ae31309a8fae55ec707a850fcac0))
 
 ## [0.1.0] - 2026-08-07
 

@@ -42,8 +42,8 @@ namespace {{ROOT_NAMESPACE}}.{Module}
             // 2. 防御完整性：领域约束前置验证
             // if (input < 0) return double.NaN;
 
-            // 3. 核心逻辑
-            double result = input; // TODO: 替换为实际计算
+            // 3. 核心逻辑（与 Go/Python/TS 模板对齐：×2.0）
+            double result = input * 2.0; // TODO: 替换为实际计算
 
             // 4. 结果守卫：防止中间步骤产生 Inf
             if (double.IsInfinity(result))

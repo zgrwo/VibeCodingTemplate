@@ -85,7 +85,9 @@ def _method_has_strong_assert(src: str) -> bool:
 
 def _method_is_weak_only(src: str) -> bool:
     """方法只有弱断言（且无强断言）→ 视为弱。"""
-    return bool(_WEAK_ASSERT_RE.search(src)) and not _method_has_strong_assert(src)
+    # 与 _method_has_strong_assert 对齐：剔除注释后再判定，避免注释掉的弱断言误报
+    code = "\n".join(line.split("#", 1)[0] for line in src.splitlines())
+    return bool(_WEAK_ASSERT_RE.search(code)) and not _method_has_strong_assert(src)
 
 
 # 自测夹具文件：刻意含弱断言以验证守卫逻辑，不应触发自 WARN（告警疲劳）

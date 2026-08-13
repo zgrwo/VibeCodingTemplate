@@ -36,8 +36,12 @@ _R = TypeVar("_R")
 
 
 def _default_classifier(exc: BaseException) -> bool:
-    """默认瞬态错误分类：网络/超时类。"""
-    return isinstance(exc, (ConnectionError, TimeoutError, OSError))
+    """默认瞬态错误分类：网络/超时类。
+
+    ConnectionError / TimeoutError 是 OSError 子类，若再叠加 OSError，
+    会把 FileNotFoundError / PermissionError 也误判为「瞬时可重试」。
+    """
+    return isinstance(exc, (ConnectionError, TimeoutError))
 
 
 def retry_transient(

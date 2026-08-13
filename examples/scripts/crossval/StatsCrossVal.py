@@ -26,7 +26,7 @@ from src.stats.StatsCore import mean, weighted_mean  # noqa: E402
 from verify_manual import check, cross_check, section  # noqa: E402
 
 # ========================================================================
-# Stats — 3 UDFs
+# Stats — 2 UDFs
 # ========================================================================
 section("Stats — 均值计算", 3)
 

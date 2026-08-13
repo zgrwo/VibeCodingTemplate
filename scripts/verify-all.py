@@ -38,7 +38,7 @@ def run_step(name: str, cmd: list[str], cwd: Path | None = None) -> bool:
     print(f"  命令: {' '.join(cmd)}")
     try:
         result = subprocess.run(cmd, cwd=cwd or ROOT)
-    except (FileNotFoundError, OSError) as e:
+    except OSError as e:
         print(f"  [FAIL] {name} 失败（工具未找到: {e}）")
         return False
     if result.returncode != 0:

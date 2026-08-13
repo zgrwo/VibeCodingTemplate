@@ -48,9 +48,18 @@ export function weightedMean(
   if (values.length === 0 || weights.length === 0 || values.length !== weights.length) {
     return NaN;
   }
-  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+  // 与 mean 对齐：逐对过滤非有限值/权重，避免 NaN/Inf 毒化整个结果。
+  let totalWeight = 0;
+  let weightedSum = 0;
+  for (let i = 0; i < values.length; i++) {
+    const v = values[i];
+    const w = weights[i];
+    if (!Number.isFinite(v) || !Number.isFinite(w)) continue;
+    totalWeight += w;
+    weightedSum += v * w;
+  }
   if (totalWeight === 0) return NaN;
-  const result = values.reduce((sum, v, i) => sum + v * weights[i], 0) / totalWeight;
+  const result = weightedSum / totalWeight;
   if (!Number.isFinite(result)) return NaN;
   return result;
 }

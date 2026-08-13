@@ -13,7 +13,9 @@
         { "type": "build",    "section": "🏗 构建" },
         { "type": "ci",       "section": "⚙️ CI" },
         { "type": "perf",     "section": "🚀 性能" },
-        { "type": "chore",    "section": "🧹 维护" }
+        { "type": "chore",    "section": "🧹 维护" },
+        { "type": "style",    "section": "🎨 代码风格" },
+        { "type": "revert",   "section": "⏪ 回滚" }
       ]
     }
   }

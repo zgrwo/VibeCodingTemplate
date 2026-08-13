@@ -30,7 +30,7 @@ with contextlib.suppress(AttributeError, ValueError):
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def get_changed_files(base: str) -> list[str]:
+def get_changed_files(base: str) -> list[str] | None:
     """返回变更的文件相对路径列表：base..HEAD 提交 + 未提交工作区改动。
 
     默认 base=HEAD~1 只含已提交变更，会漏掉开发者最关心的未提交工作区改动，
@@ -63,7 +63,7 @@ def get_changed_files(base: str) -> list[str]:
         if r3.returncode == 0:
             results.extend(r3.stdout.splitlines())
     except (FileNotFoundError, subprocess.TimeoutExpired):
-        return []
+        return None
     seen: set[str] = set()
     out = []
     for line in results:
@@ -114,6 +114,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     changed = get_changed_files(args.base)
+    if changed is None:
+        print("[FAIL] git 命令失败，无法确定变更文件（docstring 约定：git 错误退出码 1）")
+        return 1
     # 纳入 src/ 与 scripts/ 变更（scripts/ 是本模板治理逻辑所在，src/ 可能为空）
     src_changes = [f for f in changed
                    if f.startswith(("src/", "scripts/"))]

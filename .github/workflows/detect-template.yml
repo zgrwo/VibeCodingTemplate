@@ -16,7 +16,7 @@ on:
   workflow_call:
     outputs:
       is_template:
-        description: "true if AGENTS.md has unreplaced '{{' placeholders"
+        description: "true if AGENTS.md still has the unreplaced core placeholder {{PROJECT_NAME}}"
         value: ${{ jobs.check.outputs.is_template }}
 
 # 最小权限：仅读取仓库内容（checkout 需要）
@@ -35,7 +35,7 @@ jobs:
       - name: Detect template mode
         id: detect
         run: |
-          if grep -rq '{{' AGENTS.md 2>/dev/null; then
+          if grep -rq '{{PROJECT_NAME}}' AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"

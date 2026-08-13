@@ -28,6 +28,9 @@ on:
       - "CHANGELOG.md"
       - "SECURITY.md"
       - "CODE_OF_CONDUCT.md"
+      - "pyproject.toml"
+      - "Makefile"
+      - ".pre-commit-config.yaml"
   workflow_dispatch:
   # Merge Queue：配合 Settings → Branches → 开启 merge queue 使用
   # （merge_group 事件无 paths 过滤，全部 job 运行；未开启 merge queue 时本触发不生效）
@@ -64,7 +67,7 @@ jobs:
       - name: 检测是否为模板仓库自身
         id: detect
         run: |
-          if grep -rq '{{' AGENTS.md 2>/dev/null; then
+          if grep -rq '{{PROJECT_NAME}}' AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
@@ -116,7 +119,7 @@ jobs:
       - name: 检测是否为模板仓库自身
         id: detect
         run: |
-          if grep -rq '{{' AGENTS.md 2>/dev/null; then
+          if grep -rq '{{PROJECT_NAME}}' AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
@@ -141,7 +144,7 @@ jobs:
       - name: 检测是否为模板仓库自身
         id: detect
         run: |
-          if grep -rq '{{' AGENTS.md 2>/dev/null; then
+          if grep -rq '{{PROJECT_NAME}}' AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
@@ -209,7 +212,7 @@ jobs:
         id: detect
         shell: bash
         run: |
-          if grep -rq '{{' AGENTS.md 2>/dev/null; then
+          if grep -rq '{{PROJECT_NAME}}' AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"

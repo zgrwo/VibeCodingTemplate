@@ -52,6 +52,15 @@ if (-not $Force -and (Test-Path $Target) -and (Get-ChildItem $Target -Force | Se
     throw "目标目录非空：$Target（如确需覆盖请加 -Force）"
 }
 
+# target 不能在模板仓库内或等于模板根：下方 Remove-Item 会先递归删除模板源码再自我复制，
+# 造成模板树被自身覆盖销毁（镜像 init-project.py 的同名守卫）。
+$resolvedTarget = [System.IO.Path]::GetFullPath($Target)
+$resolvedTemplate = [System.IO.Path]::GetFullPath($template).TrimEnd('', '/')
+if ($resolvedTarget -eq $resolvedTemplate -or
+    $resolvedTarget.StartsWith($resolvedTemplate + '', [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw "target 不能在模板仓库内或等于模板根：$Target"
+}
+
 # ----------------------------------------------------------------------------
 # 2. 复制 template（跳过 .git 与日志/构建产物/AI 工具本地目录）
 # ----------------------------------------------------------------------------

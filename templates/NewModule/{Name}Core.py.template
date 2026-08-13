@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Optional
 
 
@@ -32,8 +33,8 @@ def compute(value: Optional[float]) -> float:
         遵循哨兵契约：无效输入返回 NaN，不抛异常（勿开启下方注释掉的
         raise ValueError——那会违反「静默传播阻断」红线）。
     """
-    # 1. 静默传播阻断：None 显式守卫（Falsy 陷阱：0 是有效值，勿用 if value）
-    if value is None:
+    # 1. 静默传播阻断：None / NaN / Inf 显式守卫（Falsy 陷阱：0 是有效值，勿用 if value）
+    if value is None or math.isnan(value) or math.isinf(value):
         return float("nan")
 
     # 2. 防御完整性：领域约束前置验证

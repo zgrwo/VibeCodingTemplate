@@ -14,6 +14,7 @@ import (
 
 // ComputeResult 类型别名（哨兵值模式：NaN 表示无效，0 是有效值）
 // 在数值计算中，0 是有效值（均值=0、计数=0），必须用 NaN 表示"无效"
+type ComputeResult = float64
 
 // Compute 计算数值入口。
 //
@@ -22,7 +23,7 @@ import (
 //
 // 返回:
 //   计算结果；无效输入返回 NaN（不 panic，不返回 error）
-func Compute(value float64) float64 {
+func Compute(value float64) ComputeResult {
 	// 1. 哨兵守卫：NaN/Inf → NaN
 	if math.IsNaN(value) || math.IsInf(value, 0) {
 		return math.NaN()

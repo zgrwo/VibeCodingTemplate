@@ -19,9 +19,6 @@ def mean(values: list[float] | None) -> float:
 
     Returns:
         均值；无效输入返回 NaN。
-
-    Raises:
-        TypeError: 输入类型不匹配（非 list/None）。
     """
     # 1. 哨兵守卫：None → NaN（勿用 if values，空列表是有效输入但返回 NaN）
     if values is None:
@@ -68,11 +65,15 @@ def weighted_mean(
     if len(values) != len(weights):
         return float("nan")
 
-    total_weight = sum(weights)
+    # 与 mean() 对齐：逐对过滤非有限（NaN/Inf）值及其配对权重，否则 NaN 会毒化整个结果
+    pairs = [(v, w) for v, w in zip(values, weights, strict=True)
+             if isinstance(v, (int, float)) and math.isfinite(v)
+             and isinstance(w, (int, float)) and math.isfinite(w)]
+    total_weight = sum(w for _, w in pairs)
     if total_weight == 0:
         return float("nan")
 
-    result = sum(v * w for v, w in zip(values, weights, strict=True)) / total_weight
+    result = sum(v * w for v, w in pairs) / total_weight
 
     if math.isinf(result) or math.isnan(result):
         return float("nan")

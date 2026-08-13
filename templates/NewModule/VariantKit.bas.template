@@ -1,7 +1,7 @@
 ' ============================================================================
-' {Name}VariantKit.bas — Variant 输入归一化基础层（最小实现）
-' 使用方式：将 {Name} 替换为基础设施名（如 VariantKit、ExcelKit）
-' 目标位置：src/{Module}/{Name}VariantKit.bas（导入 VBE 后，供各模块 UDF 引用）
+' VariantKit.bas — Variant 输入归一化基础层（最小实现）
+' 使用方式：本模块为固定名基础设施模块（VBA 模块名随文件名），直接复制为 VariantKit.bas
+' 目标位置：src/VariantKit.bas（导入 VBE 后，模块名即 VariantKit，供各模块 UDF 引用）
 ' 职责：Range 对象与 Variant 数组/单值的统一入口（vba-SKILL §1.2）
 '       仅提供无状态工具，不含业务逻辑
 ' ============================================================================

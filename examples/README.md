@@ -16,7 +16,7 @@ examples/
 ├── tests/
 │   ├── test_stats.py            # Python 单元测试（pytest，16 tests）
 │   ├── test_stats.test.ts       # TypeScript 单元测试（vitest，17 tests）
-│   └── test_stats.go            # Go 单元测试（table-driven，16 tests）
+│   └── test_stats_test.go       # Go 单元测试（table-driven，16 tests）
 └── scripts/
     └── crossval/
         └── StatsCrossVal.py     # 交叉验证
@@ -54,5 +54,5 @@ cd examples && go mod init examples && go test ./tests/... -v  # 16 tests
 | `examples/src/stats/StatsCore.go` | `templates/NewModule/{Name}Core.go.template` |
 | `examples/tests/test_stats.py` | `templates/NewModule/test_{Name}Core.py.template` |
 | `examples/tests/test_stats.test.ts` | `templates/NewModule/{Name}Core.test.ts.template` |
-| `examples/tests/test_stats.go` | `templates/NewModule/{Name}Core_test.go.template` |
+| `examples/tests/test_stats_test.go` | `templates/NewModule/{Name}Core_test.go.template` |
 | `examples/scripts/crossval/StatsCrossVal.py` | `templates/NewModule/{Name}CrossVal.py.template` |
