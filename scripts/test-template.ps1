@@ -91,19 +91,6 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # ----------------------------------------------------------------------------
-# 3.5 生成后断言：占位符约定教学文字未被 init 污染（防 P1 元占位符回归）
-#     pre-release-review.md 的教学引用应为 `{{...}}`（转义标记），
-#     若 init 用 name.lower() 替换了未登记 token，会出现 `{{...}}`→`...`
-#     或约定文字变 `upper`/`x`——此处直接断言拦截。
-# ----------------------------------------------------------------------------
-$escapeOk = Select-String -Path "$Target\rules\pre-release-review.md" -Pattern '\{\{\.\.\.\}\}' -Quiet
-$lowered = Select-String -Path "$Target\rules\pre-release-review.md" -Pattern '`upper`|`x`|`upper_case`' -Quiet
-if (-not $escapeOk -or $lowered) {
-    Write-Host "❌ 生成项目的占位符约定教学被污染：init 未正确保留 {{...}} 转义标记（元占位符回归）" -ForegroundColor Red
-    exit 1
-}
-
-# ----------------------------------------------------------------------------
 # 4. 验证生成产物（文档一致性三件套）
 # ----------------------------------------------------------------------------
 Push-Location $Target

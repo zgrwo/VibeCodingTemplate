@@ -334,8 +334,6 @@
 | [user-manual.md](rules/user-manual.md) | 学习教程 | 每函数详细示例 + 结果解读 |
 | [project-structure.md](rules/project-structure.md) | 结构地图 | 文件职责与层级关系 |
 | [documentation.md](rules/documentation.md) | 文档职责 | 各文档分工与维护规则 |
-| [code-review-prompt.md](rules/code-review-prompt.md) | 审查模板 | 深度代码审查 Prompt |
-| [pre-release-review.md](rules/pre-release-review.md) | 审查模板 | 发行前全量深度审查 Prompt（min/med/max） |
 | [cross-project-synthesis.md](rules/cross-project-synthesis.md) | 方法论 | 跨项目共性经验与重构方法论 |
 | [refactoring-plan.md](rules/refactoring-plan.md) | 重构计划 | 从"能用"到"卓越"的路线图模板 |
 | [adr-template.md](rules/adr-template.md) | ADR 模板 | 架构决策记录格式与编号规则 |

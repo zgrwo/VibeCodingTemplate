@@ -21,10 +21,6 @@ AGENTS.md              项目宪法（四条核心准则、红线规则、防幻
 └── tests/             验证脚本自测（<!-- AUTO_COUNTS:TESTS_START -->169<!-- AUTO_COUNTS:TESTS_END --> tests，见 tests/scripts/）
 ```
 
-## 演进计划
-
-- **吸收计划**：`docs/absorption-plan-2026-08.md` 记录从 5 个子项目反哺模板的高价值点（多注册表门禁 / 文档计数注入 / 跨语言验证 runner / 环境医生 / 测试质量门禁等），是跨会话执行的唯一依据。
-
 ## 关键设计决策
 
 ### ADR-0001：占位符双语法

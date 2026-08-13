@@ -25,8 +25,6 @@
 │   ├── specification.md          # 业务规则与功能范围唯一信源
 │   ├── api-reference.md          # API 签名唯一信源
 │   ├── user-manual.md            # 用户手册
-│   ├── code-review-prompt.md     # 深度审查 Prompt
-│   ├── pre-release-review.md     # 发行前全量深度审查 Prompt（min/med/max）
 │   ├── cross-project-synthesis.md# 跨项目共性经验与重构方法论
 │   ├── refactoring-plan.md       # 重构计划模板（现状→目标路线图）
 │   ├── adr-template.md           # ADR 模板（编号与格式）
@@ -90,11 +88,7 @@
 │
 ├── docs/                         # 用户文档（补充材料）
 │   ├── README.md                 # 文档目录说明（与 rules/ 的分工）
-│   ├── architecture.md           # 架构设计（ADR 决策记录）
-│   ├── absorption-plan-2026-08.md # 子项目高价值点吸收计划（跨会话执行依据）
-│   ├── review-max-2026-08-12.md  # Max 审查报告（18 维度，59 发现）
-│   ├── review-max-2026-08-13.md  # Max 审查报告（18 维度，56 发现）
-│   └── fix-max-review-2026-08-12.md # 审查全量修复执行文档（新会话冷启动依据）
+│   └── architecture.md           # 架构设计（ADR 决策记录）
 │
 ├── build/                        # 构建配置（按需裁剪）
 │   └── ...

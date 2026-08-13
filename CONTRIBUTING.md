@@ -52,7 +52,7 @@ cd {{PROJECT_NAME}}
 2. 检查调用者与影响范围（Grep 调用链）
 3. 实现功能 + 同步写测试（边界/退化输入必须覆盖）
 4. 运行全量验证（{{FULL_VERIFY_CMD}}）
-5. 执行深度审查（`rules/code-review-prompt.md`，按变更范围选 Min/Standard/Max，见[代码审查](#代码审查)）
+5. 执行深度审查（按变更范围选 Min/Standard/Max，见[代码审查](#代码审查)）
 6. 同步文档（api-reference / user-manual / project-structure）
 7. 提交前必检清单（见 [AGENTS.md](AGENTS.md#提交前必检)）
 
@@ -101,7 +101,7 @@ cd {{PROJECT_NAME}}
 
 ## 代码审查
 
-- **选择级别**：单文件小修复 → Min；功能迭代（≤5 文件）→ Standard；发版前全量 → Max（模板见 `rules/code-review-prompt.md`）。
+- **选择级别**：单文件小修复 → Min；功能迭代（≤5 文件）→ Standard；发版前全量 → Max。
 - **审查者期望**：收到 review 请求后 **48 小时内** 给出首轮反馈；审查聚焦正确性/防御性/架构合规，风格问题由 CI 拦截。
 - **提交方期望**：PR 保持小粒度（一个逻辑变更一个 PR），及时响应 review 意见并 resolve 讨论。
 

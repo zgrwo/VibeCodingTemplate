@@ -13,8 +13,6 @@
 | `rules/api-reference.md` | 开发者/AI | "函数签名是什么？"（**签名唯一信源**） | 任何 Public 接口变更 |
 | `rules/user-manual.md` | 最终用户 | "我要做 X，怎么操作？" | 用户可见功能变更 |
 | `rules/project-structure.md` | 开发者/AI | "代码在哪？文件干什么？"（**结构唯一信源**） | 文件新增/删除/移动 |
-| `rules/code-review-prompt.md` | AI 审查 | "如何系统性审查代码？" | 审查维度演进 |
-| `rules/pre-release-review.md` | AI 审查 | "发行前如何穷尽审计？" | 审查维度演进 |
 | `rules/adr-template.md` + `rules/adr/` | AI + 人类 | "这个架构决策为什么这么做？"（决策历史） | 新增/推翻架构决策 |
 | `rules/falsy-pitfalls.md` | AI 编码 | "Python 中 0 被当作 False？" | 发现新 falsy 误判案例 |
 | `rules/tooling-pitfalls.md` | AI + 人类 | "PowerShell/git 有什么坑？" | 新踩坑并验证修复后 |
@@ -32,7 +30,7 @@
 |------|----------|----------|
 | **新贡献者** | README.md → AGENTS.md → context.md → CONTRIBUTING.md | 20 min |
 | **AI 编码助手** | AGENTS.md → 对应 skills/*.md → rules/falsy-pitfalls.md（Python） | 10 min |
-| **代码审查者** | AGENTS.md → rules/code-review-prompt.md → 对应 skills/*.md | 15 min |
+| **代码审查者** | AGENTS.md → 对应 skills/*.md | 15 min |
 | **架构决策者** | AGENTS.md → rules/project-structure.md → skills/architecture-reviewer.md → rules/adr-template.md | 20 min |
 | **重构执行者** | rules/refactoring-plan.md → skills/refactoring-guardian.md → AGENTS.md「防错三原则」 | 15 min |
 

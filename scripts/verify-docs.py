@@ -47,8 +47,6 @@ DOC_FILES = [
     "rules/specification.md",
     "rules/api-reference.md",
     "rules/user-manual.md",
-    "rules/code-review-prompt.md",
-    "rules/pre-release-review.md",
     "rules/cross-project-synthesis.md",
     "rules/refactoring-plan.md",
     "rules/adr-template.md",

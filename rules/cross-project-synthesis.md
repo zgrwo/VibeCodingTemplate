@@ -54,7 +54,7 @@
 
 **现象**：每个项目都经历了 5-15 轮代码审查修复。
 **根因**：初始实现只考虑正常路径，未系统性考虑退化输入。
-**对策**：→ 已固化为 [AGENTS.md 防错三原则](../AGENTS.md) 与 [code-review-prompt.md](code-review-prompt.md)（Standard 级别自查）。
+**对策**：→ 已固化为 [AGENTS.md 防错三原则](../AGENTS.md)（Standard 级别自查）。
 
 ### 7. 框架/版本兼容性
 

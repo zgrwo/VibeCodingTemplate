@@ -83,8 +83,6 @@ Template-only sections in this repo's own docs (e.g. the "从本模板初始化�
 | SSOT | `rules/api-reference.md` | Single source for function signatures |
 | Domain terms | `rules/context.md` | Single source for terminology |
 | Project structure | `rules/project-structure.md` | Single source for file layout |
-| Code review | `rules/code-review-prompt.md` | Tiered review templates (Min/Standard/Max) |
-| Pre-release audit | `rules/pre-release-review.md` | Pre-release review prompt (Min/Med/Max) |
 | Sentinel contract | `rules/sentinel-contract.md` | L1-L5 sentinel contract & NaN/Inf guard checklist |
 | Cross-project lessons | `rules/cross-project-synthesis.md` | Anti-pattern library from real projects |
 
