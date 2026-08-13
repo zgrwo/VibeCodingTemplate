@@ -4,6 +4,32 @@ All notable changes to VibeCodingTemplate.
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.2.0](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.1.2...v0.2.0) (2026-08-13)
+
+
+### ✨ 新功能
+
+* 从 5 个子项目反哺吸收 A+B+C 档高价值点（v0.2.0） ([3410791](https://github.com/zgrwo/VibeCodingTemplate/commit/3410791de9a0cfa0e20b364059bdd038a90d274e))
+* 全量修复 Max 审查 P1/P2/P3（模板可编译性 + CI 门禁 + SSOT 同步） ([05956c5](https://github.com/zgrwo/VibeCodingTemplate/commit/05956c5647debc647252bcdf45c8de20c7f20286))
+
+
+### 🐛 Bug 修复
+
+* **ci:** pip-audit 定向审计项目依赖，消除 runner 环境 CVE 假阳性 ([c6693e9](https://github.com/zgrwo/VibeCodingTemplate/commit/c6693e9f040659e85f021eabd6609efddb60d473))
+* **init:** 修复自删除护栏 TrimEnd 空字符串崩溃 ([002d604](https://github.com/zgrwo/VibeCodingTemplate/commit/002d6042982e3bf79252104c5a6b253e2bb60466))
+* 修复 code-review 审查发现的 8 项缺陷 ([22a2eca](https://github.com/zgrwo/VibeCodingTemplate/commit/22a2ecad80f81badc233bfb10a66d92d7b0a6bbe))
+* 修复 Max 审查全部 P1/P2 + 关键 P3 发现 ([aedd517](https://github.com/zgrwo/VibeCodingTemplate/commit/aedd517cfde04f1da43a72b943a29aa63047ce88))
+
+
+### 📄 文档
+
+* 持久化 Max 审查报告与修复执行文档 + 登记目录树 ([897e172](https://github.com/zgrwo/VibeCodingTemplate/commit/897e172942d9248da5a1f8afce52b00ac9d0c667))
+
+
+### 🔧 重构
+
+* 将 AI 审查/审计文档收敛至 .claude 并清理 SSOT 引用 ([edc1476](https://github.com/zgrwo/VibeCodingTemplate/commit/edc1476934f0fa5ce384bd7fd1c731b450e97247))
+
 ## [Unreleased]
 
 > 本模板自身的变更记录（新项目初始化时请重置为项目自己的变更历史）。
