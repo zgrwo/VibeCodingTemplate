@@ -48,34 +48,56 @@ $Values = $normalized
 # ----------------------------------------------------------------------------
 # 1. 校验目标目录
 # ----------------------------------------------------------------------------
-if (-not $Force -and (Test-Path $Target) -and (Get-ChildItem $Target -Force | Select-Object -First 1)) {
+# 目标必须是目录（非文件）：-Force 会把文件静默删除并替换成目录，镜像 init-project.py 的拒绝。
+if (Test-Path -LiteralPath $Target -PathType Leaf) {
+    throw "目标路径是文件，不是目录：$Target"
+}
+# 目标是符号链接/junction（重解析点）时拒绝：词法 GetFullPath 无法解析重解析点，穿透链接删除
+# 会摧毁链接指向的真实文件（镜像 init-project.py 物理 Path.resolve() 的语义）。
+if (Test-Path -LiteralPath $Target) {
+    $targetItem = Get-Item -LiteralPath $Target -Force
+    if ($targetItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+        throw "目标路径是符号链接/junction（重解析点）：$Target（请使用实际目录，防穿透删除）"
+    }
+}
+if (-not $Force -and (Test-Path -LiteralPath $Target) -and (Get-ChildItem -LiteralPath $Target -Force | Select-Object -First 1)) {
     throw "目标目录非空：$Target（如确需覆盖请加 -Force）"
 }
 
-# target 不能在模板仓库内或等于模板根：下方 Remove-Item 会先递归删除模板源码再自我复制，
-# 造成模板树被自身覆盖销毁（镜像 init-project.py 的同名守卫）。
-$resolvedTarget = [System.IO.Path]::GetFullPath($Target)
-$resolvedTemplate = [System.IO.Path]::GetFullPath($template).TrimEnd('/', '\')
-if ($resolvedTarget -eq $resolvedTemplate -or
-    $resolvedTarget.StartsWith($resolvedTemplate + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) {
-    throw "target 不能在模板仓库内或等于模板根：$Target"
+# target 不能等于模板根、在模板仓库内、或是模板仓库的祖先：下方 Remove-Item 会先递归删除
+# 目标内容，若目标是模板祖先会连模板仓库（含 .git）与所有同级项目一并删除（防自删除）。
+# 比较按平台大小写语义（Windows 不敏感 / Linux 敏感），镜像 init-project.py 的物理路径守卫。
+try {
+    $resolvedTarget   = [System.IO.Path]::GetFullPath($Target)
+    $resolvedTemplate = [System.IO.Path]::GetFullPath($template)
+} catch {
+    throw "目标路径无效：$Target（$($_.Exception.Message)）"
+}
+$isWindows     = ([System.IO.Path]::DirectorySeparatorChar -eq '\')
+$comparison    = if ($isWindows) { [System.StringComparison]::OrdinalIgnoreCase } else { [System.StringComparison]::Ordinal }
+$sep           = [System.IO.Path]::DirectorySeparatorChar
+$equalOrInside = [string]::Equals($resolvedTarget, $resolvedTemplate, $comparison) -or
+                 $resolvedTarget.StartsWith($resolvedTemplate + $sep, $comparison)
+$isAncestor    = $resolvedTemplate.StartsWith($resolvedTarget + $sep, $comparison)
+if ($equalOrInside -or $isAncestor) {
+    throw "target 不能在模板仓库内、等于模板根或包含模板仓库：$Target"
 }
 
 # ----------------------------------------------------------------------------
 # 2. 复制 template（跳过 .git 与日志/构建产物/AI 工具本地目录）
 # ----------------------------------------------------------------------------
 Write-Host "==> 复制 template → $Target" -ForegroundColor Cyan
-if (Test-Path $Target) { Get-ChildItem $Target -Force | Remove-Item -Recurse -Force }
-New-Item -ItemType Directory -Path $Target -Force | Out-Null
+if (Test-Path -LiteralPath $Target) { Get-ChildItem -LiteralPath $Target -Force | Remove-Item -Recurse -Force }
+[System.IO.Directory]::CreateDirectory($Target) | Out-Null
 # .claude/.codegraph/.qoder 为 AI 工具本地目录（.gitignore 已忽略，不应进入新项目，
 # 否则开发者本地 AI 设置随初始化泄漏，且 verify-docs.py --strict 会将其视为未声明目录）
-Get-ChildItem $template -Force | Where-Object { $_.Name -notin @(".git", "logs", ".claude", ".codegraph", ".qoder", ".coverage") } | ForEach-Object {
-    Copy-Item $_.FullName $Target -Recurse -Force
+Get-ChildItem -LiteralPath $template -Force | Where-Object { $_.Name -notin @(".git", "logs", ".claude", ".codegraph", ".qoder", ".coverage") } | ForEach-Object {
+    Copy-Item -LiteralPath $_.FullName -Destination $Target -Recurse -Force
 }
 # 清理被复制进来的垃圾/构建目录（__pycache__/bin/obj 等不入库，也不应进入新项目；
 # 清单与 init-project.py 的 CLEANUP_DIRS 对齐）
 foreach ($junk in @("__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache", ".venv", "venv", "env", "node_modules", "bin", "obj", "dist", "TestResults")) {
-    Get-ChildItem $Target -Recurse -Force -Directory -Filter $junk -ErrorAction SilentlyContinue |
+    Get-ChildItem -LiteralPath $Target -Recurse -Force -Directory -Filter $junk -ErrorAction SilentlyContinue |
         Remove-Item -Recurse -Force
 }
 Write-Host "    完成（已跳过 .git / logs / .claude / __pycache__ 等）" -ForegroundColor Green
@@ -88,8 +110,8 @@ Write-Host "    完成（已跳过 .git / logs / .claude / __pycache__ 等）" -
 # 跳过 tests/（扫描夹具目录，与 py 版对齐）；写回保留原文件 BOM 状态。
 $startMarker = '<!-- TEMPLATE_ONLY_START -->'
 $endMarker   = '<!-- TEMPLATE_ONLY_END -->'
-Get-ChildItem $Target -Recurse -File -Force | Where-Object {
-    $_.Extension -eq ".md" -and $_.FullName -notmatch "\\(tests)\\" -and $_.FullName -notmatch "\\.git\\"
+Get-ChildItem -LiteralPath $Target -Recurse -File -Force | Where-Object {
+    $_.Extension -eq ".md" -and $_.FullName -notmatch "[\\/]tests([\\/]|$)" -and $_.FullName -notmatch "[\\/]\.git([\\/]|$)"
 } | ForEach-Object {
     $content = Get-Content $_.FullName -Encoding UTF8 -Raw
     $new = $content
@@ -159,7 +181,7 @@ $placeholderRe = [regex]::new("\{\{([A-Z0-9_]+)\}\}")
 $found = @{}
 # -Force：pwsh 7 的 Get-ChildItem -Recurse 不递归 .github 等隐藏目录，漏扫会导致 CI 下占位符未替换
 # 跳过 tests/：测试夹具 token（{{A}}/{{B}}/{{FOO}} 等）是 scanner 测试输入，不能被替换或计入未替换检查（与 init-project.py 的 SKIP_PLACEHOLDER_DIRS 对齐）
-Get-ChildItem $Target -Recurse -File -Force | Where-Object {
+Get-ChildItem -LiteralPath $Target -Recurse -File -Force | Where-Object {
     $_.Extension -notin @(".dll", ".exe", ".pdb") -and $_.FullName -notmatch "[\\/]tests([\\/]|$)"
 } | ForEach-Object {
     $content = Get-Content $_.FullName -Encoding UTF8 -Raw -ErrorAction SilentlyContinue
@@ -216,11 +238,22 @@ if ($found.Count -eq 0) {
                 break
             }
             "core" {
-                $default = if ($meta.default) { $meta.default } else { $name.ToLowerInvariant() }
-                $prompt  = if ($meta.prompt) { $meta.prompt } else { "请输入 $name" }
-                $answer = Read-Host "    $prompt（Enter 用默认: $default）"
-                if ([string]::IsNullOrWhiteSpace($answer)) { $answer = $default }
+                $default = $meta.default  # 可能为 $null（无 manifest 默认值）
+                if (-not $default -and [Console]::IsInputRedirected) {
+                    throw "非交互模式下 core 占位符 {{$name}} 无默认值：请通过 -Values 提供（如 -Values @{ $name = '...' }）"
+                }
+                $fallback = if ($default) { $default } else { $name.ToLowerInvariant() }
+                $prompt   = if ($meta.prompt) { $meta.prompt } else { "请输入 $name" }
+                $answer = Read-Host "    $prompt（Enter 用默认: $fallback）"
+                if ([string]::IsNullOrWhiteSpace($answer)) { $answer = $fallback }
                 $Values["{{$name}}"] = $answer
+                break
+            }
+            default {
+                # manifest 条目缺/错 category：按 content 处理并告警（镜像 init-project.py 的 entry.get('category', 'content')）
+                Write-Host "    [WARN] 占位符 $name 的 category 无效（'$($meta.category)'），已按 content 处理，请修正 placeholders.json" -ForegroundColor Yellow
+                $Values["{{$name}}"] = $name.ToLowerInvariant()
+                $autoFilled++
                 break
             }
         }
@@ -245,10 +278,14 @@ if ($found.Count -eq 0) {
     $files = @($files | Where-Object { $_ -notmatch "[\\/]tests([\\/]|$)" } | Sort-Object -Unique)
     foreach ($file in $files) {
         $content = Get-Content $file -Encoding UTF8 -Raw
-        $new = $content
-        foreach ($key in $Values.Keys) {
-            $new = $new.Replace($key, [string]$Values[$key])
-        }
+        # 单趟替换：对原内容每个 {{...}} 匹配查表替换，值内若含其他占位符不会被二次展开
+        # （镜像 init-project.py 的 pattern.sub 语义，避免 hashtable 遍历顺序造成输出不确定）。
+        $new = $placeholderRe.Replace($content, {
+            param($m)
+            $k = "{{" + $m.Groups[1].Value + "}}"
+            if ($Values.ContainsKey($k)) { return [string]$Values[$k] }
+            return $m.Value
+        })
         if ($new -ne $content) {
             # 写回时保留原文件 BOM 状态（.ps1 必须 UTF-8 with BOM，否则 PowerShell 5.1 中文解析失败）
             $bytes = [System.IO.File]::ReadAllBytes($file)
@@ -280,7 +317,7 @@ All notable changes to $projName.
 
 > 新项目初始状态：首个功能落地后在此登记变更。
 "@
-[System.IO.File]::WriteAllText("$Target\CHANGELOG.md", $changelogInit, (New-Object System.Text.UTF8Encoding $true))
+[System.IO.File]::WriteAllText((Join-Path $Target "CHANGELOG.md"), $changelogInit, (New-Object System.Text.UTF8Encoding $true))
 Write-Host "==> CHANGELOG.md 已重置为新项目初始态" -ForegroundColor Green
 
 # ----------------------------------------------------------------------------
@@ -289,7 +326,7 @@ Write-Host "==> CHANGELOG.md 已重置为新项目初始态" -ForegroundColor Gr
 $remaining = @{}
 # -Force：同上，避免漏扫隐藏目录中的未替换占位符（如 .github/workflows/*.yml）
 # 跳过 tests/：测试夹具 token 不应计入"未替换"（与扫描/替换对齐，见步骤 3）
-Get-ChildItem $Target -Recurse -File -Force | Where-Object {
+Get-ChildItem -LiteralPath $Target -Recurse -File -Force | Where-Object {
     $_.Extension -notin @(".dll", ".exe", ".pdb") -and $_.FullName -notmatch "[\\/]tests([\\/]|$)"
 } | ForEach-Object {
     $content = Get-Content $_.FullName -Encoding UTF8 -Raw -ErrorAction SilentlyContinue
@@ -300,10 +337,13 @@ Get-ChildItem $Target -Recurse -File -Force | Where-Object {
         }
     }
 }
+$hasRemaining = $false
 if ($remaining.Count -gt 0) {
     Write-Host "`n[警告] 以下占位符未替换（请人工处理）：" -ForegroundColor Yellow
     $remaining.Keys | Sort-Object | ForEach-Object { Write-Host "    {{$_}} → $($remaining[$_] -join ', ')" }
-    exit 1
+    # 不在此处退出：先执行下方 git init / 兼容副本收尾，再以 1 退出（与 init-project.py 对齐，
+    # 避免显式请求的 -GitInit/-CreateCompatibilityLinks 被静默跳过）
+    $hasRemaining = $true
 }
 
 # ----------------------------------------------------------------------------
@@ -311,19 +351,38 @@ if ($remaining.Count -gt 0) {
 # ----------------------------------------------------------------------------
 if ($GitInit) {
     Push-Location $Target
-    git init 2>$null | Out-Null
-    # commit-msg 校验 hook：scripts/git-hooks/commit-msg（见 CONTRIBUTING「提交规范」）
-    git config core.hooksPath scripts/git-hooks 2>$null | Out-Null
-    Pop-Location
-    Write-Host "==> 已执行 git init（commit-msg 校验 hook 已启用）" -ForegroundColor Green
+    try {
+        # git 缺失（未安装/不在 PATH）抛 CommandNotFoundException，捕获为清晰错误（镜像 init-project.py 的 FileNotFoundError）
+        git init 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "git init 退出码 $LASTEXITCODE" }
+        # commit-msg 校验 hook：scripts/git-hooks/commit-msg（见 CONTRIBUTING「提交规范」）
+        git config core.hooksPath scripts/git-hooks 2>&1 | Out-Null
+        $configExit = $LASTEXITCODE
+        if ($configExit -ne 0) {
+            Write-Host "    [WARN] git config core.hooksPath 失败（exit $configExit），生成的仓库可能不带 commit-msg 校验" -ForegroundColor Yellow
+        }
+    } catch {
+        throw "git init 失败（$Target）：$($_.Exception.Message)"
+    } finally {
+        Pop-Location
+    }
+    if ($configExit -eq 0) {
+        Write-Host "==> 已执行 git init（commit-msg 校验 hook 已启用）" -ForegroundColor Green
+    } else {
+        Write-Host "==> 已执行 git init（commit-msg 校验 hook 未启用）" -ForegroundColor Yellow
+    }
 }
 
 if ($CreateCompatibilityLinks) {
     # 主文件为 AGENTS.md（大写，Codex/Copilot/Windsurf 等直接读取）；仅为 Claude Code 创建副本
-    Copy-Item "$Target\AGENTS.md" "$Target\CLAUDE.md" -Force
+    Copy-Item -LiteralPath (Join-Path $Target "AGENTS.md") -Destination (Join-Path $Target "CLAUDE.md") -Force
     Write-Host "==> 已创建 CLAUDE.md（AGENTS.md 副本，供 Claude Code 读取）" -ForegroundColor Green
     Write-Host "    （注意：AGENTS.md 后续更新需重新创建 CLAUDE.md 副本，见 AGENTS.md「AGENTS.md 生态兼容」）" -ForegroundColor Yellow
 }
 
+if ($hasRemaining) {
+    Write-Host "`n==> 初始化完成（存在未替换占位符，需人工处理）" -ForegroundColor Yellow
+    exit 1
+}
 Write-Host "`n==> 初始化完成，全部占位符已替换 ✔" -ForegroundColor Green
 exit 0

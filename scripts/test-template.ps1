@@ -46,7 +46,7 @@ Write-Host "==> 扫描到 $($names.Count) 个占位符" -ForegroundColor Cyan
 # ----------------------------------------------------------------------------
 # 2. 生成占位符测试值（唯一真相源：scripts/placeholders.json 的 test 值，缺失回退小写）
 # ----------------------------------------------------------------------------
-. (Join-Path $template "scripts\placeholder-utils.ps1")
+. (Join-Path $template (Join-Path "scripts" "placeholder-utils.ps1"))
 $manifest = Get-PlaceholderManifest
 
 # 死条目硬校验：manifest 声明了但实际文件无此占位符 → 已失效条目，必须清理
@@ -84,7 +84,7 @@ foreach ($n in $names.Keys) {
 # 3. 初始化生成（无交互：-Values 全覆盖）
 # ----------------------------------------------------------------------------
 Write-Host "==> 初始化生成 → $Target" -ForegroundColor Cyan
-& (Join-Path $template "scripts\init-project.ps1") -Target $Target -Values $values -Force
+& (Join-Path $template (Join-Path "scripts" "init-project.ps1")) -Target $Target -Values $values -Force
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ 初始化失败（占位符未全部替换）" -ForegroundColor Red
     exit 1

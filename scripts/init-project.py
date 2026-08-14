@@ -144,8 +144,10 @@ def copy_template(target: Path) -> list[str]:
     # 安全护栏：禁止复制到模板仓库自身内部（递归清理会摧毁模板源文件）。
     resolved_target = target.resolve()
     resolved_template = TEMPLATE_ROOT.resolve()
-    if resolved_target == resolved_template or resolved_template in resolved_target.parents:
-        raise SystemExit(f"[FATAL] 目标目录 {target} 位于模板仓库内部，拒绝复制（防自删除）")
+    if (resolved_target == resolved_template
+            or resolved_template in resolved_target.parents
+            or resolved_target in resolved_template.parents):
+        raise SystemExit(f"[FATAL] 目标目录 {target} 位于模板仓库内部或包含模板仓库，拒绝复制（防自删除）")
 
     if target.exists():
         for item in target.iterdir():
@@ -462,10 +464,12 @@ def main() -> int:
         if any(target.iterdir()) and not args.force:
             print(f"[ERROR] 目标目录非空: {target}（如确需覆盖请加 --force）")
             return 1
-    # target 不能在模板仓库内或等于模板根：copy_template 会先把 target 自身（含已创建的
-    # 子目录）再拷进 target，copytree 嵌套污染模板树（P3-20）
-    if target == TEMPLATE_ROOT or target.is_relative_to(TEMPLATE_ROOT):
-        print(f"[ERROR] target 不能在模板仓库内: {target}")
+    # target 不能在模板仓库内、等于模板根、或是模板仓库的祖先：copy_template 会先删除
+    # target 自身内容，若目标是模板祖先会连模板仓库与同级项目一并删除（防自删除，P3-20）
+    if (target == TEMPLATE_ROOT
+            or target.is_relative_to(TEMPLATE_ROOT)
+            or TEMPLATE_ROOT.is_relative_to(target)):
+        print(f"[ERROR] target 不能在模板仓库内、等于模板根或包含模板仓库: {target}")
         return 1
 
     print(f"==> 复制模板到 {target}")

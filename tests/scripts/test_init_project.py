@@ -13,6 +13,8 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
@@ -101,6 +103,20 @@ class TestCopyTemplate:
         assert not (target / ".git").exists()
         assert not (target / ".coverage").exists()
         assert not (target / "src" / "__pycache__").exists()
+
+    def test_rejects_inside_target(self, tmp_path, monkeypatch):
+        """target 位于模板仓库内部 → 拒绝（防自删除）。"""
+        tpl = self._make_template(tmp_path)
+        monkeypatch.setattr(ip, "TEMPLATE_ROOT", tpl)
+        with pytest.raises(SystemExit):
+            ip.copy_template(tpl / "subdir")
+
+    def test_rejects_ancestor_target(self, tmp_path, monkeypatch):
+        """target 是模板仓库的祖先 → 拒绝（防递归删除模板与同级项目）。"""
+        tpl = self._make_template(tmp_path)
+        monkeypatch.setattr(ip, "TEMPLATE_ROOT", tpl)
+        with pytest.raises(SystemExit):
+            ip.copy_template(tmp_path)  # tmp_path 是 tpl 的父目录
 
 
 class TestReplacePlaceholders:
@@ -283,3 +299,18 @@ class TestMainCLI:
         code, _ = self._run(monkeypatch, [str(target), "--non-interactive", "--force"])
         assert code == 0
         assert (target / "AGENTS.md").exists()
+
+    def test_rejects_file_target(self, monkeypatch, tmp_path):
+        """文件目标 → exit 1（与 --force 无关，镜像 init-project.py 拒绝文件）。"""
+        f = tmp_path / "important.md"
+        f.write_text("precious", encoding="utf-8")
+        code, out = self._run(monkeypatch, [str(f), "--non-interactive", "--force"])
+        assert code == 1
+        assert "文件" in out
+
+    def test_rejects_ancestor_target(self, monkeypatch, tmp_path):
+        """target 为模板仓库祖先 → exit 1（防递归删除模板）。"""
+        monkeypatch.setattr(ip, "TEMPLATE_ROOT", tmp_path / "tpl")
+        code, out = self._run(monkeypatch, [str(tmp_path), "--non-interactive"])
+        assert code == 1
+        assert "模板仓库" in out
