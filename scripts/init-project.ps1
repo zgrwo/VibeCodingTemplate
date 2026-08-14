@@ -73,8 +73,9 @@ try {
 } catch {
     throw "目标路径无效：$Target（$($_.Exception.Message)）"
 }
-$isWindows     = ([System.IO.Path]::DirectorySeparatorChar -eq '\')
-$comparison    = if ($isWindows) { [System.StringComparison]::OrdinalIgnoreCase } else { [System.StringComparison]::Ordinal }
+# 注意：勿用 $IsWindows——它是 PowerShell Core 的只读自动变量，赋值会抛「read-only」错误
+$onWindows     = ([System.IO.Path]::DirectorySeparatorChar -eq '\')
+$comparison    = if ($onWindows) { [System.StringComparison]::OrdinalIgnoreCase } else { [System.StringComparison]::Ordinal }
 $sep           = [System.IO.Path]::DirectorySeparatorChar
 $equalOrInside = [string]::Equals($resolvedTarget, $resolvedTemplate, $comparison) -or
                  $resolvedTarget.StartsWith($resolvedTemplate + $sep, $comparison)
