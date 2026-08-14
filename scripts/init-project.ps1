@@ -211,7 +211,7 @@ if ($found.Count -eq 0) {
     #    core    → 交互询问（缺之项目/CI 不可用）
     #    auto    → 自动计算（DATE/YEAR，不询问）
     #    content → 占位符名小写自动占位（开发期填写文档时替换）
-    #    未登记   → 按 content 处理 + 告警（双向漂移守护）
+    #    未登记   → 保留原样 + 告警（镜像 init-project.py 的 undeclared 语义，双向漂移守护）
     # ----------------------------------------------------------------------------
     $manifest = Get-PlaceholderManifest
     $missing = @($found.Keys | Where-Object { -not $Values.ContainsKey("{{$_}}") } | Sort-Object)
@@ -223,10 +223,10 @@ if ($found.Count -eq 0) {
     foreach ($name in $missing) {
         $meta = $manifest[$name]
         if (-not $meta) {
-            # 未在 manifest 登记：按 content 处理并告警（新增占位符需补充 placeholders.json）
-            $Values["{{$name}}"] = $name.ToLowerInvariant()
+            # 未在 manifest 登记：保留原样 + 告警（镜像 init-project.py 的 undeclared 语义；
+            # 不得替换为占位符名小写——AGENTS.md 教学 token 等会被污染，H3 修复 ps1 侧对齐，
+            # 2026-08 Max 审查 F1 修复）
             $warnUndeclared += $name
-            $autoFilled++
             continue
         }
         switch ($meta.category) {
@@ -265,7 +265,7 @@ if ($found.Count -eq 0) {
         }
     }
     if ($warnUndeclared.Count -gt 0) {
-        Write-Host "    [WARN] 以下占位符未在 placeholders.json 登记（已按内容类占位，请补充 manifest）：$($warnUndeclared -join ', ')" -ForegroundColor Yellow
+        Write-Host "    [WARN] 以下占位符未在 placeholders.json 登记（已保留原样，请补充 manifest）：$($warnUndeclared -join ', ')" -ForegroundColor Yellow
     }
     if ($autoFilled -gt 0) {
         Write-Host "    （$autoFilled 个内容占位符已自动用占位符名占位，初始化后在文档填写时替换）" -ForegroundColor Yellow
@@ -387,12 +387,15 @@ if (Test-Path $manifestPath) {
 $remaining = @{}
 # -Force：同上，避免漏扫隐藏目录中的未替换占位符（如 .github/workflows/*.yml）
 # 跳过 tests/：测试夹具 token 不应计入"未替换"（与扫描/替换对齐，见步骤 3）
+# 跳过 $warnUndeclared：未登记教学 token（如 {{X}}/{{UPPER}}）按设计保留原样，
+# 不计入"未替换"（镜像 init-project.py 的 undeclared 语义，F1 修复）
 Get-ChildItem -LiteralPath $Target -Recurse -File -Force | Where-Object {
     $_.Extension -notin @(".dll", ".exe", ".pdb") -and $_.FullName -notmatch "[\\/]tests([\\/]|$)"
 } | ForEach-Object {
     $content = Get-Content $_.FullName -Encoding UTF8 -Raw -ErrorAction SilentlyContinue
     if ($content) {
         foreach ($m in $placeholderRe.Matches($content)) {
+            if ($warnUndeclared -contains $m.Groups[1].Value) { continue }
             if (-not $remaining.ContainsKey($m.Groups[1].Value)) { $remaining[$m.Groups[1].Value] = @() }
             $remaining[$m.Groups[1].Value] += (Split-Path $_.FullName -Leaf)
         }

@@ -157,7 +157,10 @@ def copy_template(target: Path) -> list[str]:
     if (resolved_target == resolved_template
             or resolved_template in resolved_target.parents
             or resolved_target in resolved_template.parents):
-        raise SystemExit(f"[FATAL] 目标目录 {target} 位于模板仓库内部或包含模板仓库，拒绝复制（防自删除）")
+        raise SystemExit(
+            f"[FATAL] 目标目录 {target} 位于模板仓库内部或包含模板仓库，"
+            "拒绝复制（防自删除）"
+        )
 
     if target.exists():
         for item in target.iterdir():
@@ -540,7 +543,8 @@ def main() -> int:
     )
     parser.add_argument("--non-interactive", action="store_true",
                         help="非交互模式（core 占位符用 default 填充；无默认值必须 --values 提供，"
-                             "否则报错退出——与 init-project.ps1 对齐，防生成 build_cmd 式损坏命令）")
+                             "否则报错退出——与 init-project.ps1 对齐，"
+                             "防生成 build_cmd 式损坏命令）")
     parser.add_argument("--force", action="store_true",
                         help="覆盖已存在的非空目标目录（与 init-project.ps1 -Force 对齐）")
     parser.add_argument("--git-init", action="store_true",
@@ -570,7 +574,8 @@ def main() -> int:
     print(f"    复制了 {len(copied)} 个文件")
     if (target / "examples").exists():
         # P6 审查修复：examples/ 为参考示例，明确告知去向（不需要可删除，
-        # 删除后需同步 project-structure.md/AGENTS.md 目录树，否则 verify-docs --strict 报未声明/缺失）
+        # 删除后需同步 project-structure.md/AGENTS.md 目录树，否则
+        # verify-docs --strict 报未声明/缺失）
         print("    [提示] examples/ 示例项目已复制（参考用途：演示多语言 Core/CrossVal/测试写法，"
               "不需要可整体删除；删除后请同步 rules/project-structure.md 与 AGENTS.md 目录树）")
 

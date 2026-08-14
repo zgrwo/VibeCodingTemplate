@@ -244,7 +244,8 @@ def run_crossval() -> bool:
     global _PASS, _FAIL
     dirs = [d for d in CROSSVAL_DIRS if d.is_dir()]
     if not dirs:
-        print("[SKIP] 未发现 scripts/crossval/ 或 examples/scripts/crossval/，数值比对待项目初始化实现"
+        print("[SKIP] 未发现 scripts/crossval/ 或 examples/scripts/crossval/，"
+              "数值比对待项目初始化实现"
               "（将 {Name}CrossVal 模板放入 scripts/crossval/ 后自动执行）")
         return True
     scripts = sorted({s for d in dirs for s in d.glob("*.py")})

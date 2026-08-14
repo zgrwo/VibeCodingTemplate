@@ -475,7 +475,7 @@ def check_semantic_consistency() -> list[str]:
 
 
 def check_version_consistency() -> list[str]:
-    """版本号 SSOT 一致性：.release-please-manifest.json 根版本 == pyproject.toml [project] version == CHANGELOG 最新发布版本。
+    """版本号 SSOT 一致性：manifest 根版本 == pyproject 版本 == CHANGELOG 最新发布版本。
 
     来源（2026-08 审查 P4）：release-please 只自动维护 manifest/CHANGELOG/tag，语言版本文件
     （pyproject.toml）是否被自动管理取决于 release-type——若配置不当，pyproject 版本会与

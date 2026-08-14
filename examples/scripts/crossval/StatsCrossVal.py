@@ -31,8 +31,8 @@ from src.stats.StatsCore import mean, weighted_mean  # noqa: E402
 # verify_manual 模块别名（文件名含连字符无法直接 import）。独立运行（直接执行
 # 本文件）时无此别名：向上查找仓库根 scripts/verify-manual.py 并以 spec 加载。
 try:
-    from verify_manual import check, cross_check, section  # noqa: E402
     import verify_manual as _vm  # noqa: E402
+    from verify_manual import check, cross_check, section  # noqa: E402
 except ModuleNotFoundError:
     import importlib.util as _ilu
 

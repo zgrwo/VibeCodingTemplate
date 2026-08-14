@@ -87,6 +87,20 @@
 - VibeCodingTemplate：run-affected-tests 对 4 个本有测试的连字符脚本全报"疑似缺测"（`verify-docs.py`→`test_verify_docs.py` 等），工具 docstring「防门禁说谎」自相矛盾
 **对策**：→ 工具比较前统一 `replace('-', '_')` 再子串匹配；见 [tooling-pitfalls.md](tooling-pitfalls.md) #24。
 
+### 11. 双实现行为分叉（py/ps1 对等失效）
+
+**现象**：同一逻辑维护 Python 与 PowerShell 双实现，修复只落在其中一个，两路径行为分叉且无测试拦截（CI 自测通常只覆盖单一实现）。
+**案例**：
+- VibeCodingTemplate（2026-08 Max 审查）：未登记占位符 token——init-project.py 返回 None 保留原样（H3 修复），init-project.ps1 仍替换为占位符名小写，Windows 初始化污染 AGENTS.md 教学 token；test-template.ps1 以 -Values 预置小写值全覆盖，使 ps1 未登记分支在 CI 自测中永不触发
+**对策**：→ 双实现共享同一份行为规范文档 + 每侧各配回归守卫（ps1 侧用 test-template.ps1 存活断言）；见 [tooling-pitfalls.md](tooling-pitfalls.md) #26。
+
+### 12. 生成器/检测器字面量污染（init 替换检测模式）
+
+**现象**：生成器（占位符替换/模板实例化）扫描全部文件，把检测逻辑自身引用的字面量（如 CI 检测"模板未替换"的 grep 模式）当作模板变量一并替换，导致检测器在生成产物中永久失效或恒真。
+**案例**：
+- VibeCodingTemplate（2026-08 审查 P0）：ci.yml/detect-template.yml 的 detect 步骤 `grep '{{PROJECT_NAME}}'` 被 init-project 替换成项目名，而生成项目 AGENTS.md 必含项目名 → `is_template` 恒 true，下游 CI 构建/测试/质量门禁被永久跳过（模板自身 CI 不执行生成项目 CI，长期未暴露）
+**对策**：→ 检测器引用占位符字面量时反斜杠转义（grep BRE `\{` 匹配字面 `{`，init 正则不再匹配）；见 [tooling-pitfalls.md](tooling-pitfalls.md) #25。
+
 ---
 
 ## 二、过度设计反模式案例（costsuite）

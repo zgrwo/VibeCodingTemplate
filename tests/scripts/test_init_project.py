@@ -239,7 +239,8 @@ class TestPrunePlaceholderManifest:
     def test_prunes_replaced_entries(self, tmp_path):
         (tmp_path / "scripts").mkdir()
         (tmp_path / "scripts" / "placeholders.json").write_text(
-            '{"schema_version": 1, "placeholders": {"YEAR": {"category": "auto"}, "KEEP": {"category": "core"}}}',
+            '{"schema_version": 1, "placeholders": '
+            '{"YEAR": {"category": "auto"}, "KEEP": {"category": "core"}}}',
             encoding="utf-8",
         )
         (tmp_path / "f.txt").write_text("{{KEEP}} 保留引用", encoding="utf-8")

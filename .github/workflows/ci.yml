@@ -156,6 +156,22 @@ jobs:
         # 需依赖清单文件（pyproject.toml / *.csproj / package-lock.json 等）；无清单的项目删除此步骤
         if: steps.detect.outputs.is_template != 'true' && github.event_name == 'pull_request'
         uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+      - name: 安装示例 CrossVal 依赖（模板模式）
+        # 必须在「手册数值一致性」（verify-manual.py）之前：verify-manual 会执行
+        # examples/scripts/crossval/StatsCrossVal.py（顶层 import numpy），numpy 缺失时
+        # run_crossval 计入 _FAIL → quality-gate 恒红（2026-08 Max 审查 F2 修复）。
+        if: steps.detect.outputs.is_template == 'true'
+        run: python -m pip install numpy
+      - name: 模板模式全量测试（pytest 字面命令）
+        # 模板仓库自身门禁：quick-check 的 Test 步骤（{{TEST_CMD}} 占位符）在模板模式被跳过，
+        # 模板自身的 191 项测试必须由本步骤硬门禁守护（2026-08 Max 审查 F3 修复）。
+        if: steps.detect.outputs.is_template == 'true'
+        run: python -m pytest tests/ -q
+      - name: 模板模式代码风格（ruff 字面命令）
+        # 模板仓库自身门禁：quality-gate 的 LINT 步骤（{{LINT_CMD}}）在模板模式被跳过，
+        # scripts/tests/examples 的 lint 由本步骤硬门禁守护（2026-08 Max 审查 F3 修复）。
+        if: steps.detect.outputs.is_template == 'true'
+        run: python -m ruff check scripts/ tests/ examples/
       - name: 手册数值一致性
         run: python scripts/verify-manual.py
       - name: 陷阱审计（falsy / 结构）
@@ -175,11 +191,6 @@ jobs:
         # 开发者无法区分环境问题与质量问题，故须在此显式安装（显式 step 而非塞进占位符，便于排障）。
         if: steps.detect.outputs.is_template != 'true'
         run: python -m pip install -e ".[dev]"
-      - name: 安装示例 CrossVal 依赖（模板模式）
-        # 模板仓库自身的 verify-manual.py 会执行 examples/scripts/crossval/StatsCrossVal.py
-        # （numpy 独立参考实现）；新项目（非模板）由 .[dev] 的 numpy 运行时依赖覆盖。
-        if: steps.detect.outputs.is_template == 'true'
-        run: python -m pip install numpy
       - name: 代码风格
         # Python: ruff check src/ scripts/
         # C#:    dotnet format --verify-no-changes

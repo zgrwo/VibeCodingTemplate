@@ -236,7 +236,9 @@
 |------|----------|------|
 | 注册/同步遗漏 | 6+ | 新增功能后忘记更新所有关联位置（_DISPATCH/TASK_REGISTRY/文档 6 处；2026-08 新增 pre-release-review.md 未登记 AGENTS.md 参考表 / project-structure.md / documentation.md / verify-docs DOC_FILES 共 4 处） |
 | 文档数字漂移 | 6+ | 函数计数、模块计数在多处硬编码，更新时遗漏（占位符数 109→118 第 5 次复发；2026-08 第 6 次：docs/architecture.md 硬编码「34 tests」实际 68） |
-| 元占位符污染 | 2 | 描述占位符机制的教学文字（`{{X}}`/`{{UPPER}}`/`{{UPPER_CASE}}`）被 init 按未登记 token 替换为小写（H3 修复仅覆盖 ps1 未覆盖 .py 移植版与文档，第 2 次复发；修复：init 对未登记 token 保留原样 + 文档统一 `{{...}}` 转义） |
+| 元占位符污染 | 3 | 描述占位符机制的教学文字（`{{X}}`/`{{UPPER}}`/`{{UPPER_CASE}}`）被 init 按未登记 token 替换为小写（H3 修复后 .py 移植版保留原样，但 ps1 侧修复缺失——2026-08 Max 审查 4 维度独立确认 + 对抗验证存活，第 3 次复发；修复：init-project.ps1 未登记 token 保留原样 + test-template.ps1 教学 token 存活断言 + remaining 扫描跳过 undeclared；文档统一 `{{...}}` 转义） |
+| 双实现行为分叉 | 1 | 同一逻辑 py/ps1 双实现行为不一致（未登记 token：py 保留原样 vs ps1 小写替换），Windows/Linux 初始化产物分叉，且 CI 自测只走 ps1 路径以 -Values 全覆盖掩盖（2026-08 Max 审查；修复：ps1 对齐 py + test-template 存活断言） |
+| 模板模式 CI 门禁盲区 | 1 | 模板仓库自身（is_template=true）跳过 Build/Test/LINT/COVERAGE（占位符命令在模板不可执行），pytest/ruff 对模板自身 scripts/examples 无守卫（2026-08 实证：ruff 对 examples/ 报 I001 而 CI 全绿；修复：quality-gate 模板模式新增 pytest/ruff 字面命令步骤） |
 | 测试文件命名与框架 glob 不匹配 | 1 | 测试文件 `test_X.ts` 不匹配 vitest/Jest 默认 glob `**/*.{test,spec}.*`，测试套件永不运行却静默通过（命名后缀需按测试框架要求） |
 | 工具命名映射未归一化分隔符 | 1 | 源文件连字符命名（`gen-doc-counts.py`）vs 测试下划线命名（`test_gen_doc_counts.py`），工具子串匹配未归一化 `-`/`_` → 门禁谎报缺测（run-affected-tests 对 4 个本有测试的脚本全报 FAIL；见 tooling-pitfalls #24） |
 | 交叉验证自校验 | 3+ | `check(name, X, X)` 永远 PASS，3 处 Bug 因此漏过（2026-08 新增：自校验正则误伤 docstring 反例教学文字，需跳过注释行） |

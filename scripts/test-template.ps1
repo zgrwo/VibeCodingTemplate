@@ -63,7 +63,7 @@ if ($deadEntries.Count -gt 0) {
 #   死条目（manifest 声明但无文件用）→ 上方硬失败；
 #   未登记（文件用但不在 manifest）→ 此处 WARN（测试夹具 {{A}}/{{X1_}} 等
 #   属 scanner 测试输入，无法登记，故不硬失败）；真正的元占位符污染由下方
-#   生成后断言拦截（转义标记必须存活、约定文字不得被替换成小写）。
+#   生成后断言拦截（教学 token 必须存活、约定文字不得被替换成小写）。
 $undeclared = @()
 foreach ($n in $names.Keys) {
     if (-not $manifest.ContainsKey($n)) { $undeclared += $n }
@@ -75,6 +75,12 @@ if ($undeclared.Count -gt 0) {
 $values = @{}
 foreach ($n in $names.Keys) {
     $key = "{{" + $n + "}}"
+    if (-not $manifest.ContainsKey($n)) {
+        # 未登记教学 token（如 {{X}}/{{UPPER}}/{{UPPER_CASE}}）：不预置小写值，
+        # 否则会掩盖 init 的未登记分支、且把教学文字污染成小写（F1 修复，与
+        # init-project.py 的 undeclared 保留原样语义对齐）
+        continue
+    }
     $test = $manifest[$n].test
     if ($test) { $values[$key] = $test }
     else { $values[$key] = $n.ToLower() }
@@ -106,6 +112,15 @@ try {
         & $s.Cmd
         if ($LASTEXITCODE -ne 0) { throw "$($s.Name) 失败 (退出码 $LASTEXITCODE)" }
     }
+    # 元占位符污染断言：未登记教学 token 必须原样存活于生成项目 AGENTS.md
+    # （H3 修复 + ps1 对齐的 F1 回归守卫；token 本身未登记，init 会保留原样）
+    $agentsText = Get-Content (Join-Path $Target "AGENTS.md") -Encoding UTF8 -Raw
+    foreach ($token in @('{{X}}', '{{UPPER}}', '{{UPPER_CASE}}')) {
+        if ($agentsText -notmatch [regex]::Escape($token)) {
+            throw "教学 token $token 未存活于生成项目 AGENTS.md（元占位符污染回归）"
+        }
+    }
+    Write-Host "`n[OK] 教学 token 存活断言通过（元占位符污染无回归）" -ForegroundColor Green
     Write-Host "`n✅ 模板自测通过：占位符替换完整 + 文档一致性验证通过" -ForegroundColor Green
     if (-not $Keep) {
         Set-Location ([System.IO.Path]::GetTempPath())

@@ -55,6 +55,8 @@
 | 23 | **ruff per-file ignore 无理由注释**（来源：工程分析套件 pyproject.toml）→ 后人 copy-paste 忽略规则，无上下文 | 每条 per-file-ignores/noqa 必须带中文理由注释（如 `"N806" 大写变量是有意的 SPC 常量 A2/D3/D4`）；新增规则类别需先确认非"覆盖问题"而是"约定豁免" |
 | 24 | **工具命名映射未归一化连字符/下划线**（源文件 `gen-doc-counts.py` 用连字符、测试 `test_gen_doc_counts.py` 用下划线，工具 `stem in name` 子串匹配失效）→ 门禁谎报"缺测"（run-affected-tests 对 4 个本有测试的脚本全报 FAIL） | 比较前统一分隔符：`stem.replace('-', '_')`（两边都归一化到 `_`）再子串匹配；补 kebab-case 源文件 → snake_case 测试的回归用例 |
 | 25 | **init 把 CI 检测脚本中的占位符字面量一并替换**（ci.yml / detect-template.yml 的 detect 步骤 grep 模式里的 PROJECT_NAME 双花括号字面量被 init-project 替换成项目名，而生成项目 AGENTS.md 必然包含项目名 → `is_template` 恒为 true，**下游项目 CI 的构建/测试/质量门禁被永久跳过**；模板自身 CI 不执行生成项目的 CI，故长期未暴露，2026-08 审查实证） | 检测"未替换占位符"的 grep 模式必须反斜杠转义（grep BRE 中 `\{` 匹配字面 `{`，init 的双花括号正则不再匹配）；凡 init 会扫描的文件中出现的**已登记**占位符字面量默认都会被替换，检测/教学类引用需显式逃逸或使用 `{{...}}` 三点号转义 |
+| 26 | **py/ps1 双实现行为分叉且 CI 只测单侧**（init-project.py 对未登记 token 返回 None 保留原样，init-project.ps1 仍替换为占位符名小写 → Windows 初始化把 AGENTS.md 教学 token 污染成小写；test-template.ps1 以 -Values 预置小写值全覆盖，ps1 未登记分支在 CI 自测中永不触发，2026-08 Max 审查 4 维度独立确认） | 双实现共享行为规范并各配回归守卫：ps1 未登记分支保留原样 + remaining 扫描跳过 undeclared + test-template.ps1 教学 token 存活断言（`{{X}}`/`{{UPPER}}`/`{{UPPER_CASE}}` 必须原样存在于生成项目） |
+| 27 | **模板模式 CI 门禁盲区**（模板仓库自身 is_template=true 时 quick-check 的 Build/Test 与 quality-gate 的 LINT/COVERAGE 全部被 `!= 'true'` 门控跳过——占位符命令在模板不可执行；template-self-test 只跑 verify 四件套 → 模板自身的 pytest/ruff 无 CI 守卫，2026-08 实证 ruff 对 examples/ 报 I001 而 CI 全绿） | quality-gate 模板模式分支加**字面命令**硬门禁（非占位符）：`python -m pytest tests/ -q`、`python -m ruff check scripts/ tests/ examples/`；依赖安装步骤（numpy）必须先于使用它的 verify-manual 步骤 |
 
 ## 提交前自查
 
