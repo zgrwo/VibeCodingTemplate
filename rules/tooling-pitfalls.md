@@ -54,6 +54,7 @@
 | 22 | **配置流断裂（声明→解析→传递→读取→使用任一环断开）**（来源：文档审查套件 STR-004 在 4 节点断裂；cross-project-synthesis #4）→ 规则/参数在配置中声明但链路某节点静默失效，报错时已在用点 | 防御模式：回退路径的 config 键集**必须与主路径一致**（文档审查套件 `_resolve_auditor_config()` 注释"陷阱 #4：回退路径 config 键集必须与 build_auditors 一致"）；新增注册点后立即用 `verify-registries.py`（档 A-A1）断言多注册表键集一致 |
 | 23 | **ruff per-file ignore 无理由注释**（来源：工程分析套件 pyproject.toml）→ 后人 copy-paste 忽略规则，无上下文 | 每条 per-file-ignores/noqa 必须带中文理由注释（如 `"N806" 大写变量是有意的 SPC 常量 A2/D3/D4`）；新增规则类别需先确认非"覆盖问题"而是"约定豁免" |
 | 24 | **工具命名映射未归一化连字符/下划线**（源文件 `gen-doc-counts.py` 用连字符、测试 `test_gen_doc_counts.py` 用下划线，工具 `stem in name` 子串匹配失效）→ 门禁谎报"缺测"（run-affected-tests 对 4 个本有测试的脚本全报 FAIL） | 比较前统一分隔符：`stem.replace('-', '_')`（两边都归一化到 `_`）再子串匹配；补 kebab-case 源文件 → snake_case 测试的回归用例 |
+| 25 | **init 把 CI 检测脚本中的占位符字面量一并替换**（ci.yml / detect-template.yml 的 detect 步骤 grep 模式里的 PROJECT_NAME 双花括号字面量被 init-project 替换成项目名，而生成项目 AGENTS.md 必然包含项目名 → `is_template` 恒为 true，**下游项目 CI 的构建/测试/质量门禁被永久跳过**；模板自身 CI 不执行生成项目的 CI，故长期未暴露，2026-08 审查实证） | 检测"未替换占位符"的 grep 模式必须反斜杠转义（grep BRE 中 `\{` 匹配字面 `{`，init 的双花括号正则不再匹配）；凡 init 会扫描的文件中出现的**已登记**占位符字面量默认都会被替换，检测/教学类引用需显式逃逸或使用 `{{...}}` 三点号转义 |
 
 ## 提交前自查
 

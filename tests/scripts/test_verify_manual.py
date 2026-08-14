@@ -8,6 +8,7 @@
 """
 import importlib.util
 import io
+import subprocess
 import sys
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -160,6 +161,24 @@ class TestRunCrossval:
             ok = vm.run_crossval()
         assert ok is True
         assert "STATS.MEAN" in out.getvalue()
+
+    def test_real_example_crossval_standalone_runs(self):
+        """示例 CrossVal 独立运行（python .../StatsCrossVal.py）可用（P2 修复）。
+
+        独立运行不依赖 verify-manual 执行器：兜底向上查找 scripts/verify-manual.py
+        以 spec 加载，校验失败时退出码 1（供脚本化调用）。
+        """
+        pytest.importorskip("numpy")
+        example = vm.ROOT / "examples" / "scripts" / "crossval" / "StatsCrossVal.py"
+        if not example.is_file():
+            pytest.skip("examples/scripts/crossval 不存在（示例目录已被裁剪）")
+        r = subprocess.run(
+            [sys.executable, str(example)],
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            cwd=vm.ROOT, timeout=60,
+        )
+        assert r.returncode == 0, r.stderr
+        assert "STATS.MEAN" in r.stdout
 
 
 class TestStaticChecks:

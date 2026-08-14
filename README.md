@@ -179,6 +179,9 @@ cp -r VibeCodingTemplate <PROJECT_NAME>  # robocopy /E /XD .git (Windows)
 
 > 用 `scripts/init-project.ps1` 自动初始化时，脚本会扫描全部 `{{...}}` 占位符，对核心值（项目名 / 所有者 / 验证命令等）交互式询问，其余内容占位符自动用占位符名占位，完成后报告遗漏项。
 
+> **初始化自动收尾**（2026-08 增强）：CHANGELOG.md / `.release-please-manifest.json` / `pyproject.toml` 版本号重置为新项目初始态（不携带模板发布历史与版本基线）；`scripts/placeholders.json` 裁剪为"仅保留替换后仍被引用的条目"（防死条目门禁 FAIL）；`examples/` 参考示例去向有提示。
+> **非交互模式**：Python 版 `--non-interactive` / PowerShell 版 stdin 重定向下，core 占位符若无默认值且未通过 `--values`/`-Values` 提供，初始化**报错退出**（防 CI 命令被静默替换成 `build_cmd` 式占位名，与 ps1 行为对齐）。
+
 ### 3. 按语言填充
 
 - **src/ 目录树**：按实际模块创建 `src/<Module>/` 结构
