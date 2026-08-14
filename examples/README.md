@@ -34,6 +34,10 @@ examples/
 
 ## 运行示例
 
+> **已接入 CI**：四语言示例测试由 `.github/workflows/ci.yml` 的 template-self-test
+> 「示例多语言测试」步骤自动执行（TS/Go/Rust/Python；仅模板仓库模式）。
+> 以下为本地手动运行方式。
+
 ```bash
 # Python 示例（需在 examples/ 下运行，src/ 结构在包路径内）
 cd examples
@@ -41,11 +45,12 @@ pip install numpy pytest
 pytest tests/test_stats.py -v  # 16 tests
 
 # TypeScript 示例（需 Node.js 18+）
-npm install -g vitest
-npx vitest run examples/tests/  # 17 tests（文件后缀 .test.ts 匹配 vitest 默认 glob）
+cd examples
+npm install          # 首次（已提交 package-lock.json，CI 用 npm ci）
+npx vitest run       # 17 tests（文件后缀 .test.ts 匹配 vitest 默认 glob）
 
-# Go 示例（需 Go 1.22+）
-cd examples && go mod init examples && go test ./tests/... -v  # 16 tests
+# Go 示例（需 Go 1.22+；go.mod 已提交，无需 go mod init）
+cd examples && go test ./tests/... -v  # 16 tests
 
 # Rust 示例（需 Rust edition 2021+）
 cd examples && cargo test  # 2 个 #[test] 函数（15 用例）

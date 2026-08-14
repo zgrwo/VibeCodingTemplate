@@ -101,6 +101,9 @@
 ├── examples/                     # 示例项目（最小可运行的完整实践）
 │   ├── README.md                 # 示例说明（Core 多语言实现 + CrossVal + 测试）
 │   ├── conftest.py               # pytest 路径引导（使根目录运行 examples/tests 可导入 src.stats）
+│   ├── package.json              # TypeScript 示例测试依赖（vitest，已接入 CI）
+│   ├── package-lock.json         # npm lock（CI npm ci 使用）
+│   ├── go.mod                    # Go 示例 module（module examples，已接入 CI）
 │   ├── Cargo.toml                # Rust 示例 crate 定义（cargo test 入口）
 │   ├── src/                      # 示例源码（lib.rs = Rust crate 根；stats/ = 多语言实现）
 │   ├── tests/                    # 示例测试（test_stats.rs = Rust 集成测试）

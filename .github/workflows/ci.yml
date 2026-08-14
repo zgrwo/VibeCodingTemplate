@@ -258,3 +258,19 @@ jobs:
       - name: 模板自测（init → verify-docs/manual/falsy）
         if: steps.detect.outputs.is_template == 'true'
         run: pwsh -File scripts/test-template.ps1
+      - name: 示例多语言测试（TS/Go/Rust/Python）
+        # examples/ 四语言示例测试接入 CI（2026-08 Max 审查豁免到期处理）：
+        #   - TS:  examples/package.json（vitest，17 tests）
+        #   - Go:  examples/go.mod + go test ./tests/...（16 用例）
+        #   - Rust: examples/Cargo.toml + cargo test（2 个 #[test] 函数 15 用例）
+        #   - Python: pytest examples/tests/（16 tests，conftest.py 引导 src.stats）
+        # GitHub 托管 runner（ubuntu/windows）均预装 Node/Go/Rust 工具链；
+        # 仅模板模式运行（下游项目不强制多语言工具链）。
+        if: steps.detect.outputs.is_template == 'true'
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m pytest examples/tests/ -q
+          cd examples && npm ci --no-audit --no-fund && npx vitest run
+          cd examples && go test ./tests/... -v
+          cd examples && cargo test
