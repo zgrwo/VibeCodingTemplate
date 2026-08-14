@@ -63,10 +63,11 @@ EXCLUDED_DIRS = {
 _PLACEHOLDER_RE = re.compile(r"\{\{([A-Z0-9_]+)\}\}")
 
 # 教学转义 token 白名单：源码注释/docstring 示例与 AGENTS.md 教学文字中的占位符
-# （{{A}}/{{FOO}}/{{NAME}}/{{X}} 等），不计入"未声明" WARN——
-# 否则每次运行恒定输出噪声，淹没真实未登记占位符信号（与 EXCLUDED_DIRS 排除 tests/ 的设计理由一致）
+# （{{A}}/{{B}}/{{FOO}}/{{NAME}}/{{X}} 等），不计入"未声明" WARN——
+# 否则每次运行恒定输出噪声，淹没真实未登记占位符信号（与 EXCLUDED_DIRS 排除 tests/ 的设计理由一致）。
+# B 来自 scripts/init-project.ps1 的扫描注释（{{A}}/{{B}}/{{FOO}}，2026-08 审查 P3 补录）。
 TEACHING_TOKENS = {
-    "A", "FOO", "NAME", "UPPER", "UPPER_CASE", "X", "X1_",
+    "A", "B", "FOO", "NAME", "UPPER", "UPPER_CASE", "X", "X1_",
 }
 
 

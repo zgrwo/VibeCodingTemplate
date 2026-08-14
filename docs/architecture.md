@@ -18,7 +18,7 @@ AGENTS.md              项目宪法（四条核心准则、红线规则、防幻
 ├── templates/         模块脚手架（NewModule + language + monorepo）
 ├── scripts/           验证脚本（AST 审计 + 初始化 + commit 校验）
 ├── examples/          示例项目（Python/TypeScript/Go）
-└── tests/             验证脚本自测（<!-- AUTO_COUNTS:TESTS_START -->173<!-- AUTO_COUNTS:TESTS_END --> tests，见 tests/scripts/）
+└── tests/             验证脚本自测（<!-- AUTO_COUNTS:TESTS_START -->190<!-- AUTO_COUNTS:TESTS_END --> tests，见 tests/scripts/）
 ```
 
 ## 关键设计决策
@@ -28,8 +28,24 @@ AGENTS.md              项目宪法（四条核心准则、红线规则、防幻
 - {PascalCase} → 模块级，开发者手动替换（不被 init 匹配，避免误伤）
 
 ### ADR-0002：模板自举检测
-CI 通过 `grep -rq '{{' AGENTS.md` 区分模板/项目模式（含任意未替换占位符，
-而非特定 `{{PROJECT_NAME}}`，避免初始化替换 PROJECT_NAME 后检测失效）。
+
+CI 检测 `AGENTS.md` 中是否残留未替换的核心占位符 `PROJECT_NAME`（双花括号包裹）来区分模板/项目模式。
+实现上刻意**检测特定占位符而非任意 `{{` 字面量**，原因有二：
+
+1. **教学 token 残留**：`AGENTS.md`「历史经验」表按 H3 修复刻意保留教学 token（`X`/`UPPER`/`UPPER_CASE` 等
+   未登记占位符原样保留），初始化后仍含双花括号字面量——若检测任意 `{{`，任何已初始化项目都会恒为
+   "模板模式"，构建永被跳过。
+2. **初始化不完整须显式失败**：特定 token 检测使"PROJECT_NAME 已替换但其他占位符残留"暴露为 CI 构建失败
+   （占位符命令不可执行），而非静默跳过造成门禁假绿。
+
+**grep 模式必须反斜杠转义**（`\{\{PROJECT_NAME\}\}`，grep BRE 中 `\{` 匹配字面 `{`）：若不转义，
+`init-project` 会把 grep 模式里的占位符字面量一并替换成项目名，而生成项目 `AGENTS.md` 必然包含项目名
+→ `is_template` 恒为 true，下游项目 CI 的构建/测试/质量门禁被永久跳过（2026-08 审查发现并修复的 P0 缺陷）。
+
+实现：`.github/workflows/ci.yml`（quick-check / full-check / quality-gate / template-self-test 四处 detect 步骤）
+与 `.github/workflows/detect-template.yml`（reusable workflow）统一使用上述转义模式。
+
+（2026-08-14 审查修正：原 ADR 文字写的是 `grep -rq '{{'`，与实现不符，且该方案会被教学 token 反噬。）
 模板仓库无构建系统，占位符命令无法执行→自举检测跳过。
 
 ### ADR-0003：Python 跨平台优先

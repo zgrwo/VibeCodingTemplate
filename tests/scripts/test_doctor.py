@@ -73,6 +73,17 @@ class TestChecks:
         assert ok is False
         assert "解析失败" in msg
 
+    def test_placeholders_empty_ok(self, tmp_path, monkeypatch):
+        """生成项目 manifest 被 init 裁剪为空 → 仍视为就绪（2026-08 审查修复）。"""
+        scripts = tmp_path / "scripts"
+        scripts.mkdir()
+        p = scripts / "placeholders.json"
+        p.write_text('{"schema_version": 1, "placeholders": {}}', encoding="utf-8")
+        monkeypatch.setattr(doc, "ROOT", tmp_path)
+        ok, msg = doc.check_placeholders()
+        assert ok is True
+        assert "0 个占位符" in msg
+
 
 class TestMainCLI:
     """测试 CLI 退出码。"""

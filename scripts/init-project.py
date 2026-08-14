@@ -18,6 +18,9 @@ init-project.py — 从模板初始化新项目（跨平台 Python 版）
       --values '{"PROJECT_NAME": "MyNewProject", "VERSION": "1.0.0"}' \\
       --git-init --create-compatibility-links
 
+注意：--non-interactive 模式下，core 占位符若无 default 且未在 --values 中提供，脚本报错退出
+（与 init-project.ps1 的 stdin 重定向 fail-fast 对齐），防止 CI 命令被静默替换成占位符名小写。
+
 退出码：0 = 全部占位符已替换；1 = 存在未替换占位符
 """
 from __future__ import annotations
@@ -113,24 +116,31 @@ def get_placeholder_value(
         return name.lower()
 
     # 3. core 交互询问
-    if category == "core" and interactive:
-        prompt = entry.get("prompt", name)
-        default = entry.get("default")
-        hint = f"  {prompt}"
-        if default:
-            hint += f"（默认 {default}）"
-        hint += ": "
-        user_input = input(hint).strip()
-        if user_input:
-            return user_input
-        if default:
-            return default
+    if category == "core":
+        if not interactive and "default" not in entry:
+            # 镜像 init-project.ps1：非交互且无默认值时 fail-fast，而非静默回退占位符名小写——
+            # 否则 BUILD_CMD/TEST_CMD 等 CI 命令占位符被替换成 build_cmd/test_cmd，
+            # 生成损坏的 .github/workflows/ci.yml（P5 审查修复）。
+            raise SystemExit(
+                f"[FATAL] 非交互模式下 core 占位符 {name} 无默认值："
+                f"请通过 --values 提供（如 --values '{{\"{name}\": \"...\"}}'）"
+            )
+        if interactive:
+            prompt = entry.get("prompt", name)
+            default = entry.get("default")
+            fallback = default if default else name.lower()
+            hint = f"  {prompt}（Enter 用默认: {fallback}）: "
+            user_input = input(hint).strip()
+            if user_input:
+                return user_input
+            if default:
+                return default
 
-    # 4. default
+    # 4. default（非交互 core 有默认值 / 交互 Enter 有默认值）
     if "default" in entry:
         return entry["default"]
 
-    # 5. content → 占位符名小写（开发期再填）
+    # 5. content → 占位符名小写（开发期再填）；交互 core Enter 且无默认值 → 同 ps1 回退小写
     return name.lower()
 
 
@@ -304,6 +314,88 @@ def _reset_changelog(target: Path) -> None:
     print("==> CHANGELOG.md 已重置为新项目初始态")
 
 
+def _reset_release_manifest(target: Path, replacements: dict[str, str]) -> None:
+    """将 .release-please-manifest.json 重置为新项目初始版本（模板自身发布版本不属于新项目）。
+
+    与 _reset_changelog 同理（P4 审查修复）：模板仓库的 manifest 携带自身发布版本（如 0.1.2），
+    直接复制会使新项目 manifest 与 pyproject.toml（version 占位符）版本漂移，
+    触发 verify-docs.py 版本一致性门禁。
+    """
+    manifest_path = target / ".release-please-manifest.json"
+    if not manifest_path.exists():
+        return
+    version = replacements.get("VERSION") or "0.1.0"
+    manifest_path.write_text(
+        json.dumps({".": version}, indent=2) + "\n", encoding="utf-8"
+    )
+    print(f"==> .release-please-manifest.json 已重置为版本 {version}")
+
+
+def _reset_pyproject_version(target: Path, replacements: dict[str, str]) -> None:
+    """将复制进新项目的根 pyproject.toml 版本号重置为 VERSION 值（P4 审查修复）。
+
+    根 pyproject.toml 是模板仓库自身开发配置（无占位符，init 不替换），直接复制会让
+    新项目版本与 .release-please-manifest.json（已重置为 VERSION）漂移，
+    触发 verify-docs.py 版本一致性门禁。
+    """
+    path = target / "pyproject.toml"
+    if not path.exists():
+        return
+    version = replacements.get("VERSION") or "0.1.0"
+    text = path.read_text(encoding="utf-8")
+    new_text = re.sub(
+        r'^version\s*=\s*["\']([^"\']+)["\']',
+        f'version = "{version}"',
+        text,
+        count=1,
+        flags=re.MULTILINE,
+    )
+    if new_text != text:
+        path.write_text(new_text, encoding="utf-8")
+        print(f"==> pyproject.toml 版本号已重置为 {version}")
+
+
+def _prune_placeholder_manifest(target: Path) -> None:
+    """裁剪生成项目 scripts/placeholders.json：仅保留替换后仍被引用的条目。
+
+    背景（2026-08 审查）：verify-registries.py 的死条目硬门禁要求 manifest 声明的条目必须被
+    文件引用。初始化后全部已登记占位符都被替换（如 {{YEAR}} 在 LICENSE、{{WHEN_TO_USE}} 在
+    user-manual.md），若 manifest 原样复制，生成项目每次跑 verify-registries 都会报大量死条目
+    FAIL（下游 quality-gate 恒红，test-template.ps1 未跑该门禁故长期未被发现）。
+    """
+    path = target / "scripts" / "placeholders.json"
+    if not path.exists():
+        return
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return
+    manifest = data.get("placeholders", {})
+    if not isinstance(manifest, dict):
+        return
+    referenced: set[str] = set()
+    pattern = re.compile(r"\{\{([A-Z0-9_]+)\}\}")
+    for f in target.rglob("*"):
+        if not f.is_file() or _in_skip_dirs(f, target):
+            continue
+        if f.suffix in (".pyc", ".dll", ".exe", ".xll", ".pdb"):
+            continue
+        try:
+            text = f.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        referenced.update(pattern.findall(text))
+    kept = {k: v for k, v in manifest.items() if k in referenced}
+    if len(kept) == len(manifest):
+        return
+    data["placeholders"] = kept
+    path.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    print(f"==> scripts/placeholders.json 已裁剪：{len(manifest)} → {len(kept)} 个占位符"
+          "（仅保留替换后仍被引用的条目）")
+
+
 _TEMPLATE_ONLY_START = b"<!-- TEMPLATE_ONLY_START -->"
 _TEMPLATE_ONLY_END = b"<!-- TEMPLATE_ONLY_END -->"
 
@@ -447,7 +539,8 @@ def main() -> int:
         help='占位符值 JSON，如 \'{"PROJECT_NAME": "MyApp", "VERSION": "1.0.0"}\''
     )
     parser.add_argument("--non-interactive", action="store_true",
-                        help="非交互模式（core 占位符用 default/占位符名小写填充，不询问）")
+                        help="非交互模式（core 占位符用 default 填充；无默认值必须 --values 提供，"
+                             "否则报错退出——与 init-project.ps1 对齐，防生成 build_cmd 式损坏命令）")
     parser.add_argument("--force", action="store_true",
                         help="覆盖已存在的非空目标目录（与 init-project.ps1 -Force 对齐）")
     parser.add_argument("--git-init", action="store_true",
@@ -475,6 +568,11 @@ def main() -> int:
     print(f"==> 复制模板到 {target}")
     copied = copy_template(target)
     print(f"    复制了 {len(copied)} 个文件")
+    if (target / "examples").exists():
+        # P6 审查修复：examples/ 为参考示例，明确告知去向（不需要可删除，
+        # 删除后需同步 project-structure.md/AGENTS.md 目录树，否则 verify-docs --strict 报未声明/缺失）
+        print("    [提示] examples/ 示例项目已复制（参考用途：演示多语言 Core/CrossVal/测试写法，"
+              "不需要可整体删除；删除后请同步 rules/project-structure.md 与 AGENTS.md 目录树）")
 
     # 删除模板专属段落（README 的「从本模板初始化新项目」等不进入新项目；
     # 在占位符收集前执行，被删段落内的 {{...}} 示例不计入下游替换清单）
@@ -511,8 +609,12 @@ def main() -> int:
     if remaining:
         print(f"    [WARN] {remaining} 个占位符未替换（content 类，需开发期手动填充）")
 
-    # 重置 CHANGELOG 为新项目初始态（与 ps1 对齐，避免新项目携带模板发布历史）
+    # 重置 CHANGELOG / 版本基线 / 版本号 / 占位符 manifest（与 ps1 对齐，
+    # 避免新项目携带模板发布历史、版本漂移或死条目门禁 FAIL）
     _reset_changelog(target)
+    _reset_release_manifest(target, replacements)
+    _reset_pyproject_version(target, replacements)
+    _prune_placeholder_manifest(target)
 
     # git init
     if args.git_init and not _setup_git(target):

@@ -10,6 +10,7 @@ test_verify_docs.py — verify-docs.py 自身测试套件
 """
 import contextlib
 import importlib.util
+import json
 import re
 import sys
 from pathlib import Path
@@ -194,3 +195,48 @@ class TestSemanticConsistency:
         monkeypatch.setattr(vd, "ROOT", tmp_path)
         problems = vd.check_semantic_consistency()
         assert any("input" in p for p in problems)
+
+
+class TestVersionConsistency:
+    """版本号 SSOT 一致性门禁（P4 修复：防 manifest/pyproject/CHANGELOG 漂移）。"""
+
+    def _setup(self, tmp_path, monkeypatch, manifest_ver, pyproject_ver, changelog_ver):
+        (tmp_path / ".release-please-manifest.json").write_text(
+            json.dumps({".": manifest_ver}), encoding="utf-8"
+        )
+        (tmp_path / "pyproject.toml").write_text(
+            f'[project]\nversion = "{pyproject_ver}"\n', encoding="utf-8"
+        )
+        if changelog_ver:
+            (tmp_path / "CHANGELOG.md").write_text(
+                f"## [Unreleased]\n\n## [{changelog_ver}](https://github.com/x/y)\n",
+                encoding="utf-8",
+            )
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+
+    def test_consistent_versions_pass(self, tmp_path, monkeypatch):
+        self._setup(tmp_path, monkeypatch, "0.1.2", "0.1.2", "0.1.2")
+        assert vd.check_version_consistency() == []
+
+    def test_manifest_pyproject_mismatch_detected(self, tmp_path, monkeypatch):
+        """manifest 0.1.2 vs pyproject 0.1.0 → 检出（曾真实发生的漂移形态）。"""
+        self._setup(tmp_path, monkeypatch, "0.1.2", "0.1.0", "0.1.2")
+        problems = vd.check_version_consistency()
+        assert any("版本漂移" in p and "pyproject.toml" in p for p in problems)
+
+    def test_manifest_changelog_mismatch_detected(self, tmp_path, monkeypatch):
+        self._setup(tmp_path, monkeypatch, "0.1.2", "0.1.2", "0.1.1")
+        problems = vd.check_version_consistency()
+        assert any("版本漂移" in p and "CHANGELOG" in p for p in problems)
+
+    def test_missing_manifest_skips(self, tmp_path, monkeypatch):
+        """无 release-please manifest（未接入/非发布项目）→ 不强制。"""
+        (tmp_path / "pyproject.toml").write_text('[project]\nversion = "0.1.0"\n', encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        assert vd.check_version_consistency() == []
+
+    def test_missing_pyproject_skips(self, tmp_path, monkeypatch):
+        """非 Python 项目（无 pyproject.toml）→ 不强制。"""
+        (tmp_path / ".release-please-manifest.json").write_text('{".": "0.1.2"}', encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        assert vd.check_version_consistency() == []

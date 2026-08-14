@@ -12,6 +12,8 @@ import sys
 from contextlib import redirect_stdout
 from pathlib import Path
 
+import pytest
+
 # 将 scripts/ 加入路径以导入 verify-manual
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
@@ -81,11 +83,11 @@ class TestCrossCheck:
 
 
 class TestRunCrossval:
-    """run_crossval() 的 SKIP 路径。"""
+    """run_crossval() 的 SKIP 路径与发现目录语义。"""
 
     def test_missing_dir_skips(self, tmp_path, monkeypatch):
         """crossval 目录缺失 → SKIP 且返回 True（不假装通过）。"""
-        monkeypatch.setattr(vm, "CROSSVAL_DIR", tmp_path / "no-such-crossval")
+        monkeypatch.setattr(vm, "CROSSVAL_DIRS", [tmp_path / "no-such-crossval"])
         out = io.StringIO()
         with redirect_stdout(out):
             ok = vm.run_crossval()
@@ -96,7 +98,7 @@ class TestRunCrossval:
         """crossval 目录存在但为空 → SKIP。"""
         crossval = tmp_path / "crossval"
         crossval.mkdir()
-        monkeypatch.setattr(vm, "CROSSVAL_DIR", crossval)
+        monkeypatch.setattr(vm, "CROSSVAL_DIRS", [crossval])
         out = io.StringIO()
         with redirect_stdout(out):
             ok = vm.run_crossval()
@@ -113,7 +115,7 @@ class TestRunCrossval:
             '    check("G.BAD", 1.0, 2.0)\n',
             encoding="utf-8",
         )
-        monkeypatch.setattr(vm, "CROSSVAL_DIR", crossval)
+        monkeypatch.setattr(vm, "CROSSVAL_DIRS", [crossval])
         monkeypatch.setattr(vm, "_PASS", 0)
         monkeypatch.setattr(vm, "_FAIL", 0)
         out = io.StringIO()
@@ -131,7 +133,7 @@ class TestRunCrossval:
             'check("G.OK", 1.0, 1.0)\n',
             encoding="utf-8",
         )
-        monkeypatch.setattr(vm, "CROSSVAL_DIR", crossval)
+        monkeypatch.setattr(vm, "CROSSVAL_DIRS", [crossval])
         monkeypatch.setattr(vm, "_PASS", 0)
         monkeypatch.setattr(vm, "_FAIL", 0)
         out = io.StringIO()
@@ -139,6 +141,25 @@ class TestRunCrossval:
             ok = vm.run_crossval()
         assert ok is True
         assert "未产生任何校验项" not in out.getvalue()
+
+    def test_real_example_crossval_passes(self, monkeypatch):
+        """模板自带示例 CrossVal（examples/scripts/crossval/）必须可执行（P2 修复：闭环验证接线）。
+
+        防止示例 CrossVal 沦为死代码：verify-manual.py 自动发现两处目录
+        （scripts/crossval/ 与 examples/scripts/crossval/），示例必须真实产生校验项。
+        """
+        pytest.importorskip("numpy")  # 示例 CrossVal 用 numpy 独立参考实现比对
+        example_dir = vm.ROOT / "examples" / "scripts" / "crossval"
+        if not example_dir.is_dir():
+            pytest.skip("examples/scripts/crossval 不存在（示例目录已被裁剪）")
+        monkeypatch.setattr(vm, "CROSSVAL_DIRS", [example_dir])
+        monkeypatch.setattr(vm, "_PASS", 0)
+        monkeypatch.setattr(vm, "_FAIL", 0)
+        out = io.StringIO()
+        with redirect_stdout(out):
+            ok = vm.run_crossval()
+        assert ok is True
+        assert "STATS.MEAN" in out.getvalue()
 
 
 class TestStaticChecks:

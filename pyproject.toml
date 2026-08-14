@@ -10,7 +10,7 @@
 
 [project]
 name = "vibe-coding-template"
-version = "0.1.0"
+version = "0.1.2"
 description = "AI coding governance template — project constitution, skills, verification scripts, CI scaffolding"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -21,6 +21,7 @@ dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "ruff>=0.4",
+    "numpy>=1.24",  # 示例 CrossVal（examples/scripts/crossval/StatsCrossVal.py）numpy 独立参考实现
 ]
 
 [tool.ruff]

@@ -102,6 +102,11 @@ foreach ($junk in @("__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache"
         Remove-Item -Recurse -Force
 }
 Write-Host "    完成（已跳过 .git / logs / .claude / __pycache__ 等）" -ForegroundColor Green
+if (Test-Path (Join-Path $Target "examples")) {
+    # P6 审查修复：examples/ 为参考示例，明确告知去向（不需要可删除，
+    # 删除后需同步 project-structure.md/AGENTS.md 目录树，否则 verify-docs --strict 报未声明/缺失）
+    Write-Host "    [提示] examples/ 示例项目已复制（参考用途：演示多语言 Core/CrossVal/测试写法，不需要可整体删除；删除后请同步 rules/project-structure.md 与 AGENTS.md 目录树）" -ForegroundColor Yellow
+}
 
 # ----------------------------------------------------------------------------
 # 2.5 删除标记的模板专属段落（README 的「从本模板初始化新项目」等不进入新项目）
@@ -320,6 +325,61 @@ All notable changes to $projName.
 "@
 [System.IO.File]::WriteAllText((Join-Path $Target "CHANGELOG.md"), $changelogInit, (New-Object System.Text.UTF8Encoding $true))
 Write-Host "==> CHANGELOG.md 已重置为新项目初始态" -ForegroundColor Green
+
+# ----------------------------------------------------------------------------
+# 5.6 重置 .release-please-manifest.json 为新项目初始版本（模板自身的发布版本不属于新项目）
+# ----------------------------------------------------------------------------
+# 与 _reset_changelog 同理（P4 审查修复）：模板仓库 manifest 携带自身发布版本（如 0.1.2），
+# 直接复制会使新项目 manifest 与 pyproject.toml（{{VERSION}}）版本漂移，
+# 触发 verify-docs.py 版本一致性门禁。
+$manifestPath = Join-Path $Target ".release-please-manifest.json"
+if (Test-Path $manifestPath) {
+    $versionKey = "{{" + "VERSION" + "}}"
+    $version = if ($Values.ContainsKey($versionKey)) { [string]$Values[$versionKey] } else { "0.1.0" }
+    $manifestJson = @{ "." = $version } | ConvertTo-Json
+    [System.IO.File]::WriteAllText($manifestPath, $manifestJson, (New-Object System.Text.UTF8Encoding $true))
+    Write-Host "==> .release-please-manifest.json 已重置为版本 $version" -ForegroundColor Green
+
+    # 5.6.1 将复制进新项目的根 pyproject.toml 版本号重置为 VERSION 值（与 _reset_release_manifest 同理，
+    # 防新项目版本漂移触发 verify-docs.py 版本一致性门禁，P4 修复）
+    $pyProjectPath = Join-Path $Target "pyproject.toml"
+    if (Test-Path $pyProjectPath) {
+        $pyText = Get-Content $pyProjectPath -Encoding UTF8 -Raw
+        $newPyText = $pyText -replace '(?m)^version\s*=\s*"[^"]+"', "version = `"$version`""
+        if ($newPyText -ne $pyText) {
+            [System.IO.File]::WriteAllText($pyProjectPath, $newPyText, (New-Object System.Text.UTF8Encoding $true))
+            Write-Host "==> pyproject.toml 版本号已重置为 $version" -ForegroundColor Green
+        }
+    }
+
+    # 5.6.2 裁剪生成项目 placeholders.json：仅保留替换后仍被引用的条目（防死条目门禁 FAIL）。
+    # 初始化后全部已登记占位符都被替换（如 {{YEAR}} 在 LICENSE），manifest 原样复制会让
+    # 生成项目每次跑 verify-registries 都报死条目 FAIL（下游 quality-gate 恒红，审查修复）。
+    $phPath = Join-Path $Target (Join-Path "scripts" "placeholders.json")
+    if (Test-Path $phPath) {
+        $phData = Get-Content $phPath -Encoding UTF8 -Raw | ConvertFrom-Json
+        if ($phData -and $phData.placeholders) {
+            $referenced = @{}
+            Get-ChildItem -LiteralPath $Target -Recurse -File -Force | Where-Object {
+                $_.Extension -notin @(".pyc", ".dll", ".exe", ".pdb") -and $_.FullName -notmatch "[\\/]tests([\\/]|$)"
+            } | ForEach-Object {
+                $content = Get-Content $_.FullName -Encoding UTF8 -Raw -ErrorAction SilentlyContinue
+                if ($content) {
+                    foreach ($m in $placeholderRe.Matches($content)) { $referenced[$m.Groups[1].Value] = $true }
+                }
+            }
+            $kept = @{}
+            foreach ($prop in $phData.placeholders.PSObject.Properties) {
+                if ($referenced.ContainsKey($prop.Name)) { $kept[$prop.Name] = $prop.Value }
+            }
+            if ($kept.Count -ne $phData.placeholders.PSObject.Properties.Count) {
+                $pruned = @{ schema_version = $phData.schema_version; placeholders = $kept }
+                [System.IO.File]::WriteAllText($phPath, ($pruned | ConvertTo-Json -Depth 5), (New-Object System.Text.UTF8Encoding $true))
+                Write-Host "==> scripts/placeholders.json 已裁剪（仅保留替换后仍被引用的条目）" -ForegroundColor Green
+            }
+        }
+    }
+}
 
 # ----------------------------------------------------------------------------
 # 6. 报告未替换占位符

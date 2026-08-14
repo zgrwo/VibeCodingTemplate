@@ -85,6 +85,9 @@
 - 函数计数、模块计数等数字**仅在 api-reference.md 中维护**
 - 其他文档如需引用数字，使用"见 api-reference"链接，不硬编码数字
 - 若必须硬编码（如 README 概述），则 api-reference 变更时必须同步
+- **版本号 SSOT**：`.release-please-manifest.json` 根版本、`pyproject.toml` 的 `[project] version`、
+  `CHANGELOG.md` 最新发布版本三者必须一致（发版由 release-please 自动维护；
+  `scripts/verify-docs.py` 语义检查强制，防 release-type 不管理语言版本文件时漂移）
 - **手册关键数值**（effect size/阈值/均值等）用 CLAIM 标记（`<!-- CLAIM:NAME -->值<!-- /CLAIM:NAME -->`）圈定，
   `scripts/verify-manual.py` 的 `manual_check()` 实跑比对（防文档数字漂移；语法见 user-manual.md）
 

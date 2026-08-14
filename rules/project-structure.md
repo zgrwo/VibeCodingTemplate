@@ -66,7 +66,7 @@
 │   ├── init-project.ps1          # 从模板初始化新项目（Windows PowerShell）
 │   ├── init-project.py           # 从模板初始化新项目（跨平台 Python）
 │   ├── test-template.ps1         # 模板完整性自测（init → verify 三件套，CI template-self-test 调用）
-│   ├── crossval/                 # 交叉验证目录（按需创建，参考 examples/scripts/crossval/；verify-manual.py 自动发现）
+│   ├── crossval/                 # 交叉验证目录（按需创建；verify-manual.py 自动发现 scripts/crossval/ 与 examples/scripts/crossval/）
 │   └── ...
 │
 ├── templates/                    # 模块脚手架

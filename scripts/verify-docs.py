@@ -20,6 +20,7 @@ verify-docs.py — 文档一致性验证
 """
 import argparse
 import contextlib
+import json
 import re
 import sys
 from pathlib import Path
@@ -473,6 +474,54 @@ def check_semantic_consistency() -> list[str]:
     return problems
 
 
+def check_version_consistency() -> list[str]:
+    """版本号 SSOT 一致性：.release-please-manifest.json 根版本 == pyproject.toml [project] version == CHANGELOG 最新发布版本。
+
+    来源（2026-08 审查 P4）：release-please 只自动维护 manifest/CHANGELOG/tag，语言版本文件
+    （pyproject.toml）是否被自动管理取决于 release-type——若配置不当，pyproject 版本会与
+    已发布版本脱节（曾出现 manifest 0.1.2 vs pyproject 0.1.0），且无门禁拦截。
+    非 Python 项目（无 pyproject.toml）或未接入 release-please（无 manifest）时不强制。
+    """
+    problems: list[str] = []
+    manifest_path = ROOT / ".release-please-manifest.json"
+    pyproject_path = ROOT / "pyproject.toml"
+    if not manifest_path.exists() or not pyproject_path.exists():
+        return problems
+    try:
+        manifest_version = str(
+            json.loads(manifest_path.read_text(encoding="utf-8")).get(".", "")
+        ).strip()
+    except (json.JSONDecodeError, OSError):
+        manifest_version = ""
+    m = re.search(
+        r'^version\s*=\s*["\']([^"\']+)["\']',
+        pyproject_path.read_text(encoding="utf-8"),
+        re.MULTILINE,
+    )
+    pyproject_version = m.group(1).strip() if m else ""
+    if manifest_version and pyproject_version and manifest_version != pyproject_version:
+        problems.append(
+            f"[版本漂移] .release-please-manifest.json 版本 {manifest_version} != "
+            f"pyproject.toml 版本 {pyproject_version}"
+            "（发版后需同步；或确认 release-please release-type 能自动管理 pyproject.toml）"
+        )
+    # CHANGELOG 最新已发布版本（首个 `## [x.y.z]` 段，Unreleased 不匹配数字版本）
+    changelog_path = ROOT / "CHANGELOG.md"
+    if changelog_path.exists():
+        m2 = re.search(
+            r"^##\s*\[(\d+\.\d+\.\d+)\]",
+            changelog_path.read_text(encoding="utf-8", errors="replace"),
+            re.MULTILINE,
+        )
+        changelog_version = m2.group(1) if m2 else ""
+        if manifest_version and changelog_version and manifest_version != changelog_version:
+            problems.append(
+                f"[版本漂移] .release-please-manifest.json {manifest_version} != "
+                f"CHANGELOG 最新发布版本 {changelog_version}"
+            )
+    return problems
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="文档一致性验证")
     parser.add_argument("--strict", action="store_true", help="含未声明文件检查")
@@ -484,6 +533,7 @@ def main() -> int:
         + check_dirs()
         + check_agents_tree()
         + check_semantic_consistency()
+        + check_version_consistency()
         + check_subdir_undeclared(args.strict)
         + check_undeclared(args.strict)
     )

@@ -35,7 +35,8 @@ jobs:
       - name: Detect template mode
         id: detect
         run: |
-          if grep -rq '{{PROJECT_NAME}}' AGENTS.md 2>/dev/null; then
+          # 防 init 替换（同 ci.yml，P0）：grep BRE 中 \{ 转义字面 {，检测未替换的 PROJECT_NAME 双花括号字面量
+          if grep -rq '\{\{PROJECT_NAME\}\}' AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"

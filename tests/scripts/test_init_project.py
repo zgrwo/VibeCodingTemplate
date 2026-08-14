@@ -7,9 +7,11 @@
   - copy_template()：跳过 .git/.coverage、清理缓存目录
   - replace_placeholders()：字节级替换保留 CRLF、跳过 binary 后缀
   - build_replacements()：全量占位符生成
+  - _reset_changelog() / _reset_release_manifest()：新项目初始态重置（CHANGELOG / 版本基线）
   - _strip_template_only_blocks() / strip_template_only_sections()：TEMPLATE_ONLY 段落裁剪
 """
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -61,6 +63,7 @@ class TestScanPlaceholders:
 class TestGetPlaceholderValue:
     MANIFEST = {
         "CORE_A": {"category": "core", "prompt": "?", "default": "dflt"},
+        "CORE_NODEF": {"category": "core", "prompt": "?"},
         "AUTO_D": {"category": "auto", "rule": "year"},
         "CONT": {"category": "content"},
         "ONLY_DEFAULT": {"category": "core", "default": "def"},
@@ -79,6 +82,21 @@ class TestGetPlaceholderValue:
 
     def test_content_falls_back_to_lower(self):
         assert ip.get_placeholder_value("CONT", self.MANIFEST, {}, False) == "cont"
+
+    def test_core_no_default_noninteractive_fails(self):
+        """非交互 + core 无默认值 → fail-fast（镜像 init-project.ps1，P5 修复）。
+
+        防止 CI 命令占位符（BUILD_CMD/TEST_CMD 等）被静默替换成占位符名小写（build_cmd），
+        生成损坏的 .github/workflows/ci.yml。
+        """
+        with pytest.raises(SystemExit):
+            ip.get_placeholder_value("CORE_NODEF", self.MANIFEST, {}, False)
+
+    def test_core_no_default_interactive_enter_falls_back(self, monkeypatch):
+        """交互模式 Enter 空值且无默认值 → 回退占位符名小写（与 ps1 对齐）。"""
+        monkeypatch.setattr("builtins.input", lambda *a, **k: "")
+        got = ip.get_placeholder_value("CORE_NODEF", self.MANIFEST, {}, True)
+        assert got == "core_nodef"
 
 
 class TestCopyTemplate:
@@ -155,9 +173,11 @@ class TestBuildReplacements:
     def test_returns_mapping_for_registered(self, tmp_path):
         (tmp_path / "f.txt").write_text("{{PROJECT_NAME}} {{CONT}}", encoding="utf-8")
         repl, undeclared = ip.build_replacements(
-            tmp_path, {"PROJECT_NAME": {"category": "core", "test": "App"}}, {}, False
+            tmp_path,
+            {"PROJECT_NAME": {"category": "core", "default": "App"}},
+            {}, False,
         )
-        assert repl["PROJECT_NAME"] == "project_name"  # 无默认值 core → name.lower()
+        assert repl["PROJECT_NAME"] == "App"  # core 有默认值 → default
         # CONT 未登记 → 归入 undeclared，保留原样（防元占位符污染）
         assert "CONT" not in repl
         assert "CONT" in undeclared
@@ -166,7 +186,7 @@ class TestBuildReplacements:
         """未登记占位符必须保留原样：init 生成的文档中 {{UPPER}}/{{X}} 不被污染。"""
         (tmp_path / "f.txt").write_text("{{UPPER}} {{PROJECT_NAME}}", encoding="utf-8")
         repl, undeclared = ip.build_replacements(
-            tmp_path, {"PROJECT_NAME": {"category": "core", "test": "App"}}, {}, False
+            tmp_path, {"PROJECT_NAME": {"category": "core", "default": "App"}}, {}, False
         )
         assert "UPPER" in undeclared
         assert "UPPER" not in repl
@@ -174,6 +194,77 @@ class TestBuildReplacements:
         # UPPER 保留原样且不计入 remaining；PROJECT_NAME 被替换
         assert remaining == 0
         assert "{{UPPER}}" in (tmp_path / "f.txt").read_text(encoding="utf-8")
+
+
+class TestResetReleaseManifest:
+    """.release-please-manifest.json 重置：新项目不得携带模板自身发布版本（P4 修复）。"""
+
+    def test_resets_to_version_value(self, tmp_path):
+        f = tmp_path / ".release-please-manifest.json"
+        f.write_text('{".": "0.1.2"}', encoding="utf-8")
+        ip._reset_release_manifest(tmp_path, {"VERSION": "0.1.0"})
+        assert json.loads(f.read_text(encoding="utf-8")) == {".": "0.1.0"}
+
+    def test_missing_manifest_noop(self, tmp_path):
+        ip._reset_release_manifest(tmp_path, {"VERSION": "0.1.0"})
+        assert not (tmp_path / ".release-please-manifest.json").exists()
+
+    def test_missing_version_falls_back(self, tmp_path):
+        f = tmp_path / ".release-please-manifest.json"
+        f.write_text('{".": "0.1.2"}', encoding="utf-8")
+        ip._reset_release_manifest(tmp_path, {})
+        assert json.loads(f.read_text(encoding="utf-8")) == {".": "0.1.0"}
+
+
+class TestResetPyprojectVersion:
+    """复制进新项目的根 pyproject.toml 版本号重置（P4 修复：防与 manifest 漂移）。"""
+
+    def test_resets_version(self, tmp_path):
+        (tmp_path / "pyproject.toml").write_text(
+            '[project]\nname = "x"\nversion = "0.1.2"\n', encoding="utf-8"
+        )
+        ip._reset_pyproject_version(tmp_path, {"VERSION": "0.1.0"})
+        text = (tmp_path / "pyproject.toml").read_text(encoding="utf-8")
+        assert 'version = "0.1.0"' in text
+        assert 'version = "0.1.2"' not in text
+
+    def test_missing_file_noop(self, tmp_path):
+        ip._reset_pyproject_version(tmp_path, {"VERSION": "0.1.0"})
+        assert not (tmp_path / "pyproject.toml").exists()
+
+
+class TestPrunePlaceholderManifest:
+    """生成项目 placeholders.json 裁剪：防死条目门禁 FAIL（审查修复）。"""
+
+    def test_prunes_replaced_entries(self, tmp_path):
+        (tmp_path / "scripts").mkdir()
+        (tmp_path / "scripts" / "placeholders.json").write_text(
+            '{"schema_version": 1, "placeholders": {"YEAR": {"category": "auto"}, "KEEP": {"category": "core"}}}',
+            encoding="utf-8",
+        )
+        (tmp_path / "f.txt").write_text("{{KEEP}} 保留引用", encoding="utf-8")
+        ip._prune_placeholder_manifest(tmp_path)
+        data = json.loads(
+            (tmp_path / "scripts" / "placeholders.json").read_text(encoding="utf-8")
+        )
+        assert data["placeholders"] == {"KEEP": {"category": "core"}}
+
+    def test_all_replaced_prunes_to_empty(self, tmp_path):
+        (tmp_path / "scripts").mkdir()
+        (tmp_path / "scripts" / "placeholders.json").write_text(
+            '{"schema_version": 1, "placeholders": {"YEAR": {"category": "auto"}}}',
+            encoding="utf-8",
+        )
+        (tmp_path / "f.txt").write_text("无占位符残留", encoding="utf-8")
+        ip._prune_placeholder_manifest(tmp_path)
+        data = json.loads(
+            (tmp_path / "scripts" / "placeholders.json").read_text(encoding="utf-8")
+        )
+        assert data["placeholders"] == {}
+
+    def test_missing_manifest_noop(self, tmp_path):
+        ip._prune_placeholder_manifest(tmp_path)
+        assert not (tmp_path / "scripts" / "placeholders.json").exists()
 
 
 class TestStripTemplateOnly:
@@ -296,6 +387,12 @@ class TestMainCLI:
         target = tmp_path / "proj"
         target.mkdir()
         (target / "existing.txt").write_text("x", encoding="utf-8")
+        # P5 修复后：非交互 + 无 --values 时 core 无默认值占位符（BUILD_CMD 等）会 fail-fast，
+        # 此处桩掉取值函数，聚焦 --force 覆盖语义（真实取值的 fail-fast 见 TestGetPlaceholderValue）
+        monkeypatch.setattr(
+            ip, "get_placeholder_value",
+            lambda name, manifest, values, interactive: name.lower(),
+        )
         code, _ = self._run(monkeypatch, [str(target), "--non-interactive", "--force"])
         assert code == 0
         assert (target / "AGENTS.md").exists()

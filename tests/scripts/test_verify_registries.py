@@ -60,13 +60,14 @@ class TestCollectKeys:
         assert keys == {"FOOX", "BAR"}
 
     def test_placeholder_scan_excludes_teaching_tokens(self, tmp_path):
-        # 教学转义 token（A/FOO/NAME/X 等）不计入已使用集合，避免恒定 WARN 噪声（P3-2）
+        # 教学转义 token（A/B/FOO/NAME/X 等）不计入已使用集合，避免恒定 WARN 噪声（P3-2）
         f = tmp_path / "sample.md"
-        f.write_text("参考 {{FOO}}、{{NAME}}、{{BAR}} 三个占位符", encoding="utf-8")
+        f.write_text("参考 {{FOO}}、{{NAME}}、{{B}}、{{BAR}} 四个占位符", encoding="utf-8")
         keys, errs = vr.collect_keys({"type": "placeholder_scan", "roots": [tmp_path.as_posix()]})
         assert errs == []
         assert "FOO" not in keys
         assert "NAME" not in keys
+        assert "B" not in keys  # B 来自 init-project.ps1 扫描注释（P3 补录，防恒定 WARN）
         assert keys == {"BAR"}
 
     def test_unknown_type(self):

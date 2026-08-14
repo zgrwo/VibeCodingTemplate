@@ -67,7 +67,8 @@ jobs:
       - name: 检测是否为模板仓库自身
         id: detect
         run: |
-          if grep -rq '{{PROJECT_NAME}}' AGENTS.md 2>/dev/null; then
+          # 防 init 替换（P0）：grep BRE 中 \{ 转义字面 {，检测未替换的 PROJECT_NAME 双花括号字面量
+          if grep -rq '\{\{PROJECT_NAME\}\}' AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
@@ -119,7 +120,8 @@ jobs:
       - name: 检测是否为模板仓库自身
         id: detect
         run: |
-          if grep -rq '{{PROJECT_NAME}}' AGENTS.md 2>/dev/null; then
+          # 防 init 替换（P0）：grep BRE 中 \{ 转义字面 {，检测未替换的 PROJECT_NAME 双花括号字面量
+          if grep -rq '\{\{PROJECT_NAME\}\}' AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
@@ -144,7 +146,8 @@ jobs:
       - name: 检测是否为模板仓库自身
         id: detect
         run: |
-          if grep -rq '{{PROJECT_NAME}}' AGENTS.md 2>/dev/null; then
+          # 防 init 替换（P0）：grep BRE 中 \{ 转义字面 {，检测未替换的 PROJECT_NAME 双花括号字面量
+          if grep -rq '\{\{PROJECT_NAME\}\}' AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
@@ -172,6 +175,11 @@ jobs:
         # 开发者无法区分环境问题与质量问题，故须在此显式安装（显式 step 而非塞进占位符，便于排障）。
         if: steps.detect.outputs.is_template != 'true'
         run: python -m pip install -e ".[dev]"
+      - name: 安装示例 CrossVal 依赖（模板模式）
+        # 模板仓库自身的 verify-manual.py 会执行 examples/scripts/crossval/StatsCrossVal.py
+        # （numpy 独立参考实现）；新项目（非模板）由 .[dev] 的 numpy 运行时依赖覆盖。
+        if: steps.detect.outputs.is_template == 'true'
+        run: python -m pip install numpy
       - name: 代码风格
         # Python: ruff check src/ scripts/
         # C#:    dotnet format --verify-no-changes
@@ -189,7 +197,7 @@ jobs:
           {{COVERAGE_CMD}}
 
   # ============ template-self-test：模板仓库自测 ============
-  # 仅模板仓库运行（检测到 AGENTS.md 中未替换的 '{{' 占位符即视为模板）。
+  # 仅模板仓库运行（AGENTS.md 中残留未替换的核心占位符即视为模板）。
   # 新项目初始化替换占位符后由 detect 门控直接跳过整个 job（不启动 runner，省 2 runner-minutes），无需删除。
   detect:
     name: Detect Template Mode
@@ -208,11 +216,14 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
+      - name: 安装验证依赖（verify-manual 执行示例 CrossVal 需 numpy）
+        run: python -m pip install numpy
       - name: 检测是否为模板仓库自身（存在未替换占位符）
         id: detect
         shell: bash
         run: |
-          if grep -rq '{{PROJECT_NAME}}' AGENTS.md 2>/dev/null; then
+          # 防 init 替换（P0）：grep BRE 中 \{ 转义字面 {，检测未替换的 PROJECT_NAME 双花括号字面量
+          if grep -rq '\{\{PROJECT_NAME\}\}' AGENTS.md 2>/dev/null; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"

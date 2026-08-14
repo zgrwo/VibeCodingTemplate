@@ -4,8 +4,13 @@ verify-manual.py — 手册一致性验证 + CrossVal 执行器
 
 职责：
   1. 静态检查：自校验模式 check(X, X)、示例代码块语言标注、未闭合代码块
-  2. 数值比对（可选）：执行 scripts/crossval/*.py（独立实现 vs 被测实现）
+  2. 数值比对（可选）：执行 crossval 脚本（独立实现 vs 被测实现）
   3. 提供 cross_check() / check() / section() 辅助 API，供 CrossVal 脚本 import
+
+crossval 脚本发现目录（两处均自动发现并执行）：
+  - scripts/crossval/            —— 项目自身的交叉验证脚本（新项目按需创建）
+  - examples/scripts/crossval/   —— 模板自带示例 CrossVal（模板仓库自举闭环验证，
+                                    初始化时随 examples/ 复制进新项目；删除 examples/ 后自动 SKIP）
 
 规则（防错三原则之闭环验证）：
   - 禁止自校验 check(name, X, X) —— 永远 PASS，无验证价值
@@ -31,7 +36,11 @@ with contextlib.suppress(AttributeError, ValueError):
 
 ROOT = Path(__file__).resolve().parent.parent
 MANUAL = ROOT / "rules" / "user-manual.md"
-CROSSVAL_DIR = ROOT / "scripts" / "crossval"
+# crossval 脚本发现目录：项目自身 scripts/crossval/ + 模板自带示例 examples/scripts/crossval/
+CROSSVAL_DIRS = [
+    ROOT / "scripts" / "crossval",
+    ROOT / "examples" / "scripts" / "crossval",
+]
 
 # 自校验模式：check(name, X, X) —— 永远 PASS，无验证价值。
 # 操作数用 [^\s,]+ 而非 \w+：须覆盖 self.mean / obj.attr / d["k"] / mean(...)
@@ -231,15 +240,16 @@ def manual_check(name: str, actual: float | None, tol: float = 1e-10) -> None:
 
 
 def run_crossval() -> bool:
-    """执行 scripts/crossval/ 下所有 .py 脚本；目录缺失时 SKIP。"""
+    """执行全部 crossval 发现目录下的 .py 脚本；无任何脚本时 SKIP。"""
     global _PASS, _FAIL
-    if not CROSSVAL_DIR.exists():
-        print("[SKIP] 未发现 scripts/crossval/，数值比对待项目初始化实现"
-              "（将 {Name}CrossVal 模板放入该目录后自动执行）")
+    dirs = [d for d in CROSSVAL_DIRS if d.is_dir()]
+    if not dirs:
+        print("[SKIP] 未发现 scripts/crossval/ 或 examples/scripts/crossval/，数值比对待项目初始化实现"
+              "（将 {Name}CrossVal 模板放入 scripts/crossval/ 后自动执行）")
         return True
-    scripts = sorted(CROSSVAL_DIR.glob("*.py"))
+    scripts = sorted({s for d in dirs for s in d.glob("*.py")})
     if not scripts:
-        print("[SKIP] scripts/crossval/ 为空，数值比对待项目初始化实现")
+        print("[SKIP] crossval 目录为空，数值比对待项目初始化实现")
         return True
     # CrossVal 脚本通过 `from verify_manual import check, cross_check, section` 使用辅助 API
     sys.path.insert(0, str(ROOT / "scripts"))
@@ -276,8 +286,9 @@ def check_self_validation() -> list[str]:
     targets: list[Path] = []
     if MANUAL.exists():
         targets.append(MANUAL)
-    if CROSSVAL_DIR.exists():
-        targets.extend(sorted(CROSSVAL_DIR.glob("*.py")))
+    for d in CROSSVAL_DIRS:
+        if d.is_dir():
+            targets.extend(sorted(d.glob("*.py")))
     for path in targets:
         for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
             # 跳过注释/docstring 行：文档中的反例教学文字

@@ -92,7 +92,9 @@ def check_placeholders() -> tuple[bool, str]:
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
         return False, f"placeholders.json 解析失败: {e}"
     count = len(data.get("placeholders", {}))
-    return count > 0, f"placeholders.json 可解析（{count} 个占位符）"
+    # 计数为 0 也视为就绪：init 会裁剪生成项目的 manifest（占位符替换后仅剩未登记教学 token，
+    # 死条目门禁要求 manifest 只声明仍被引用的条目，2026-08 审查修复）
+    return True, f"placeholders.json 可解析（{count} 个占位符）"
 
 
 def main(argv: list[str] | None = None) -> int:

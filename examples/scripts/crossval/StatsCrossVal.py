@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """StatsCrossVal.py — 统计模块交叉验证
 
-使用方式：
-  复制到 scripts/crossval/StatsCrossVal.py
-  由 scripts/verify-manual.py 自动发现并执行
+使用方式（两处自动发现，无需手动执行）：
+  - 模板仓库：位于 examples/scripts/crossval/，由 scripts/verify-manual.py 自动发现并执行
+    （模板自举闭环验证：verify-manual.py 同时扫描 scripts/crossval/ 与 examples/scripts/crossval/）
+  - 新项目：复制到 scripts/crossval/StatsCrossVal.py，由 scripts/verify-manual.py 自动发现并执行
 
 原则（防错三原则之闭环验证）：
   - 禁止自校验：check(name, X, Y) 中 X 与 Y 相同则永远 PASS，无验证价值

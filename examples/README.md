@@ -3,6 +3,12 @@
 > 本目录演示使用 VibeCodingTemplate 初始化后的项目长什么样。
 > 一个完整的"统计均值计算"模块，展示 Core 多语言实现（Python/TypeScript/Go/Rust）+ CrossVal + 测试的完整实践。
 
+> **初始化去向**：`init-project` 会把本目录整体复制进新项目（参考用途，不需要可删除；
+> 删除后请同步 `rules/project-structure.md` 与 `AGENTS.md` 目录树）。
+> **自举闭环验证**：模板仓库自身的 `scripts/verify-manual.py` 自动发现并执行
+> `examples/scripts/crossval/StatsCrossVal.py`（numpy 独立参考实现比对），
+> 确保示例 CrossVal 不是死代码。
+
 ## 目录结构
 
 ```
