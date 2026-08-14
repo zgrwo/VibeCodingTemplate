@@ -20,12 +20,14 @@
 | `NewModule/{Name}Core.test.ts.template` | 单元测试（正常/边界/null/NaN） | TypeScript (vitest) |
 | `NewModule/{Name}Core.go.template` | 核心逻辑（哨兵值 NaN + error 包装 + 零 panic） | Go |
 | `NewModule/{Name}Core_test.go.template` | 单元测试（table-driven + 0 有效值 + NaN 哨兵） | Go (testing) |
+| `NewModule/{Name}Core.rs.template` | 核心逻辑（哨兵值 NaN + 零 panic + 内联 #[cfg(test)] 测试） | Rust |
 | `language/pyproject.toml.template` | Python 项目构建配置 | Python |
 | `language/tsconfig.json.template` | TypeScript 项目构建配置（strict 模式） | TypeScript |
 | `language/Directory.Build.props.template` | .NET 统一构建属性 | .NET |
 | `language/nuget.config.template` | NuGet 源配置 | .NET |
 | `language/{Name}.Tests.csproj.template` | .NET 测试项目（xUnit） | .NET |
 | `language/go.mod.template` | Go 模块定义 | Go |
+| `language/Cargo.toml.template` | Rust crate 定义 | Rust |
 | `language/Dockerfile.template` | 通用容器化模板（multi-stage, Python/Node/.NET） | Docker |
 | `language/docker-compose.yml.template` | 开发环境编排（含健康检查） | Docker Compose |
 | `language/offline-setup.py.template` | 离线安装工具（零依赖，含 `--print-cmd` 干跑安全门） | Python |
@@ -56,7 +58,7 @@
 |--------|------|------|
 | `{Name}` | 模块名 PascalCase | `Weather` |
 | `{Module}` | 所在模块目录 | `Analytics` |
-| `{module}` | Go 包名（小写，源码 `package` 声明用） | `stats` |
+| `{module}` | Go 包名 / Rust crate 名（小写，源码 `package` 声明 / Cargo.toml `name` 用） | `stats` |
 | `{module_path}` | Go 模块路径（go.mod `module` 指令用） | `github.com/org/repo` |
 | `{PREFIX}` | UDF 前缀（大写） | `WEATHER` |
 | `{N}` | CrossVal 示例用例序号（section 标题） | `2` |
@@ -119,6 +121,16 @@
 4. 运行 go test ./src/{Module}/... -v
 5. 数值结果可加 CrossVal（与 numpy/scipy 独立比对，见 Python 流程）
 6. 容器化：复制 language/Dockerfile.template，取消注释 Go 对应阶段
+```
+
+**Rust**
+```
+1. 复制 {Name}Core.rs 到 src/{Module}/；复制 language/Cargo.toml.template 到仓库根为 Cargo.toml
+2. 替换 {Name}/{module}（crate 名 snake_case）；如尚未有则 cargo init --lib
+3. Core 遵循哨兵值模式（NaN 表示无效，0 是有效值）与零 panic（见 skills/rust-SKILL.md）
+4. 运行 cargo test（单元测试在 #[cfg(test)] 内联模块，不同于 Go 的独立 _test.go）
+5. 数值结果可加 CrossVal（与 numpy/scipy 独立比对，见 Python 流程）
+6. 容器化：复制 language/Dockerfile.template，取消注释 Rust 对应阶段（或用 rust 官方镜像）
 ```
 
 **Monorepo（新增子项目）**

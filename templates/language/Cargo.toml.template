@@ -1,0 +1,25 @@
+# ============================================================================
+# Cargo.toml — Rust crate 定义
+# 使用方式：复制到项目根目录，替换 {module} 为 crate 名（snake_case，如 stats）
+# 目标位置：Cargo.toml（项目根目录）
+# 初始化：cargo init --lib（或复制本文件后 cargo build）
+# 注意：Rust crate 名用 snake_case {module}（与目录名 {Module} 大小写不同，
+#       替换时勿遗漏）。Rust 无「模块路径」概念（不同于 Go 的 module 路径），
+#       crate 名即包名，edition 用 2021（stable 稳定基线）。
+# ============================================================================
+
+[package]
+name = "{module}"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# 核心依赖（按需取消注释，或 cargo add <crate>）：
+# thiserror = "1"          # 结构化错误类型（库代码优先，避免手写 Display）
+# anyhow = "1"             # 应用层错误传播（库代码优先 thiserror）
+# serde = { version = "1", features = ["derive"] }  # 序列化
+
+[dev-dependencies]
+# 测试依赖（按需）：
+# proptest = "1"           # 属性测试（任意输入不 panic / 哨兵守卫成立）
+# approx = "0.5"           # 浮点近似断言（assert_relative_eq!）

@@ -1,0 +1,96 @@
+// ============================================================================
+// {Name}Core.rs — 核心层模块
+// 使用方式：将 {Name} 替换为模块名（PascalCase，如 Weather、Finance）
+// 目标位置：src/{Module}/{Name}Core.rs
+// 注意：核心层为纯逻辑实现，零外部框架依赖（可在无依赖环境独立单元测试）。
+//       Rust 单元测试惯例为同文件 #[cfg(test)] 模块（不同于 Go 的独立 _test.go）。
+// ============================================================================
+
+//! 核心计算模块：哨兵值模式（NaN 表示无效，0 是有效值）
+
+/// ComputeResult 类型别名（哨兵值模式：NaN 表示无效，0 是有效值）
+/// 在数值计算中，0 是有效值（均值=0、计数=0），必须用 NaN 表示"无效"
+pub type ComputeResult = f64;
+
+/// compute 计算数值入口。
+///
+/// 参数:
+///   - value: 输入值；NaN/Inf 返回 NaN（哨兵契约）
+///
+/// 返回:
+///   计算结果；无效输入返回 NaN（不 panic，不返回 Result）
+pub fn compute(value: f64) -> ComputeResult {
+    // 1. 哨兵守卫：NaN/Inf → NaN
+    if value.is_nan() || value.is_infinite() {
+        return f64::NAN;
+    }
+
+    // 2. 防御完整性：领域约束前置验证
+    // if value < 0.0 { return f64::NAN; }
+
+    // 3. 核心逻辑
+    let result = value * 2.0; // TODO: 替换为实际计算
+
+    // 4. 结果守卫：防止中间步骤产生 Inf/NaN
+    if result.is_infinite() || result.is_nan() {
+        return f64::NAN;
+    }
+
+    result
+}
+
+/// process 字符串处理入口。
+///
+/// 参数:
+///   - text: 输入文本；空串返回空串
+///
+/// 返回:
+///   处理结果
+pub fn process(text: &str) -> String {
+    // 哨兵契约：空串 → ""
+    if text.is_empty() {
+        return String::new();
+    }
+
+    // TODO: 实现处理逻辑
+    text.trim().to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_compute() {
+        // table-driven：0 是有效值，NaN/Inf 是哨兵
+        let cases: [(&str, f64, f64, bool); 6] = [
+            ("normal positive", 5.0, 10.0, false),
+            ("zero is valid", 0.0, 0.0, false), // 0 是有效值
+            ("normal negative", -3.0, -6.0, false),
+            ("NaN returns NaN", f64::NAN, f64::NAN, true),
+            ("+Inf returns NaN", f64::INFINITY, f64::NAN, true),
+            ("-Inf returns NaN", f64::NEG_INFINITY, f64::NAN, true),
+        ];
+        for (name, input, want, want_nan) in cases {
+            let got = compute(input);
+            if want_nan {
+                assert!(got.is_nan(), "{name}: compute({input}) = {got}, want NaN");
+            } else {
+                assert_eq!(got, want, "{name}");
+            }
+        }
+    }
+
+    #[test]
+    fn test_process() {
+        let cases: [(&str, &str, &str); 3] = [
+            ("normal", "  hello  ", "hello"),
+            ("empty is valid", "", ""), // 空串是有效输入
+            ("no trim needed", "hello", "hello"),
+        ];
+        for (name, input, want) in cases {
+            let got = process(input);
+            assert_eq!(got, want, "{name}");
+        }
+    }
+}

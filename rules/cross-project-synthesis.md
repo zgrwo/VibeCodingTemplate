@@ -100,14 +100,14 @@
 | NLog + AOP 审计 | 原型无审计需求 | Console/Debug 日志即可 |
 | 规格文档写未验证功能 | ERP/gRPC/审批流 | 仅写已验证功能 |
 
-**判断准则（YAGNI 四问）**：→ 见 [architecture-reviewer.md](../skills/architecture-reviewer.md)（唯一权威定义处）。
+**判断准则（YAGNI 四问）**：→ 见 [architecture-reviewer-SKILL.md](../skills/architecture-reviewer-SKILL.md)（唯一权威定义处）。
 **架构简化 ≠ 降低质量**：简化的是**未使用的复杂度**，保留的是**有实际价值的分离**（如 Engine 层纯计算独立于 Service 层，可独立测试）。
 
 ---
 
 ## 三、重构方法论（跨项目验证过）
 
-> 重构方法论由 5 个项目验证提炼（见第一节反模式案例）。**执行模板**用 [refactoring-plan.md](refactoring-plan.md)，**每 Phase 守卫**用 [refactoring-guardian.md](../skills/refactoring-guardian.md)。
+> 重构方法论由 5 个项目验证提炼（见第一节反模式案例）。**执行模板**用 [refactoring-plan.md](refactoring-plan.md)，**每 Phase 守卫**用 [refactoring-guardian-SKILL.md](../skills/refactoring-guardian-SKILL.md)。
 
 ### 1. Phase 0 审计模式（先测量再动手）
 

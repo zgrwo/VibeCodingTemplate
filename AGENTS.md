@@ -63,7 +63,7 @@
 | :--- | :--- | :--- |
 | `{{SCOPE_1}}` | `skills/{{SKILL_1}}` | `{{DESCRIPTION_1}}` |
 | `{{SCOPE_2}}` | `skills/{{SKILL_2}}` | `{{DESCRIPTION_2}}` |
-| 语言陷阱（按需） | `skills/csharp-SKILL.md` / `skills/python-SKILL.md` / `skills/vba-SKILL.md` / `skills/typescript-SKILL.md` / `skills/go-SKILL.md` | 对应语言的易错点与最佳实践 |
+| 语言陷阱（按需） | `skills/csharp-SKILL.md` / `skills/python-SKILL.md` / `skills/vba-SKILL.md` / `skills/typescript-SKILL.md` / `skills/go-SKILL.md` / `skills/rust-SKILL.md` | 对应语言的易错点与最佳实践 |
 | 工具陷阱（按需） | `rules/tooling-pitfalls.md` | Windows/PowerShell/git 脚本坑位 |
 
 > **执行方式**：直接 Read skill 文件。
@@ -76,9 +76,9 @@
 
 | 阶段 | Skill | 触发时机 |
 |------|-------|----------|
-| 决策前 | `skills/architecture-reviewer.md` | 新增组件/层级/依赖前 |
-| 执行中 | `skills/refactoring-guardian.md` | 每个 Phase 开始/结束时 |
-| 执行后 | `skills/project-plan-review.md` | 里程碑复盘/规划评审时 |
+| 决策前 | `skills/architecture-reviewer-SKILL.md` | 新增组件/层级/依赖前 |
+| 执行中 | `skills/refactoring-guardian-SKILL.md` | 每个 Phase 开始/结束时 |
+| 执行后 | `skills/project-plan-review-SKILL.md` | 里程碑复盘/规划评审时 |
 
 ## 架构分层
 

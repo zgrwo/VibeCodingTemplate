@@ -3,7 +3,7 @@
 > 基于 {{COMMIT_COUNT}} commits 全量历史分析 | 目标：从"能用"到"卓越"
 > 状态：{计划中 | Phase N 执行中 | 已完成}
 > 方法论见 [cross-project-synthesis.md](cross-project-synthesis.md) 第三节「重构方法论」（Phase 0 审计 / 小步快跑 / 决策点）；
-> 每 Phase 守卫见 [refactoring-guardian.md](../skills/refactoring-guardian.md)；YAGNI 四问权威定义见 [architecture-reviewer.md](../skills/architecture-reviewer.md)。
+> 每 Phase 守卫见 [refactoring-guardian-SKILL.md](../skills/refactoring-guardian-SKILL.md)；YAGNI 四问权威定义见 [architecture-reviewer-SKILL.md](../skills/architecture-reviewer-SKILL.md)。
 
 ## 1. 现状评估
 
@@ -42,7 +42,7 @@
 | 0 | 审计与 baseline | 痛点清单 / 覆盖数据 / 回滚条件 | 全量测试通过率记录 | 1 周 |
 | 1 | {范围} | {交付物} | {门禁} | 1-2 周 |
 
-> 每 Phase 前后必须执行重构守卫（skills/refactoring-guardian.md）：全量测试对比，新增失败 = 回滚该 Phase。
+> 每 Phase 前后必须执行重构守卫（skills/refactoring-guardian-SKILL.md）：全量测试对比，新增失败 = 回滚该 Phase。
 
 ## 4. 决策点
 
@@ -56,7 +56,7 @@ Phase 0 审计结果 → 决策：
 
 ## 5. 反模式自检（YAGNI 四问）
 
-> 完整判定规则与退出路径评估见 [architecture-reviewer.md](../skills/architecture-reviewer.md)，此处为执行前快速自检。
+> 完整判定规则与退出路径评估见 [architecture-reviewer-SKILL.md](../skills/architecture-reviewer-SKILL.md)，此处为执行前快速自检。
 
 - [ ] 这个组件现在有实际调用者吗？→ 没有 = 删除
 - [ ] 这个功能有用户验证过吗？→ 没有 = 不写入规格

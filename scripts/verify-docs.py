@@ -59,9 +59,12 @@ DOC_FILES = [
     "skills/vba-SKILL.md",
     "skills/typescript-SKILL.md",
     "skills/go-SKILL.md",
-    "skills/architecture-reviewer.md",
-    "skills/refactoring-guardian.md",
-    "skills/project-plan-review.md",
+    "skills/rust-SKILL.md",
+    "skills/architecture-reviewer-SKILL.md",
+    "skills/refactoring-guardian-SKILL.md",
+    "skills/project-plan-review-SKILL.md",
+    # scripts/ 目录导航
+    "scripts/README.md",
     # templates/ 与 docs/ 与 examples/
     "templates/README.md",
     "templates/monorepo/README.md",

@@ -39,11 +39,13 @@
 │   ├── vba-SKILL.md              # VBA 编码陷阱与规范
 │   ├── typescript-SKILL.md       # TypeScript 编码陷阱与规范
 │   ├── go-SKILL.md               # Go 编码陷阱与规范
-│   ├── architecture-reviewer.md  # 架构审查专家（重构生命周期）
-│   ├── refactoring-guardian.md   # 重构守卫（每 Phase 前后）
-│   └── project-plan-review.md    # 规划评审专家
+│   ├── rust-SKILL.md             # Rust 编码陷阱与规范
+│   ├── architecture-reviewer-SKILL.md  # 架构审查专家（重构生命周期）
+│   ├── refactoring-guardian-SKILL.md   # 重构守卫（每 Phase 前后）
+│   └── project-plan-review-SKILL.md    # 规划评审专家
 │
 ├── scripts/                      # 构建/验证脚本
+│   ├── README.md                 # 目录导航索引（脚本职责速查，详见本文件）
 │   ├── placeholders.json         # 占位符清单（唯一真相源：分类/默认值/测试值）
 │   ├── registries.json           # 注册表一致性门禁配置（registry 键集对声明）
 │   ├── verify-registries.py      # 多注册表键集一致性门禁（防注册遗漏）
@@ -69,8 +71,8 @@
 │
 ├── templates/                    # 模块脚手架
 │   ├── README.md                 # 脚手架使用说明（占位符约定 + 多语言流程）
-│   ├── NewModule/                # 新增模块多语言模板（C#/Python/VBA/TypeScript/Go）
-│   ├── language/                 # 构建配置模板（pyproject/Build.props/nuget/tsconfig/go.mod/Dockerfile）
+│   ├── NewModule/                # 新增模块多语言模板（C#/Python/VBA/TypeScript/Go/Rust）
+│   ├── language/                 # 构建配置模板（pyproject/Build.props/nuget/tsconfig/go.mod/Cargo.toml/Dockerfile）
 │   └── monorepo/                 # Monorepo 子项目模板（子目录级 AGENTS.md）
 │
 ├── .github/                      # GitHub 协作
@@ -91,19 +93,20 @@
 │   └── architecture.md           # 架构设计（ADR 决策记录）
 │
 ├── build/                        # 构建配置（按需裁剪）
-│   └── ...
+│   └── README.md                 # 构建目录用途说明
 │
 ├── logs/                         # 运行日志（.gitignore 排除）
 │
 ├── examples/                     # 示例项目（最小可运行的完整实践）
 │   ├── README.md                 # 示例说明（Core 多语言实现 + CrossVal + 测试）
 │   ├── conftest.py               # pytest 路径引导（使根目录运行 examples/tests 可导入 src.stats）
-│   ├── src/stats/                # 统计模块示例（Python/TypeScript/Go）
-│   ├── tests/                    # 示例测试
+│   ├── Cargo.toml                # Rust 示例 crate 定义（cargo test 入口）
+│   ├── src/                      # 示例源码（lib.rs = Rust crate 根；stats/ = 多语言实现）
+│   ├── tests/                    # 示例测试（test_stats.rs = Rust 集成测试）
 │   └── scripts/crossval/         # 交叉验证参考实现
 │
 ├── tools/                        # 辅助工具/脚本
-│   └── ...
+│   └── README.md                 # 辅助工具目录用途说明
 │
 ├── Makefile                      # 跨平台验证入口（Linux/macOS: make verify）
 ├── pyproject.toml                # Python 项目配置（依赖、lint、格式化）

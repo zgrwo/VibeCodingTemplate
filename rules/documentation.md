@@ -31,8 +31,8 @@
 | **新贡献者** | README.md → AGENTS.md → context.md → CONTRIBUTING.md | 20 min |
 | **AI 编码助手** | AGENTS.md → 对应 skills/*.md → rules/falsy-pitfalls.md（Python） | 10 min |
 | **代码审查者** | AGENTS.md → 对应 skills/*.md | 15 min |
-| **架构决策者** | AGENTS.md → rules/project-structure.md → skills/architecture-reviewer.md → rules/adr-template.md | 20 min |
-| **重构执行者** | rules/refactoring-plan.md → skills/refactoring-guardian.md → AGENTS.md「防错三原则」 | 15 min |
+| **架构决策者** | AGENTS.md → rules/project-structure.md → skills/architecture-reviewer-SKILL.md → rules/adr-template.md | 20 min |
+| **重构执行者** | rules/refactoring-plan.md → skills/refactoring-guardian-SKILL.md → AGENTS.md「防错三原则」 | 15 min |
 
 > 跳过项：`rules/cross-project-synthesis.md`（方法论库，按需查阅，不必线性阅读）
 

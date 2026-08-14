@@ -122,7 +122,7 @@
 
 ## 治理体系说明
 
-本项目遵循 [Harmonization 治理规范](https://github.com/zgrwo/Harmonization) 模板体系：
+本项目遵循 AI 编码治理模板体系（项目宪法 + SSOT + 闭环验证）：
 
 > 文档职责分工与维护规则（唯一权威）：[rules/documentation.md](rules/documentation.md)。下表仅为导航速览。
 

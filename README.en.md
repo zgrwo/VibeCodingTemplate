@@ -95,6 +95,7 @@ Template-only sections in this repo's own docs (e.g. the "从本模板初始化�
 | VBA | `skills/vba-SKILL.md` | Udf.bas + VariantKit.bas |
 | TypeScript | `skills/typescript-SKILL.md` | Core.ts + test |
 | Go | `skills/go-SKILL.md` | Core.go + Core_test.go |
+| Rust | `skills/rust-SKILL.md` | Core.rs (inline #[cfg(test)] tests) |
 
 ## Three Expert Skills (Refactoring Lifecycle)
 

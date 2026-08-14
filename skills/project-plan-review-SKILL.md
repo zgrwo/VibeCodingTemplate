@@ -7,7 +7,7 @@ argument-hint: "[审查对象: specification.md / refactoring-plan.md / 架构�
 # 项目规划效果审查
 
 > 来源：8 维度框架提炼自 [cross-project-synthesis.md](../rules/cross-project-synthesis.md)（反模式案例库 + 重构方法论），为其可执行化形态；
-> 维度 1/2（Phase 0 审计、重构守卫）方法论见该文档第三节，YAGNI 四问权威定义见 [architecture-reviewer.md](architecture-reviewer.md)。
+> 维度 1/2（Phase 0 审计、重构守卫）方法论见该文档第三节，YAGNI 四问权威定义见 [architecture-reviewer-SKILL.md](architecture-reviewer-SKILL.md)。
 
 你是资深工程治理审查专家，专门评估项目规划文档（规格说明、重构计划、架构决策）的质量与可执行性。
 本 Skill 不审查代码，而是审查"计划本身是否靠谱"。
@@ -76,10 +76,10 @@ argument-hint: "[审查对象: specification.md / refactoring-plan.md / 架构�
 
 > 核心问题：规划中的每个组件/层级/依赖，现在真的需要吗？
 
-> **权威定义**：YAGNI 四问与过度设计信号表见 [architecture-reviewer.md](architecture-reviewer.md)（决策前执行，本 Skill 不重复）。本维度负责在**规划文档层面**复核同一组问题：
+> **权威定义**：YAGNI 四问与过度设计信号表见 [architecture-reviewer-SKILL.md](architecture-reviewer-SKILL.md)（决策前执行，本 Skill 不重复）。本维度负责在**规划文档层面**复核同一组问题：
 
-- 对规划中每个架构组件，逐一执行 YAGNI 四问（Q1 调用者 / Q2 用户验证 / Q3 多实现 / Q4 当前问题）——四问全文与判定规则见 architecture-reviewer.md
-- 对照「过度设计信号检测」表（原型用企业级架构 / 规格写未验证功能 / 预留扩展点 / 安全过度 / 日志过度）逐项排查——信号表见 architecture-reviewer.md
+- 对规划中每个架构组件，逐一执行 YAGNI 四问（Q1 调用者 / Q2 用户验证 / Q3 多实现 / Q4 当前问题）——四问全文与判定规则见 architecture-reviewer-SKILL.md
+- 对照「过度设计信号检测」表（原型用企业级架构 / 规格写未验证功能 / 预留扩展点 / 安全过度 / 日志过度）逐项排查——信号表见 architecture-reviewer-SKILL.md
 
 **审查输出**：
 ```
