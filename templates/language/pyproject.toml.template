@@ -50,7 +50,12 @@ report = []  # 按需补充（reportlab/openpyxl 等）
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["{{PACKAGE_NAME}}*"]
+# include 用 ["*"] 而非 ["{{PACKAGE_NAME}}*"]：NewModule 流程的模块直接放在 src/{Module}/，
+# 若只打包 {{PACKAGE_NAME}} 前缀目录，按模板新增的模块（如 src/Analytics/）不会被 pip 安装
+# （开发环境经 pythonpath=["src"] 可导入，打包后缺失——配置流断裂，2026-08 Max 审查修复）。
+include = ["*"]
+# src/ 为 namespace package 根（模板测试以 `from src.{Module}...` 导入），需显式启用
+namespaces = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

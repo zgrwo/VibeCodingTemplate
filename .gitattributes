@@ -16,6 +16,13 @@
 # 脚手架模板文件（源码级占位符，复制到 src/ 使用）→ LF
 *.template text eol=lf
 
+# TOML / 无扩展名根配置 → LF（2026-08 Max 审查补充，防 Windows autocrlf 漂移）
+*.toml text eol=lf
+.editorconfig text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+LICENSE text eol=lf
+
 # git hooks（无扩展名，POSIX 脚本，core.hooksPath）→ LF
 scripts/git-hooks/* text eol=lf
 

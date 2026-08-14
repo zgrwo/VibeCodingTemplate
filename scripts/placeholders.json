@@ -274,11 +274,6 @@
       "prompt": "",
       "test": "均值 > 0 表示数据整体偏高，< 0 表示偏低"
     },
-    "ISSUE_NUMBER": {
-      "category": "content",
-      "prompt": "",
-      "test": "1234"
-    },
     "KEYWORD_1": {
       "category": "content",
       "prompt": "",
@@ -330,11 +325,6 @@
       "category": "content",
       "prompt": "",
       "test": "文本处理模块"
-    },
-    "N": {
-      "category": "content",
-      "prompt": "",
-      "test": "5"
     },
     "ONE_LINE_DESCRIPTION": {
       "category": "content",

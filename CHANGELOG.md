@@ -60,7 +60,7 @@ All notable changes to VibeCodingTemplate.
 - `.gitattributes`：`*.ps1` 固定 eol=crlf（Windows 脚本跨平台一致性）（L4）
 - `README.md`：徽章启用说明（取消注释 + 替换 OWNER/REPO_NAME）（L5）
 - `scripts/falsy-audit.py`：覆盖属性访问（`x.y`）与 `return x or` 变体（L6）
-- `AGENTS.md` / `rules/refactoring-plan.md`：`{{N}}` 归位为 `{N}`（源码级待填标记，不参与 init 替换）（L7）
+- `AGENTS.md` / `rules/refactoring-plan.md`：双花括号 `N` 归位为单花括号 `{N}`（源码级待填标记，不参与 init 替换）（L7）
 - `scripts/verify-all.ps1`：`$LASTEXITCODE` 判断简化（L9）
 - `rules/cross-project-synthesis.md`：SSOT 收敛为案例库 + 索引（删除与 AGENTS.md 重复内容）
 - `rules/api-reference.md`：示例段职责收敛至 user-manual，错误值占位符化
@@ -96,7 +96,7 @@ All notable changes to VibeCodingTemplate.
 - 验证脚本输出 emoji 在 Windows GBK 控制台 UnicodeEncodeError（统一为 [OK]/[FAIL]/[SKIP] ASCII 标记）
 - `test-template.ps1` 无 BOM 导致 PowerShell 5.1 中文解析失败
 - `verify-docs.py` 在模板自身状态下必然失败（logs 目录声明冲突 + 占位符断链）
-- PR 模板 `{{ISSUE_NUMBER}}` 误用占位符体系（改为填写式）
+- PR 模板的 ISSUE_NUMBER 双花括号字面量误用占位符体系（改为填写式）
 - `ci.yml` 在模板仓库自身运行时占位符命令必然失败（三 job 加 is_template 检测跳过，模板仓库 CI 全绿）（H1）
 - `verify-docs.py` REQUIRED_DIRS 硬编码 10 目录，与规模裁剪冲突（改为从 project-structure.md 目录树解析）（H2）
 - `init-project.ps1` 元占位符污染：描述占位符机制的注释文字被自扫描替换（统一 `{{...}}` 形式排除）（H3）

@@ -13,11 +13,13 @@
         数值交叉验证：被测实现结果 vs 独立参考实现（scipy/numpy），两路独立计算
   - check(name, actual, expected)
         确定性结果比对：actual == expected（expected 必须是硬编码期望值）
+  - compare(name, actual, expected, tol=1e-10)
+        分类型比较器：数组/字典/字符串/标量统一比对（非标量结果用）
   - manual_check(name, actual, tol=1e-10)
         手册声称值实跑比对：actual vs user-manual.md 中 `<!-- CLAIM:NAME -->值<!-- /CLAIM:NAME -->`
         （防文档数字漂移：手册数值由真实运行验证，而非静态核对）
   - section(name, count)
-        模块测试分节标题
+        模块测试分节标题（count 为用例/断言总数）
 
 原则（防错三原则之闭环验证）：
   - 禁止自校验：check(name, X, Y) 中 X 与 Y 相同则永远 PASS，无验证价值（verify-manual.py 会静态拦截）
@@ -48,8 +50,10 @@ section("{PREFIX} — {模块说明}", {N})
 # 示例 2：确定性结果 UDF 验证（硬编码期望值）
 # check("{PREFIX}.PROCESS", "hello world".title(), "Hello World")
 
-# 示例 3：统计量 UDF 交叉验证（带容差）
-# cross_check("{PREFIX}.STAT", float(stats.describe([1, 2, 3, 4, 5]).variance), tol=1e-8)
+# 示例 3：统计量 UDF 交叉验证（带容差；3 参签名：name, actual, expected, tol）
+# cross_check("{PREFIX}.STAT",
+#             your_impl([1, 2, 3, 4, 5]),
+#             float(stats.describe([1, 2, 3, 4, 5]).variance), tol=1e-8)
 
 # 示例 4：手册声称值实跑比对（user-manual.md 需含
 #   `<!-- CLAIM:{PREFIX}.COMPUTE_EXAMPLE -->12.5<!-- /CLAIM:{PREFIX}.COMPUTE_EXAMPLE -->`）

@@ -242,6 +242,9 @@ def manual_check(name: str, actual: float | None, tol: float = 1e-10) -> None:
 def run_crossval() -> bool:
     """执行全部 crossval 发现目录下的 .py 脚本；无任何脚本时 SKIP。"""
     global _PASS, _FAIL
+    # 入口归零：防重复调用（测试/库复用）计数泄漏导致误判（可重入性，2026-08 Max 审查 P2 修复）
+    _PASS = 0
+    _FAIL = 0
     dirs = [d for d in CROSSVAL_DIRS if d.is_dir()]
     if not dirs:
         print("[SKIP] 未发现 scripts/crossval/ 或 examples/scripts/crossval/，"

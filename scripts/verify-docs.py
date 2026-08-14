@@ -7,6 +7,9 @@ verify-docs.py — 文档一致性验证
   2. 检查 project-structure.md 目录树中声明的顶层目录是否真实存在
   3. 校验 AGENTS.md 与 project-structure.md 的顶层目录集合一致（双目录树防漂移）
   4. 检查目录树中未声明的文件/目录（可选，--strict）
+  5. 语义交叉检查：裸 catch/except、文档 TODO/FIXME 残留、CI 脚本裸 input 调用（防门禁挂起）
+  6. 反引号路径检查：`skills/xxx.md` 等非 markdown 链接的失效引用
+  7. 版本一致性门禁：.release-please-manifest.json == pyproject.toml == CHANGELOG 最新发布版本
 
 规则：
   - 含 {{...}} 占位符的链接目标跳过（初始化替换前无法验证，打印提示）
@@ -458,11 +461,18 @@ def check_semantic_consistency() -> list[str]:
             text = p.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        # 仅匹配真正的调用：跳过注释行，且跳过含正则模式字面量的行（检查逻辑自身，
-        # 如本函数里 `input|raw_input` 是正则串而非调用）
+        # 仅匹配真正的调用：跳过注释/docstring 行（docstring 教学文字如「裸 input() 调用」
+        # 会误报），且跳过含正则模式字面量的行（检查逻辑自身，如本函数里 `input|raw_input`
+        # 是正则串而非调用）。2026-08 Max 审查加固：新增 docstring 状态跟踪。
+        in_docstring = False
         for line_no, line in enumerate(text.splitlines(), start=1):
             stripped = line.split("#", 1)[0]
             if "input|raw_input" in stripped or "re.search" in stripped:
+                continue
+            if '"""' in stripped or "'''" in stripped:
+                in_docstring = not in_docstring  # 单行 docstring 成对出现，两次翻转抵消
+                continue
+            if in_docstring:
                 continue
             call = re.search(r"(?:^|\s)(input|raw_input)\s*\(", stripped)
             if call:

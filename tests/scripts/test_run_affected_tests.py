@@ -8,6 +8,7 @@ test_run_affected_tests.py — run-affected-tests.py 自身测试套件
   - main --dry-run 退出码（有 src 变更→0，无→0）
 """
 import importlib.util
+import subprocess
 import sys
 from pathlib import Path
 
@@ -54,6 +55,39 @@ class TestFindTestsFor:
 
     def test_dunder_ignored(self, tmp_path):
         assert rat.find_tests_for("src/__init__.py", tmp_path) == []
+
+
+class TestGetChangedFiles:
+    """get_changed_files()：三路 git diff 合并/去重/异常路径（2026-08 Max 审查 P2 补测）。"""
+
+    @staticmethod
+    def _make_result(returncode, stdout):
+        return type("R", (), {"returncode": returncode, "stdout": stdout})()
+
+    def test_merges_three_diffs_and_dedups(self, monkeypatch):
+        results = [
+            self._make_result(0, "src/a.py\nscripts/b.py\n"),
+            self._make_result(0, "src/a.py\n"),      # 工作区改动与已提交重复
+            self._make_result(0, "scripts/c.py\n"),  # 已暂存
+        ]
+        monkeypatch.setattr(
+            rat.subprocess, "run", lambda cmd, **kw: results.pop(0)
+        )
+        assert rat.get_changed_files("HEAD~1") == [
+            "src/a.py", "scripts/b.py", "scripts/c.py",
+        ]
+
+    def test_timeout_returns_none(self, monkeypatch):
+        def boom(cmd, **kw):
+            raise subprocess.TimeoutExpired(cmd, 15)
+        monkeypatch.setattr(rat.subprocess, "run", boom)
+        assert rat.get_changed_files("HEAD~1") is None
+
+    def test_git_missing_returns_none(self, monkeypatch):
+        def boom(cmd, **kw):
+            raise FileNotFoundError()
+        monkeypatch.setattr(rat.subprocess, "run", boom)
+        assert rat.get_changed_files("HEAD~1") is None
 
 
 class TestMainCLI:

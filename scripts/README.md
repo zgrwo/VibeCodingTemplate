@@ -7,7 +7,7 @@
 | 分组 | 脚本 | 作用 |
 |------|------|------|
 | 全量验证 | `verify-all.py` / `verify-all.ps1` | 全量验证入口（Python 跨平台 / PowerShell Win） |
-| 文档一致性 | `verify-docs.py --strict` | 链接 / 目录树 / 语义一致性 |
+| 文档一致性 | `verify-docs.py --strict` | 链接 / 目录树 / 语义 / 版本一致性 |
 | 文档一致性 | `verify-manual.py` | 手册一致性 + CrossVal 执行器（禁自校验） |
 | 文档一致性 | `gen-doc-counts.py --check` | 文档计数注入（防数字漂移） |
 | 注册一致性 | `verify-registries.py` | 多注册表键集一致性（防注册遗漏） |

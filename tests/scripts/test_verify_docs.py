@@ -240,3 +240,63 @@ class TestVersionConsistency:
         (tmp_path / ".release-please-manifest.json").write_text('{".": "0.1.2"}', encoding="utf-8")
         monkeypatch.setattr(vd, "ROOT", tmp_path)
         assert vd.check_version_consistency() == []
+
+
+class TestHardGateDetection:
+    """CI 硬门禁的检出行为测试（2026-08 Max 审查 P2 补测：
+    此前断链/反引号/未声明仅弱断言 isinstance(list)）。"""
+
+    def _setup(self, tmp_path, monkeypatch, doc_name, doc_content):
+        (tmp_path / doc_name).write_text(doc_content, encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        monkeypatch.setattr(vd, "DOC_FILES", [doc_name])
+
+    def test_check_links_detects_broken_link(self, tmp_path, monkeypatch):
+        self._setup(tmp_path, monkeypatch, "README.md", "see [x](missing.md)")
+        problems = vd.check_links()
+        assert any("[断链]" in p and "missing.md" in p for p in problems)
+
+    def test_check_links_clean(self, tmp_path, monkeypatch):
+        (tmp_path / "target.md").write_text("", encoding="utf-8")
+        self._setup(tmp_path, monkeypatch, "README.md", "see [x](target.md)")
+        assert vd.check_links() == []
+
+    def test_check_backtick_paths_detects_dead_path(self, tmp_path, monkeypatch):
+        self._setup(tmp_path, monkeypatch, "README.md", "用 `scripts/nope.py` 做 X")
+        problems = vd.check_backtick_paths()
+        assert any("反引号路径失效" in p and "nope.py" in p for p in problems)
+
+    def test_check_backtick_paths_clean(self, tmp_path, monkeypatch):
+        scripts = tmp_path / "scripts"
+        scripts.mkdir()
+        (scripts / "ok.py").write_text("", encoding="utf-8")
+        self._setup(tmp_path, monkeypatch, "README.md", "用 `scripts/ok.py` 做 X")
+        assert vd.check_backtick_paths() == []
+
+    def test_check_undeclared_detects_root_file(self, tmp_path, monkeypatch):
+        (tmp_path / "extra.txt").write_text("", encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        monkeypatch.setattr(vd, "_parse_top_entries", lambda: ["src", "tests"])
+        problems = vd.check_undeclared(strict=True)
+        assert any("未声明文件" in p and "extra.txt" in p for p in problems)
+
+    def test_check_undeclared_non_strict_skips(self, tmp_path, monkeypatch):
+        (tmp_path / "extra.txt").write_text("", encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        monkeypatch.setattr(vd, "_parse_top_entries", lambda: ["src", "tests"])
+        assert vd.check_undeclared(strict=False) == []
+
+    def test_check_subdir_undeclared_detects_child(self, tmp_path, monkeypatch):
+        rules = tmp_path / "rules"
+        rules.mkdir()
+        (rules / "orphan.md").write_text("", encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        monkeypatch.setattr(vd, "_parse_nested_files", lambda: {"rules": {"known.md"}})
+        problems = vd.check_subdir_undeclared(strict=True)
+        assert any("未声明文件" in p and "orphan.md" in p for p in problems)
+
+    def test_check_dirs_detects_missing_declared(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        monkeypatch.setattr(vd, "_parse_top_dirs", lambda: ["src", "ghost"])
+        problems = vd.check_dirs()
+        assert any("[缺失目录]" in p and "ghost" in p for p in problems)

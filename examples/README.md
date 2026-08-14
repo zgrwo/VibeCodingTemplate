@@ -26,7 +26,7 @@ examples/
 │   ├── test_stats.py            # Python 单元测试（pytest，16 tests）
 │   ├── test_stats.test.ts       # TypeScript 单元测试（vitest，17 tests）
 │   ├── test_stats_test.go       # Go 单元测试（table-driven，16 tests）
-│   └── test_stats.rs            # Rust 集成测试（cargo test，15 tests）
+│   └── test_stats.rs            # Rust 集成测试（cargo test，2 个 #[test] 函数含 15 用例）
 └── scripts/
     └── crossval/
         └── StatsCrossVal.py     # 交叉验证
@@ -48,7 +48,7 @@ npx vitest run examples/tests/  # 17 tests（文件后缀 .test.ts 匹配 vitest
 cd examples && go mod init examples && go test ./tests/... -v  # 16 tests
 
 # Rust 示例（需 Rust edition 2021+）
-cd examples && cargo test  # 15 tests
+cd examples && cargo test  # 2 个 #[test] 函数（15 用例）
 ```
 
 ## 设计要点

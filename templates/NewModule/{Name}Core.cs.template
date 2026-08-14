@@ -20,12 +20,12 @@ namespace {{ROOT_NAMESPACE}}.{Module}
     internal static class {Name}Core
     {
         // ====================================================================
-        // 哨兵契约 (L1-L5)：
-        //   L1: 参数转换失败 → 返回类型零值（double→NaN, string→""）
-        //   L2: 除零 → NaN（不抛异常）
-        //   L3: 空集合 → NaN（不抛异常）
-        //   L4: 溢出 → NaN（不抛异常）
-        //   L5: 未知类型 Convert 失败 → throw
+        // 哨兵契约 (L1-L5，唯一定义见 rules/sentinel-contract.md)：
+        //   L1 守卫：显式检查 NaN/Inf/null（double.IsNaN / IsInfinity）
+        //   L2 哨兵：不可转换/无效数值 → 类型零值哨兵（double→NaN，不抛异常）
+        //   L3 外部信号：null/空集合 → NaN（无有效值，跳过该元素）
+        //   L4 已知取舍：0 与"无效"不可区分时文档化（0 是有效值，勿用 if(x) 判空）
+        //   L5 最终边界：未知类型 Convert 失败 → 显式 throw（由入口层兜底）
         // ====================================================================
 
         /// <summary>

@@ -61,7 +61,7 @@
 | `{module}` | Go 包名 / Rust crate 名（小写，源码 `package` 声明 / Cargo.toml `name` 用） | `stats` |
 | `{module_path}` | Go 模块路径（go.mod `module` 指令用） | `github.com/org/repo` |
 | `{PREFIX}` | UDF 前缀（大写） | `WEATHER` |
-| `{N}` | CrossVal 示例用例序号（section 标题） | `2` |
+| `{N}` | CrossVal 用例/断言总数（section(name, count) 的 count） | `2` |
 | `{模块说明}` | 模块功能一句话说明（CrossVal 头部） | `温度转换` |
 | `{{ROOT_NAMESPACE}}` | 项目根命名空间（初始化时确定） | `Acme.Stats` |
 

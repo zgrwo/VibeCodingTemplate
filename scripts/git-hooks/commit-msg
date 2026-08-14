@@ -8,6 +8,7 @@
 # 实现：转发给 scripts/validate-commit-msg.sh（校验规则的唯一真相源）
 # ============================================================================
 
-# 定位脚本目录（兼容 Windows Git Bash 与 Linux）
-script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+# 定位脚本目录（兼容 Windows Git Bash / Linux / macOS BSD：
+# 不用 dirname -- / cd -- 等 GNU 扩展，2026-08 Max 审查 P2 修复）
+script_dir=$(CDPATH= cd "$(dirname "$0")" && pwd)
 exec "$script_dir/../validate-commit-msg.sh" "$1"

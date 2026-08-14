@@ -72,4 +72,7 @@ USER 65532
 # Node:   CMD ["node", "dist/index.js"]
 # .NET:    CMD ["dotnet", "{{PACKAGE_NAME}}.dll"]
 # Go:     CMD ["./server"]
-CMD ["{{ENTRY_CMD}}"]
+# 默认 shell 形式：适合带 shell 的基础镜像（ENTRY_CMD 为多词命令，如 "python -m my_project"；
+# exec 数组形式会把整串当单个可执行文件而启动失败）。
+# Distroless 无 shell：请改用上方按语言示例的 exec 数组形式。
+CMD {{ENTRY_CMD}}

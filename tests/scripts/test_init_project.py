@@ -195,6 +195,21 @@ class TestBuildReplacements:
         assert remaining == 0
         assert "{{UPPER}}" in (tmp_path / "f.txt").read_text(encoding="utf-8")
 
+    def test_noninteractive_core_missing_aggregated(self, tmp_path):
+        """非交互缺多个 core 无默认值 → 一次性聚合报错并给出 --values 示例（P2 修复）。"""
+        (tmp_path / "f.txt").write_text("{{A1}} {{B1}} {{C1}}", encoding="utf-8")
+        manifest = {
+            "A1": {"category": "core"},
+            "B1": {"category": "core"},
+            "C1": {"category": "content"},
+        }
+        with pytest.raises(SystemExit) as ei:
+            ip.build_replacements(tmp_path, manifest, {}, False)
+        msg = str(ei.value)
+        assert "A1" in msg and "B1" in msg      # 两个缺失的 core 一次性列出
+        assert "C1" not in msg                  # content 类不参与 fail-fast
+        assert "--values" in msg
+
 
 class TestResetReleaseManifest:
     """.release-please-manifest.json 重置：新项目不得携带模板自身发布版本（P4 修复）。"""
@@ -389,10 +404,11 @@ class TestMainCLI:
         target.mkdir()
         (target / "existing.txt").write_text("x", encoding="utf-8")
         # P5 修复后：非交互 + 无 --values 时 core 无默认值占位符（BUILD_CMD 等）会 fail-fast，
-        # 此处桩掉取值函数，聚焦 --force 覆盖语义（真实取值的 fail-fast 见 TestGetPlaceholderValue）
+        # 此处桩掉占位符收集与替换（聚焦 --force 覆盖语义；
+        # fail-fast 见 TestGetPlaceholderValue / TestBuildReplacements）
+        monkeypatch.setattr(ip, "collect_placeholders", lambda target: set())
         monkeypatch.setattr(
-            ip, "get_placeholder_value",
-            lambda name, manifest, values, interactive: name.lower(),
+            ip, "replace_placeholders", lambda target, replacements, undeclared=None: (0, 0)
         )
         code, _ = self._run(monkeypatch, [str(target), "--non-interactive", "--force"])
         assert code == 0

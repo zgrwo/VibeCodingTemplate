@@ -57,7 +57,7 @@ python scripts/verify-all.py
 |--------|---------|------|
 | `scripts/verify-registries.py` | Multi-registry key-set consistency (prevent missed registration) | `make verify` / CI |
 | `scripts/gen-doc-counts.py --check` | Auto-inject document counts (prevent number drift) | `make verify` / CI |
-| `scripts/verify-docs.py --strict` | Link / directory-tree / semantic consistency | `make verify` / CI |
+| `scripts/verify-docs.py --strict` | Link / directory-tree / semantic / version consistency | `make verify` / CI |
 | `scripts/verify-manual.py` | Manual consistency + CrossVal executor | `make verify` / CI |
 | `scripts/test-quality-guard.py` | Test quality guard (weak asserts / missing tests / naming) | `make verify` / CI |
 | `scripts/doctor.py` | Environment readiness diagnostic (first step for new developers) | `make doctor` |
@@ -106,6 +106,21 @@ Refactoring Guardian (during execution) → Did we introduce regressions?
         ↓
 Project Plan Reviewer (post-execution) → Did the plan work?
 ```
+
+## Governance System
+
+> Document ownership & maintenance rules (single authority): `rules/documentation.md`. This table is a quick navigation index.
+
+| File | Audience | Responsibility |
+|------|----------|----------------|
+| `AGENTS.md` | AI coding assistants | Project constitution — architecture, red lines, coding principles, anti-hallucination rules (AGENTS.md ecosystem compatible) |
+| `README.md` | Human users | Feature guide — install, module overview, usage patterns (this file in Chinese) |
+| `rules/` | AI + humans | Specification docs — API reference, user manual, glossary, ADRs, pitfall lists |
+| `skills/` | AI coding | Skill definitions — language pitfalls, coding patterns, refactoring rules |
+| `.github/` | CI + collaboration | Quality gates, CodeQL scanning, dependency updates, Issue/PR templates |
+| `CONTRIBUTING.md` / `CHANGELOG.md` / `LICENSE` | Collaboration & compliance | Contribution flow, version history, open-source license |
+
+**Core principles**: SSOT (every fact defined once, referenced elsewhere), Skill-first (load the skill before touching code), four core principles (Think First / Simplicity First / Surgical Changes / Goal-Driven), closed-loop verification.
 
 ## CI/CD Pipeline
 

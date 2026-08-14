@@ -228,10 +228,30 @@ def build_replacements(
 
     undeclared = 出现在文件中但未在 manifest/values 登记的占位符名集合——
     这类 token 是元文档引用（如 {{...}} 字面量），应保留原样不替换。
+
+    非交互模式下先聚合全部"core 且无默认值且未提供"的占位符，一次性报错并给出
+    --values 模板（镜像 init-project.ps1 的 fail-fast，但避免逐个报错往返 20 次，
+    2026-08 Max 审查 P2 修复）。
     """
+    names = sorted(collect_placeholders(target))
+    if not interactive:
+        missing_core = [
+            name for name in names
+            if name not in values
+            and name in manifest
+            and manifest[name].get("category") == "core"
+            and "default" not in manifest[name]
+        ]
+        if missing_core:
+            example = json.dumps(dict.fromkeys(missing_core, "..."))
+            raise SystemExit(
+                "[FATAL] 非交互模式下以下 core 占位符无默认值，请通过 --values 提供："
+                + ", ".join(missing_core)
+                + f"\n        示例 --values: {example}"
+            )
     replacements: dict[str, str] = {}
     undeclared: set[str] = set()
-    for name in sorted(collect_placeholders(target)):
+    for name in names:
         value = get_placeholder_value(name, manifest, values, interactive)
         if value is None:
             undeclared.add(name)

@@ -74,6 +74,16 @@ logs/
 *.tmp
 *.bak
 
+# === 密钥与凭据（防意外提交，2026-08 Max 审查补充）===
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+
 # === 文档审查报告（运行时产物）===
 reports/
 output/
