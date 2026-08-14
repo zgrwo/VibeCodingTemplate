@@ -136,6 +136,15 @@ cd {{PROJECT_NAME}}
 4. 手动覆盖版本：在 release PR 的 commit body 中加 `Release-As: x.y.z`
 5. 验证：Release 产物可用；若有构建产物，可配 tag 触发的构建 workflow
 
+**发行前检查清单**（合并 release PR 前逐项确认；完整 18 维度穷尽审计见 `.claude/prompts/pre-release-review.md`）：
+
+- [ ] `python scripts/verify-all.py` 全绿（构建/测试/文档一致性/手册一致性/注册表/计数/质量守卫）
+- [ ] `python -m ruff check scripts/ tests/ examples/` 零违规
+- [ ] 版本一致性：`.release-please-manifest.json` == `pyproject.toml` == CHANGELOG 最新段（verify-docs 门禁已覆盖）
+- [ ] 模板仓库自身：`test-template.ps1` 通过（含教学 token 存活断言）
+- [ ] `git status` 干净，无未提交/未追踪文件
+- [ ] 模板模式下 CI（pytest/ruff 字面命令步骤）为绿色
+
 工作流：`.github/workflows/release.yml`（release-please-action）+ 配置 `.github/release-please/config.json` + 版本基线 `.release-please-manifest.json`。
 
 ## 许可证

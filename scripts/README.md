@@ -18,5 +18,6 @@
 | 初始化 | `init-project.py` / `init-project.ps1` | 从模板初始化新项目 |
 | 模板自测 | `test-template.ps1` | init → verify 三件套（CI template-self-test 调用） |
 | 提交校验 | `validate-commit-msg.sh` | Conventional Commits 校验（hook + CI 共用） |
+| 共享常量 | `_excluded_dirs.py` | 排除目录集合 SSOT（verify-docs / verify-registries / init 共用） |
 
 > **唯一真相源**：占位符清单见 `placeholders.json`；注册表配置见 `registries.json`；文档计数源见 `doc-counts.json`。

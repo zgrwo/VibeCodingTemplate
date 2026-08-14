@@ -135,7 +135,8 @@ pub fn mean(values: &[f64]) -> f64 {
 // }
 ```
 
-> **NaN 守卫清单**：输入 NaN/Inf → NaN；空集合 → NaN；全无效 → NaN；结果 Inf/NaN → NaN。0 恒为有效值。
+> **NaN 守卫清单**：标量输入 NaN/Inf → NaN；集合内 NaN/Inf 元素 → 跳过（仅全无效 → NaN，
+> 见 examples/src/stats/mod.rs 的过滤实现）；空集合 → NaN；结果 Inf/NaN → NaN。0 恒为有效值。
 
 ## 5. 集合与切片陷阱
 

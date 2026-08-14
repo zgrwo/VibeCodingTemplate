@@ -100,7 +100,7 @@
     "DB_PASSWORD": {
       "category": "core",
       "prompt": "数据库密码（docker-compose 使用）",
-      "test": "secret"
+      "test": "test-password-placeholder"
     },
     "DB_USER": {
       "category": "core",

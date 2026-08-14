@@ -94,6 +94,11 @@ def main() -> int:
         steps.append(("注册表一致性", [py, "scripts/verify-registries.py"]))
         steps.append(("文档计数一致性", [py, "scripts/gen-doc-counts.py", "--check"]))
         steps.append(("测试质量守卫", [py, "scripts/test-quality-guard.py"]))
+        # 模板自身治理脚本的"缺测"检测（默认 --src src 在模板仓库为空转；
+        # 2026-08 Max 审查 #D8 修复：scripts/ 公共函数必须被 tests/scripts 引用）
+        steps.append(("测试质量守卫（scripts 缺测）",
+                      [py, "scripts/test-quality-guard.py",
+                       "--src", "scripts", "--tests", "tests/scripts"]))
 
     all_passed = True
     for name, cmd in steps:

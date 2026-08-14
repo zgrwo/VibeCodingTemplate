@@ -52,14 +52,6 @@ $Values = $normalized
 if (Test-Path -LiteralPath $Target -PathType Leaf) {
     throw "目标路径是文件，不是目录：$Target"
 }
-# 目标是符号链接/junction（重解析点）时拒绝：词法 GetFullPath 无法解析重解析点，穿透链接删除
-# 会摧毁链接指向的真实文件（镜像 init-project.py 物理 Path.resolve() 的语义）。
-if (Test-Path -LiteralPath $Target) {
-    $targetItem = Get-Item -LiteralPath $Target -Force
-    if ($targetItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
-        throw "目标路径是符号链接/junction（重解析点）：$Target（请使用实际目录，防穿透删除）"
-    }
-}
 if (-not $Force -and (Test-Path -LiteralPath $Target) -and (Get-ChildItem -LiteralPath $Target -Force | Select-Object -First 1)) {
     throw "目标目录非空：$Target（如确需覆盖请加 -Force）"
 }
@@ -72,6 +64,22 @@ try {
     $resolvedTemplate = [System.IO.Path]::GetFullPath($template)
 } catch {
     throw "目标路径无效：$Target（$($_.Exception.Message)）"
+}
+# 目标路径**任何组件**为符号链接/junction（重解析点）时拒绝：词法 GetFullPath 无法解析
+# 中间组件，若 -Target 经 junction 指向模板仓库内部，下方 Remove-Item 会穿透链接删除模板
+# 真实文件（含 .git）。镜像 init-project.py 的 Path.resolve() 物理解析语义；原实现仅拒绝
+# 叶子 ReparsePoint（2026-08 Max 审查 #7 修复）。
+$probe = $resolvedTarget
+while ($probe -and $probe.Length -gt 2) {
+    $probeItem = Get-Item -Force -LiteralPath $probe -ErrorAction SilentlyContinue
+    if ($probeItem -and ($probeItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint)) {
+        throw "目标路径含符号链接/junction 组件：$probe（请使用实际目录，防穿透删除）"
+    }
+    # 注意：不用 Split-Path -LiteralPath ... -Parent——PS 5.1 该组合参数集歧义
+    # （AmbiguousParameterSet），改用 .NET API（2026-08 Max 审查踩坑实证）
+    $parent = [System.IO.Path]::GetDirectoryName($probe)
+    if ($parent -eq $probe) { break }
+    $probe = $parent
 }
 # 注意：勿用 $IsWindows——它是 PowerShell Core 的只读自动变量，赋值会抛「read-only」错误
 $onWindows     = ([System.IO.Path]::DirectorySeparatorChar -eq '\')
@@ -282,6 +290,15 @@ if ($found.Count -eq 0) {
     }
     # 防御性跳过 tests/（扫描已排除，此处双保险，避免路径来源差异引入夹具文件）
     $files = @($files | Where-Object { $_ -notmatch "[\\/]tests([\\/]|$)" } | Sort-Object -Unique)
+    # 值合法性检查（镜像 init-project.py 的 P3-21 纵深防御，2026-08 Max 审查 #17 修复）：
+    # 含换行/双花括号的值会改写生成项目的 CI 工作流或代码语义
+    foreach ($vk in $Values.Keys) {
+        $vv = [string]$Values[$vk]
+        if ($vv -match "[\r\n]" -or $vv -match "\{\{") {
+            $preview = if ($vv.Length -gt 40) { $vv.Substring(0, 40) } else { $vv }
+            Write-Host "    [WARN] 占位符 $vk 的值含换行/花括号等特殊字符，可能破坏目标文件语义: $preview" -ForegroundColor Yellow
+        }
+    }
     foreach ($file in $files) {
         $content = Get-Content $file -Encoding UTF8 -Raw
         # 单趟替换：对原内容每个 {{...}} 匹配查表替换，值内若含其他占位符不会被二次展开

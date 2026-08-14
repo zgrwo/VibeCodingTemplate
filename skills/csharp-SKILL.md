@@ -7,6 +7,8 @@ argument-hint: "[修改的 .cs 文件/模块] [--context 新增 UDF | 修复缺�
 # C# 编码技能
 
 > 从 ExcelFormulaLabs + costsuite 历史 diff 中提炼的 C# 易错点与最佳实践。修改 .cs 前必读。
+> 防御契约 SSOT：哨兵/守卫的 L1-L5 唯一定义见 [sentinel-contract.md](../rules/sentinel-contract.md)，
+> 本节仅列 C# 落地映射。
 
 ## 1. Excel-DNA 黄金法则
 
@@ -76,12 +78,14 @@ catch (Exception ex) when (ex is not OutOfMemoryException
 
 ### 2.3 哨兵契约（InputNormalizer）
 
+> 契约定义见 [sentinel-contract.md](../rules/sentinel-contract.md)（L1-L5）；下表为 C# 类型落地映射。
+
 | 目标类型 | 不可转换时返回 | 不抛异常 |
 |----------|---------------|----------|
 | double | NaN | ✅ |
 | long/int | 0 | ✅ |
 | bool | false | ✅ |
-| DateTime | MinValue | ✅ |
+| DateTime | MinValue（C# 本地扩展，SSOT L1-L5 未列此类型） | ✅ |
 | string | "" | ✅ |
 | 未知类型 | **throw** | ❌ 禁止 `return default(T)` |
 

@@ -73,6 +73,10 @@ try {
                 if ($LASTEXITCODE) { throw "gen-doc-counts.py 失败 (退出码 $LASTEXITCODE)" }
                 python "$root\scripts\test-quality-guard.py"
                 if ($LASTEXITCODE) { throw "test-quality-guard.py 失败 (退出码 $LASTEXITCODE)" }
+                # 模板自身治理脚本的"缺测"检测（默认 --src src 在模板仓库为空转；
+                # 2026-08 Max 审查 #D8 修复：scripts/ 公共函数必须被 tests/scripts 引用）
+                python "$root\scripts\test-quality-guard.py" --src scripts --tests tests/scripts
+                if ($LASTEXITCODE) { throw "test-quality-guard.py（scripts 缺测）失败 (退出码 $LASTEXITCODE)" }
             }
         }
     }

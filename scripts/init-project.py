@@ -34,6 +34,10 @@ import shutil
 import sys
 from pathlib import Path
 
+# 排除目录集合 SSOT（2026-08 Max 审查 #8 收敛）：复制语义取 BASE 子集——
+# 缓存目录（__pycache__/.pytest_cache 等）复制后由 CLEANUP_DIRS 递归清理而非跳过
+from _excluded_dirs import BASE_EXCLUDED_DIRS  # noqa: E402
+
 # Windows GBK 控制台：强制 UTF-8 输出
 with contextlib.suppress(AttributeError, ValueError):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -45,7 +49,8 @@ PLACEHOLDERS_JSON = TEMPLATE_ROOT / "scripts" / "placeholders.json"
 # 注意：与 init-project.ps1 对齐——仅跳过顶级目录，不递归跳过子目录中的同名目录
 # build/ 在模板中是源目录（含 .gitkeep），仅在作为构建产物时才应跳过
 SKIP_TOP_DIRS = {
-    ".git", "logs", ".claude", ".codegraph", ".qoder",
+    d for d in BASE_EXCLUDED_DIRS
+    if d not in ("__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache", ".coverage")
 }
 # 跳过的根级文件（运行产物，非模板内容；如 pytest-cov 生成的 .coverage）
 SKIP_TOP_FILES = {".coverage"}
@@ -573,6 +578,13 @@ def main() -> int:
                         help="创建 CLAUDE.md 副本（Claude Code 兼容）")
     args = parser.parse_args()
 
+    # 目标自身是符号链接/junction 时拒绝：resolve() 会解引用链接，copy_template 的
+    # iterdir/rmtree 将穿透链接删除真实目录内容（镜像 init-project.ps1 的重解析点拒绝，
+    # 2026-08 Max 审查 #7 修复；中间路径组件的 junction 由 resolve() 物理解析后
+    # 由下方防自删除守卫覆盖）
+    if Path(args.target).is_symlink():
+        print(f"[ERROR] 目标路径是符号链接: {args.target}（请使用实际目录，防穿透删除）")
+        return 1
     target = Path(args.target).resolve()
     if target.exists():
         if not target.is_dir():

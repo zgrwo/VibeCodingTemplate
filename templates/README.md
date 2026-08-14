@@ -128,7 +128,8 @@
 1. 复制 {Name}Core.rs 到 src/{Module}/；复制 language/Cargo.toml.template 到仓库根为 Cargo.toml
 2. 替换 {Name}/{module}（crate 名 snake_case）；如尚未有则 cargo init --lib
 3. Core 遵循哨兵值模式（NaN 表示无效，0 是有效值）与零 panic（见 skills/rust-SKILL.md）
-4. 运行 cargo test（单元测试在 #[cfg(test)] 内联模块，不同于 Go 的独立 _test.go）
+4. 运行 cargo test（单元测试在 #[cfg(test)] 内联模块；examples/ 演示用集成测试结构
+   （examples/tests/test_stats.rs），两种形态均可，模板内联形态更贴近最小模块）
 5. 数值结果可加 CrossVal（与 numpy/scipy 独立比对，见 Python 流程）
 6. 容器化：复制 language/Dockerfile.template，取消注释 Rust 对应阶段（或用 rust 官方镜像）
 ```

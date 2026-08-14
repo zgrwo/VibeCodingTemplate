@@ -275,3 +275,44 @@ class TestMediumRisk:
             assert code == 0  # MEDIUM 不阻塞
         finally:
             fa.DEFAULT_SCOPE = orig
+
+
+class TestPublicEntryPoints:
+    """公共入口直接引用（缺测守卫：防门禁漏检，2026-08 Max 审查）。"""
+
+    def test_audit_file_ast_direct(self, tmp_path):
+        f = tmp_path / "a.py"
+        f.write_text("if count:\n    pass\n", encoding="utf-8")
+        findings = fa.audit_file_ast(f)
+        assert findings is not None
+        assert any(level == "HIGH" for level, *_ in findings)
+
+    def test_audit_file_regex_direct(self, tmp_path):
+        f = tmp_path / "b.py"
+        f.write_text("if count:\n    pass\n", encoding="utf-8")
+        findings = fa.audit_file_regex(f)
+        assert any(level == "HIGH" for level, *_ in findings)
+
+
+class TestDegenerateInputs:
+    """退化输入（2026-08 Max 审查 P3 补测：binary/读失败不崩溃）。"""
+
+    def test_binary_file_no_crash(self, tmp_path):
+        """二进制文件 → UnicodeDecodeError 兜底，静默返回空 findings。"""
+        f = tmp_path / "data.py"
+        f.write_bytes(b"if count:\n\x00\xff\xfe")
+        assert fa.audit_file(f) == []
+
+    def test_oserror_read_skips(self, tmp_path, monkeypatch):
+        """读取抛 OSError（权限/占用）→ 静默跳过不崩溃。"""
+        f = tmp_path / "data.py"
+        f.write_text("x = 1", encoding="utf-8")
+        real_read = Path.read_text
+
+        def boom(self, *a, **k):
+            if self == f:
+                raise OSError("permission denied")
+            return real_read(self, *a, **k)
+
+        monkeypatch.setattr(Path, "read_text", boom)
+        assert fa.audit_file(f) == []

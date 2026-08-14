@@ -28,6 +28,9 @@ import re
 import sys
 from pathlib import Path
 
+# 排除目录集合 SSOT（2026-08 Max 审查 #8 收敛，此前多处重复定义且发散）
+from _excluded_dirs import BASE_EXCLUDED_DIRS  # noqa: E402
+
 # Windows GBK 控制台：强制 UTF-8 输出，避免中文说明乱码（[OK]/[FAIL] 标记保持 ASCII 兼容）
 with contextlib.suppress(AttributeError, ValueError):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -81,10 +84,7 @@ DOC_FILES = [
 # 注：logs/ 为运行时目录（.gitignore 排除、init-project 复制时跳过），不检查；
 #     .git/ 为 git 内部目录，无需声明；
 #     .claude/.codegraph/.qoder/ 为 AI 工具本地目录（.gitignore 已忽略、init-project 复制时跳过）
-EXCLUDED_DIRS = {
-    "logs", ".git", ".claude", ".codegraph", ".qoder",
-    ".pytest_cache", ".ruff_cache", "__pycache__", ".coverage",
-}
+EXCLUDED_DIRS = set(BASE_EXCLUDED_DIRS)
 
 
 def _parse_top_dirs() -> list[str]:
@@ -395,44 +395,51 @@ def check_subdir_undeclared(strict: bool) -> list[str]:
     return problems
 
 
-def check_semantic_consistency() -> list[str]:
-    """语义交叉检查（来源：ExcelAddin verify-docs.sh 8 向量中语言无关部分）。
+def _check_bare_handlers() -> list[str]:
+    """向量 1：裸异常捕获（src/ 生产代码 + scripts/ 治理脚本；跳过注释/docstring 行防自误报）。
 
-    模板的红线规则要求"无裸 catch/except"，但该自检原为提交前 grep，不属
-    verify-docs 硬门禁。此处将最易遗漏的 3 个语言无关向量纳入 CI：
-      1. 源码无裸 `catch {`（C#）/ 无裸 `except:`（Python）
-      2. 文档无未闭合 TODO/FIXME 残留（易被误以为已处理）
-      3. scripts/*.py 无裸 `input()`（CI 无 TTY 时挂起）
+    模板红线"无裸 catch/except"原为提交前 grep（ci.yml 同步扫描 src/ scripts/）。
+    逐行扫描并跳过注释/docstring（verify-docs 自身 docstring 的教学文字含 except 字面量，
+    不跳过会自误报；2026-08 Max 审查拆分加固）。
     """
     problems: list[str] = []
-
-    # 向量 1：裸异常捕获（仅扫 src/ 生产代码；tests/ 常含教学字符串会被误判，
-    # 且模板红线"grep catch{ src/" 本就只扫 src/）
     bare_patterns = [
-        (r"catch\s*\{", "{csharp} 裸 catch {", ("src",)),
-        (r"except\s*:", "{python} 裸 except:", ("src",)),
+        (r"catch\s*\{", "{csharp} 裸 catch {", {".cs"}),
+        (r"except\s*:", "{python} 裸 except 捕获", {".py"}),
     ]
-    for pattern, label, roots in bare_patterns:
-        for root in roots:
+    for pattern, label, suffixes in bare_patterns:
+        for root in ("src", "scripts"):
             base = ROOT / root
             if not base.exists():
                 continue
             for p in base.rglob("*"):
-                if not p.is_file() or p.suffix.lower() not in {".cs", ".py"}:
+                if not p.is_file() or p.suffix.lower() not in suffixes:
                     continue
                 if any(part in EXCLUDED_DIRS for part in p.relative_to(ROOT).parts):
                     continue
                 try:
-                    text = p.read_text(encoding="utf-8", errors="replace")
+                    lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
                 except OSError:
                     continue
-                if re.search(pattern, text):
-                    problems.append(
-                        f"[语义检查] {label} 残留于 {p.relative_to(ROOT)}"
-                        "（防错三原则：统一排除不可恢复异常，禁止裸捕获）"
-                    )
+                in_docstring = False
+                for i, line in enumerate(lines, 1):
+                    stripped = line.split("#", 1)[0]
+                    if '"""' in stripped or "'''" in stripped:
+                        in_docstring = not in_docstring  # 单行 docstring 成对出现，两次翻转抵消
+                        continue
+                    if in_docstring:
+                        continue
+                    if re.search(pattern, stripped):
+                        problems.append(
+                            f"[语义检查] {label} 残留于 {p.relative_to(ROOT)}:{i}"
+                            "（防错三原则：统一排除不可恢复异常，禁止裸捕获）"
+                        )
+    return problems
 
-    # 向量 2：文档中的 TODO/FIXME 残留（未闭合的待办易被当作已完成）
+
+def _check_unclosed_todos() -> list[str]:
+    """向量 2：文档中的 TODO/FIXME 残留（未闭合的待办易被当作已完成）。"""
+    problems: list[str] = []
     for doc in DOC_FILES:
         p = ROOT / doc
         if not p.exists():
@@ -448,10 +455,16 @@ def check_semantic_consistency() -> list[str]:
                 f"[语义检查] {doc} 含未闭合 {m.group(1)} 待办（第 "
                 f"{text[:m.start()].count(chr(10)) + 1} 行）——已完成请移除，未完成请登记"
             )
+    return problems
 
-    # 向量 3：CI 调用的验证脚本禁裸 input()（CI 无 TTY 时挂起）。
-    # 仅扫非交互验证脚本（verify-* / falsy-audit / gen-doc-counts），
-    # init-project.* 本为交互工具且有 --non-interactive，不在 CI 直跑，豁免。
+
+def _check_bare_input_calls() -> list[str]:
+    """向量 3：CI 调用的验证脚本禁裸 input()（CI 无 TTY 时挂起）。
+
+    仅扫非交互验证脚本（verify-* / falsy-audit / gen-doc-counts），
+    init-project.* 本为交互工具且有 --non-interactive，不在 CI 直跑，豁免。
+    """
+    problems: list[str] = []
     ci_scripts = [
         p for p in (ROOT / "scripts").glob("*.py")
         if p.name.startswith(("verify-", "falsy-", "gen-doc-"))
@@ -480,8 +493,19 @@ def check_semantic_consistency() -> list[str]:
                     f"[语义检查] {p.name} 第 {line_no} 行含裸 {call.group(1)} 调用"
                     "——CI 无交互环境会挂起，请改为参数/环境变量/--non-interactive"
                 )
-
     return problems
+
+
+def check_semantic_consistency() -> list[str]:
+    """语义交叉检查（来源：ExcelAddin verify-docs.sh 8 向量中语言无关部分）。
+
+    模板的红线规则要求"无裸 catch/except"，但该自检原为提交前 grep，不属
+    verify-docs 硬门禁。此处将最易遗漏的 3 个语言无关向量纳入 CI：
+      1. 源码无裸 catch {（C#）/ 无裸 except 捕获（Python）
+      2. 文档无未闭合 TODO/FIXME 残留（易被误以为已处理）
+      3. scripts/*.py 无裸 input 调用（CI 无 TTY 时挂起）
+    """
+    return _check_bare_handlers() + _check_unclosed_todos() + _check_bare_input_calls()
 
 
 def check_version_consistency() -> list[str]:

@@ -398,11 +398,58 @@ class TestMainCLI:
         assert code == 1
         assert "目标目录非空" in out
 
+    def test_collect_placeholders_direct(self, tmp_path):
+        """collect_placeholders() 公共入口直接引用（缺测守卫），tests/ 夹具被跳过。"""
+        (tmp_path / "a.md").write_text("{{A1}} 与 {{B1}}", encoding="utf-8")
+        tests = tmp_path / "tests"
+        tests.mkdir()
+        (tests / "f.txt").write_text("{{A1}}", encoding="utf-8")
+        assert ip.collect_placeholders(tmp_path) == {"A1", "B1"}
+
+    def test_bad_values_json_returns_one(self, monkeypatch, tmp_path):
+        """--values JSON 解析失败 → exit 1（错误处理路径补测，2026-08 Max 审查 P3）。"""
+        target = tmp_path / "proj"
+        monkeypatch.setattr(
+            ip, "copy_template", lambda target: target.mkdir(parents=True, exist_ok=True) or []
+        )
+        code, out = self._run(
+            monkeypatch,
+            [str(target), "--non-interactive", "--values", "{bad json"],
+        )
+        assert code == 1
+        assert "JSON 解析失败" in out
+
+    def test_symlink_target_rejected(self, monkeypatch, tmp_path):
+        """目标为符号链接 → 拒绝（镜像 ps1 重解析点防护，2026-08 Max 审查 #7）。"""
+        import os
+        real = tmp_path / "real"
+        real.mkdir()
+        link = tmp_path / "link"
+        try:
+            os.symlink(real, link)
+        except (OSError, NotImplementedError):
+            pytest.skip("当前环境无符号链接权限（Windows 需开发者模式）")
+        code, out = self._run(monkeypatch, [str(link), "--non-interactive", "--force"])
+        assert code == 1
+        assert "符号链接" in out
+
     def test_force_overrides_nonempty(self, monkeypatch, tmp_path):
-        """--force 允许覆盖非空目标（与 init-project.ps1 -Force 对齐）。"""
+        """--force 允许覆盖非空目标（与 init-project.ps1 -Force 对齐）。
+
+        使用小型模板夹具替代真实仓库复制（提速：原实现复制整个模板 150+ 文件）。
+        """
         target = tmp_path / "proj"
         target.mkdir()
         (target / "existing.txt").write_text("x", encoding="utf-8")
+        tpl = tmp_path / "tpl"
+        tpl.mkdir()
+        (tpl / "AGENTS.md").write_text("# {{PROJECT_NAME}}\n", encoding="utf-8")
+        (tpl / "CHANGELOG.md").write_text("x", encoding="utf-8")
+        (tpl / "pyproject.toml").write_text('[project]\nversion = "0.1.0"\n', encoding="utf-8")
+        (tpl / ".release-please-manifest.json").write_text('{".": "0.1.2"}', encoding="utf-8")
+        (tpl / "scripts").mkdir()
+        (tpl / "scripts" / "placeholders.json").write_text('{"placeholders": {}}', encoding="utf-8")
+        monkeypatch.setattr(ip, "TEMPLATE_ROOT", tpl)
         # P5 修复后：非交互 + 无 --values 时 core 无默认值占位符（BUILD_CMD 等）会 fail-fast，
         # 此处桩掉占位符收集与替换（聚焦 --force 覆盖语义；
         # fail-fast 见 TestGetPlaceholderValue / TestBuildReplacements）

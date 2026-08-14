@@ -43,6 +43,9 @@ import re
 import sys
 from pathlib import Path
 
+# 排除目录集合 SSOT（2026-08 Max 审查 #8 收敛）
+from _excluded_dirs import BASE_EXCLUDED_DIRS  # noqa: E402
+
 # Windows GBK 控制台：强制 UTF-8 输出，避免中文说明乱码
 with contextlib.suppress(AttributeError, ValueError):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -50,15 +53,10 @@ with contextlib.suppress(AttributeError, ValueError):
 ROOT = Path(__file__).resolve().parent.parent
 
 # placeholder_scan 默认跳过目录（AI 工具本地目录 / 运行时产物，不入库）
-EXCLUDED_DIRS = {
-    ".git", ".claude", ".codegraph", ".qoder",
-    "logs", "build", "benchmarks",
-    "__pycache__", ".pytest_cache", ".ruff_cache",
-    # tests/ 含教学/夹具 token（{{FOO}}/{{A}} 等）——计入"已使用"会：
-    #   (a) 每次运行输出大量未声明 WARN 淹没真实信号
-    #   (b) 夹具引用使死条目被误判为已使用，削弱 FAIL 检测
-    "tests",
-}
+# tests/ 为本工具用途专属项：含教学/夹具 token（{{FOO}}/{{A}} 等）——计入"已使用"会：
+#   (a) 每次运行输出大量未声明 WARN 淹没真实信号
+#   (b) 夹具引用使死条目被误判为已使用，削弱 FAIL 检测
+EXCLUDED_DIRS = set(BASE_EXCLUDED_DIRS) | {"build", "benchmarks", "tests"}
 
 _PLACEHOLDER_RE = re.compile(r"\{\{([A-Z0-9_]+)\}\}")
 

@@ -48,6 +48,7 @@
 │   ├── README.md                 # 目录导航索引（脚本职责速查，详见本文件）
 │   ├── placeholders.json         # 占位符清单（唯一真相源：分类/默认值/测试值）
 │   ├── registries.json           # 注册表一致性门禁配置（registry 键集对声明）
+│   ├── _excluded_dirs.py         # 排除目录集合 SSOT（verify-docs/verify-registries/init 共用）
 │   ├── verify-registries.py      # 多注册表键集一致性门禁（防注册遗漏）
 │   ├── doc-counts.json           # 文档计数源配置（AUTO_COUNTS 标记注入）
 │   ├── gen-doc-counts.py         # 文档计数自动注入（防文档数字漂移）

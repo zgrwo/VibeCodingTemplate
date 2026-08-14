@@ -28,6 +28,7 @@ on:
       - "CHANGELOG.md"
       - "SECURITY.md"
       - "CODE_OF_CONDUCT.md"
+      - ".release-please-manifest.json"  # 版本基线变更必须过 CI（2026-08 Max 审查补充）
       - "pyproject.toml"
       - "Makefile"
       - ".pre-commit-config.yaml"
@@ -41,8 +42,10 @@ concurrency:
   cancel-in-progress: true
 
 # 最小权限：本工作流只读仓库内容（Security hardening 最佳实践）
+# pull-requests: read 供 dependency-review-action 读取 PR 元数据（2026-08 Max 审查补充）
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   # ============ quick：PR 级快速验证 ============
@@ -106,7 +109,7 @@ jobs:
       - name: 提交前自检（无裸 catch / bare except）
         run: |
           grep -rn "catch\s*{" src/ --include="*.cs" && exit 1 || true
-          grep -rn "except:" src/ && exit 1 || true
+          grep -rn "except:" src/ scripts/ --include="*.py" && exit 1 || true
 
   # ============ full：手动全量验证 ============
   full-check:

@@ -45,6 +45,13 @@ class TestCompute:
     def test_unknown_type_returns_neg(self):
         assert gdc._compute("x", {"type": "bogus"}) == -1
 
+    def test_compute_counts_public_api(self, tmp_path, monkeypatch):
+        """compute_counts() 公共入口直接引用（缺测守卫：防门禁漏检，2026-08 Max 审查）。"""
+        (tmp_path / "a.py").write_text("x = 1", encoding="utf-8")
+        monkeypatch.setattr(gdc, "ROOT", tmp_path)
+        values = gdc.compute_counts({"k": {"type": "file_count", "glob": "*.py"}})
+        assert values == {"k": 1}
+
 
 class TestUpdateDoc:
     """测试标记块的更新与比对。"""

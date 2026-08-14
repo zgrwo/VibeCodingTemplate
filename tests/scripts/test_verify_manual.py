@@ -314,3 +314,29 @@ class TestCompareAndTiers:
         }
         assert vm.TOLERANCE_TIERS["standard"] == 1e-10
         assert vm.TOLERANCE_TIERS["stats"] == 1e-2
+
+
+class TestPublicEntryPoints:
+    """公共入口直接引用（缺测守卫：防门禁漏检，2026-08 Max 审查）。"""
+
+    def test_section_direct(self):
+        out = io.StringIO()
+        with redirect_stdout(out):
+            vm.section("X", 3)
+        assert "X" in out.getvalue() and "3" in out.getvalue()
+
+    def test_check_self_validation_direct_clean(self, tmp_path, monkeypatch):
+        manual = tmp_path / "user-manual.md"
+        manual.write_text(
+            "## 说明\n\n示例：check(name, X, Y) 中 X 与 Y 不同才有效\n", encoding="utf-8"
+        )
+        monkeypatch.setattr(vm, "MANUAL", manual)
+        monkeypatch.setattr(vm, "CROSSVAL_DIRS", [tmp_path / "no-such-crossval"])
+        assert vm.check_self_validation() == []
+
+    def test_check_self_validation_direct_detects(self, tmp_path, monkeypatch):
+        manual = tmp_path / "user-manual.md"
+        manual.write_text('check("G", 1.0, 1.0)\n', encoding="utf-8")
+        monkeypatch.setattr(vm, "MANUAL", manual)
+        monkeypatch.setattr(vm, "CROSSVAL_DIRS", [tmp_path / "no-such-crossval"])
+        assert any("[自校验]" in p for p in vm.check_self_validation())
