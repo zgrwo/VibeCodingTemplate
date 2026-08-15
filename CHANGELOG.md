@@ -11,7 +11,7 @@ All notable changes to VibeCodingTemplate.
 
 ### Added
 
-- **占位符清单 SSOT**：新增 `scripts/placeholders.json`（114 项，含分类/默认值/测试值）与 `scripts/placeholder-utils.ps1`（共享读取，损坏时回退默认表）——消除占位符真相散落 init-project.ps1 / test-template.ps1 / README 三处的漂移
+- **占位符清单 SSOT**：新增 `scripts/placeholders.json`（112 项，含分类/默认值/测试值）与 `scripts/placeholder-utils.ps1`（共享读取，损坏时回退默认表）——消除占位符真相散落 init-project.ps1 / test-template.ps1 / README 三处的漂移
 - **反引号路径检查**：`verify-docs.py` 新增 `check_backtick_paths()`——拦截技能表/占位符约定表中反引号包裹的相对路径失效（如占位符替换成 `skills/skill_1` 死链），补齐 markdown 链接检查的盲区
 - **VBA 基础层模板**：新增 `templates/NewModule/{Name}VariantKit.bas.template`（Range/数组统一归一化 NormalizeInput），VBA 脚手架不再依赖外部模块移植
 - **commit 规范强制**：新增 `scripts/validate-commit-msg.sh`（Conventional Commits 校验，零依赖 POSIX sh）+ `scripts/git-hooks/commit-msg`（core.hooksPath 安装）+ CI 提交规范检查 step——与 release-please 发版闭环
@@ -23,6 +23,9 @@ All notable changes to VibeCodingTemplate.
 - 新增 `templates/NewModule/{Name}Foundation.cs.template`：补齐 UDF 模板的 Foundation 依赖
 - 新增 `.github/CODEOWNERS` 与 `.github/ISSUE_TEMPLATE/config.yml`
 - 新增 `.github/ISSUE_TEMPLATE/{feature_request,docs_request,refactor_request}.yml`：Issue 模板升级为 GitHub Issue Forms（结构化字段 + 必填校验）
+- **Rust 支持完整闭环**：新增 `templates/NewModule/{Name}Core.rs.template`（哨兵值 NaN + 零 panic + 内联 `#[cfg(test)]` 测试）、`language/Cargo.toml.template`、`skills/rust-SKILL.md`，examples/ 四语言对齐（stats 示例 + 集成测试）
+- **examples 四语言示例测试接入 CI**：template-self-test 新增「示例多语言测试」步骤——Python pytest / TS vitest / Go go test / Rust cargo test 全部在 GitHub 托管 runner（预装工具链）上执行
+- **Superpowers 过程技能精选 6 个**：`skills/{brainstorming,writing-plans,test-driven-development,subagent-driven-development,systematic-debugging,verification-before-completion}`（第三方 obra/superpowers，MIT，英文原版随模板分发；来源与更新方式见 `skills/README.md`）
 
 ### Changed
 
@@ -114,6 +117,7 @@ All notable changes to VibeCodingTemplate.
 - `test-template.ps1`：临时目录改用 `[System.IO.Path]::GetTempPath()`，修复 Linux runner 上 `$env:TEMP` 为 null 导致 CI 模板自测必败
 - `security.yml`：codeql-action 由 v3 升级至 v4.37.6（v3 将于 2026-12 弃用；统一三处 SHA 避免 dependabot 部分更新导致的版本混用）
 - `test-template.ps1` / `init-project.ps1`：占位符扫描加 `-Force`（pwsh 7 的 `Get-ChildItem -Recurse` 不递归 `.github` 等隐藏目录，Windows PS 5.1 会），修复 CI（pwsh/Linux）漏扫 ci.yml 的 `{{LINT_CMD}}` 导致死条目误报与初始化后占位符残留
+- `init-project.py` / `init-project.ps1`：目标路径符号链接/junction（重解析点）检测——拒绝 `-Target` 经 junction 指向模板仓库内部（`is_symlink()` 对 Windows junction 返回 False，需检测 FILE_ATTRIBUTE_REPARSE_POINT），防 `Remove-Item` 穿透链接删除模板（Max 审查 #7）
 
 ## [0.1.2](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.1.1...v0.1.2) (2026-08-09)
 

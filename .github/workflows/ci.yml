@@ -169,7 +169,7 @@ jobs:
         run: python -m pip install numpy pytest ruff
       - name: 模板模式全量测试（pytest 字面命令）
         # 模板仓库自身门禁：quick-check 的 Test 步骤（{{TEST_CMD}} 占位符）在模板模式被跳过，
-        # 模板自身的 191 项测试必须由本步骤硬门禁守护（2026-08 Max 审查 F3 修复）。
+        # 模板自身的全部 pytest 测试必须由本步骤硬门禁守护（2026-08 Max 审查 F3 修复）。
         if: steps.detect.outputs.is_template == 'true'
         run: python -m pytest tests/ -q
       - name: 模板模式代码风格（ruff 字面命令）

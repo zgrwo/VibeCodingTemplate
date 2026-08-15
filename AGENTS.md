@@ -245,6 +245,7 @@
 | 交叉验证自校验 | 3+ | `check(name, X, X)` 永远 PASS，3 处 Bug 因此漏过（2026-08 新增：自校验正则误伤 docstring 反例教学文字，需跳过注释行） |
 | 配置流断裂 | 4+ | 规则/参数在配置中声明但链路某节点断裂导致功能静默失效（PATTERN_1/2、ROOT_CAUSE_1/2 死条目：内容已固化文档但 manifest 未清理；2026-08 新增 CrossVal sys.path 层级错误致 `from src.stats` 无法解析） |
 | 初始实现防御不足 | 5×15轮 | 初始实现只考虑正常路径，未系统性考虑退化输入（每个项目平均经历 5-15 轮审查修复） |
+| 工具链声明与代码漂移 | 1 | 仓库声明了 ruff-format hook（.pre-commit-config.yaml）与 Makefile format target，但 27 个 Python 文件从未按 ruff format 排版——`pre-commit run --all-files` 会产生大 diff（2026-08-15 发行前审查实证；修复：ruff format 全仓对齐，后续在 CI 或 pre-commit 中兜底 `ruff format --check`） |
 
 ### 关键设计经验
 
