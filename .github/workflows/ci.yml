@@ -114,9 +114,10 @@ jobs:
         if: steps.detect.outputs.is_template != 'true'
         run: "{{TEST_CMD}}"
       - name: 提交前自检（无裸 catch / bare except）
-        run: |
-          grep -rn "catch\s*{" src/ --include="*.cs" && exit 1 || true
-          grep -rn "except:" src/ scripts/ --include="*.py" && exit 1 || true
+        # 与 verify-docs 语义检查向量 1 同源（注释/docstring 感知）：裸 grep 会命中
+        # scripts/verify-docs.py docstring 内的 `except:` 教学文字（2026-08-15 实证，
+        # rules/tooling-pitfalls.md #20），故统一由单一信源执行。
+        run: python3 scripts/verify-docs.py --check-bare-handlers
 
   # ============ full：手动全量验证 ============
   full-check:

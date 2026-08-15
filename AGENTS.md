@@ -160,7 +160,8 @@
 | **防御完整性** | 安全机制覆盖模块所有方法（路径验证 / 超时 / 参数化） |
 | **异常过滤器** | 统一排除不可恢复异常（OOM / StackOverflow / AccessViolation） |
 
-> **提交前自检**：`grep -rn "catch\s*{" src/` 或 `grep -rn "except:" src/` 必须返回空。
+> **提交前自检**：`python scripts/verify-docs.py --check-bare-handlers` 必须返回 `[OK]`（注释/docstring 感知；
+> 勿用裸 grep——会误伤 docstring 内的 `except:` 教学文字，2026-08-15 实证，见 tooling-pitfalls #20）。
 
 ### 3. 闭环验证强制
 

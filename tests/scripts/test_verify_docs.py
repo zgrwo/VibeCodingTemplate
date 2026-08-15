@@ -139,6 +139,37 @@ class TestMainCLI:
             code = vd.main()
         assert code == 0
 
+    def test_check_bare_handlers_flag_clean(self, monkeypatch):
+        """--check-bare-handlers 对仓库自身（docstring 教学文字）返回 0 不误报。"""
+        import io
+        from contextlib import redirect_stdout
+
+        monkeypatch.setattr("sys.argv", ["verify-docs.py", "--check-bare-handlers"])
+        out = io.StringIO()
+        with redirect_stdout(out):
+            code = vd.main()
+        assert code == 0
+        assert "无裸 catch / bare except" in out.getvalue()
+
+    def test_check_bare_handlers_flag_detects(self, tmp_path, monkeypatch):
+        """--check-bare-handlers 对含真实裸 except 的目录返回 1（检出）。"""
+        import io
+        from contextlib import redirect_stdout
+
+        scripts = tmp_path / "scripts"
+        scripts.mkdir()
+        (scripts / "verify-x.py").write_text(
+            "def f():\n    try:\n        pass\n    except:\n        pass\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        monkeypatch.setattr("sys.argv", ["verify-docs.py", "--check-bare-handlers"])
+        out = io.StringIO()
+        with redirect_stdout(out):
+            code = vd.main()
+        assert code == 1
+        assert "裸 except" in out.getvalue()
+
 
 class TestCheckFunctionsDetection:
     """检出型测试：构造破坏场景 → 断言问题被检出（非仅 return type）。"""

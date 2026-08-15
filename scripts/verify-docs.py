@@ -594,7 +594,23 @@ def check_version_consistency() -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="文档一致性验证")
     parser.add_argument("--strict", action="store_true", help="含未声明文件检查")
+    parser.add_argument(
+        "--check-bare-handlers",
+        action="store_true",
+        help="仅执行向量 1：裸 catch/bare except 检查（quick-check 提交前自检调用；"
+        "注释/docstring 感知，防教学文字自误报）",
+    )
     args = parser.parse_args()
+
+    if args.check_bare_handlers:
+        problems = _check_bare_handlers()
+        if problems:
+            print("[FAIL] 发现裸 catch / bare except：")
+            for p in problems:
+                print(f"  - {p}")
+            return 1
+        print("[OK] 无裸 catch / bare except")
+        return 0
 
     problems = (
         check_links()
