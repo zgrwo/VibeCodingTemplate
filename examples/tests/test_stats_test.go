@@ -29,6 +29,7 @@ func TestMean(t *testing.T) {
 		{"NaN elements filtered", []float64{1, math.NaN(), 3}, 2.0, false},
 		{"Inf elements filtered", []float64{1, math.Inf(1), 3}, 2.0, false},
 		{"all invalid returns NaN", []float64{math.NaN(), math.Inf(1)}, 0, true},
+		{"overflow returns NaN", []float64{1e308, 1e308}, 0, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

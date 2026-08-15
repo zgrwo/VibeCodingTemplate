@@ -19,6 +19,7 @@ describe("mean", () => {
   it("NaN elements filtered", () => expect(mean([1, NaN, 3])).toBe(2));
   it("Infinity elements filtered", () => expect(mean([1, Infinity, 3])).toBe(2));
   it("all invalid returns NaN", () => expect(Number.isNaN(mean([NaN, Infinity]))).toBe(true));
+  it("overflow returns NaN", () => expect(Number.isNaN(mean([1e308, 1e308]))).toBe(true));
 });
 
 describe("weightedMean", () => {

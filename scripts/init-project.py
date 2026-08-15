@@ -557,6 +557,24 @@ def _create_compat_links(target: Path) -> None:
         print("    注意: AGENTS.md 更新后需重新创建 CLAUDE.md 副本")
 
 
+def _is_reparse_point(p: Path) -> bool:
+    """判断路径是否为重解析点（符号链接 / Windows junction）。
+
+    Path.is_symlink() 对 Windows junction（mklink /J）返回 False（2026-08 Max 审查实证），
+    需额外检测 FILE_ATTRIBUTE_REPARSE_POINT（0x400）位；3.12+ 可用 Path.is_junction()。
+    与 init-project.ps1 的 ReparsePoint 拒绝语义对齐。
+    """
+    if p.is_symlink():
+        return True
+    try:
+        if hasattr(p, "is_junction"):  # Python 3.12+
+            return bool(p.is_junction())
+        attrs = getattr(p.stat(), "st_file_attributes", 0)  # Windows 专属，非 Windows 为 0
+        return bool(attrs & 0x400)  # FILE_ATTRIBUTE_REPARSE_POINT
+    except (OSError, AttributeError):
+        return False
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="从模板初始化新项目（跨平台 Python 版）"
@@ -578,12 +596,13 @@ def main() -> int:
                         help="创建 CLAUDE.md 副本（Claude Code 兼容）")
     args = parser.parse_args()
 
-    # 目标自身是符号链接/junction 时拒绝：resolve() 会解引用链接，copy_template 的
+    # 目标自身是符号链接/junction（重解析点）时拒绝：resolve() 会解引用链接，copy_template 的
     # iterdir/rmtree 将穿透链接删除真实目录内容（镜像 init-project.ps1 的重解析点拒绝，
     # 2026-08 Max 审查 #7 修复；中间路径组件的 junction 由 resolve() 物理解析后
-    # 由下方防自删除守卫覆盖）
-    if Path(args.target).is_symlink():
-        print(f"[ERROR] 目标路径是符号链接: {args.target}（请使用实际目录，防穿透删除）")
+    # 由下方防自删除守卫覆盖）。注意 is_symlink() 对 Windows junction 返回 False，
+    # 必须用 _is_reparse_point（含 FILE_ATTRIBUTE_REPARSE_POINT 位检测）。
+    if _is_reparse_point(Path(args.target)):
+        print(f"[ERROR] 目标路径是符号链接/junction: {args.target}（请使用实际目录，防穿透删除）")
         return 1
     target = Path(args.target).resolve()
     if target.exists():

@@ -14,6 +14,10 @@
 ```
 examples/
 ├── README.md                    # 本文件
+├── conftest.py                  # pytest 路径引导（src.stats → examples/src/stats）
+├── package.json                 # TypeScript 示例测试依赖（vitest）
+├── package-lock.json            # npm lock（CI npm ci 使用）
+├── go.mod                       # Go 示例 module（module examples）
 ├── Cargo.toml                   # Rust crate 定义（cargo test 入口）
 ├── src/
 │   ├── lib.rs                   # Rust crate 根（pub mod stats）
@@ -55,6 +59,10 @@ cd examples && go test ./tests/... -v  # 16 tests
 # Rust 示例（需 Rust edition 2021+）
 cd examples && cargo test  # 2 个 #[test] 函数（15 用例）
 ```
+
+> **供应链说明**：`package-lock.json` 的 `resolved` 指向 npmmirror 镜像（生成环境网络配置），
+> 全部条目带 sha512 `integrity` 校验防篡改；如需官方源可
+> `npm install --package-lock-only --registry=https://registry.npmjs.org/` 重新生成。
 
 ## 设计要点
 

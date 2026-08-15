@@ -399,8 +399,8 @@ def _check_bare_handlers() -> list[str]:
     """向量 1：裸异常捕获（src/ 生产代码 + scripts/ 治理脚本；跳过注释/docstring 行防自误报）。
 
     模板红线"无裸 catch/except"原为提交前 grep（ci.yml 同步扫描 src/ scripts/）。
-    逐行扫描并跳过注释/docstring（verify-docs 自身 docstring 的教学文字含 except 字面量，
-    不跳过会自误报；2026-08 Max 审查拆分加固）。
+    逐行扫描并跳过注释/docstring 行（正则需冒号；跳过是为防未来 docstring/注释出现
+    `except:` 字面量时自误报，2026-08 Max 审查拆分加固）。
     """
     problems: list[str] = []
     bare_patterns = [
@@ -422,10 +422,30 @@ def _check_bare_handlers() -> list[str]:
                 except OSError:
                     continue
                 in_docstring = False
+                in_block_comment = False  # C# /* */ 块注释状态（下游 .cs 项目防误报）
                 for i, line in enumerate(lines, 1):
                     stripped = line.split("#", 1)[0]
-                    if '"""' in stripped or "'''" in stripped:
-                        in_docstring = not in_docstring  # 单行 docstring 成对出现，两次翻转抵消
+                    if suffixes == {".cs"}:
+                        # C#：剥离 // 行注释（含 /// XML 注释）与 /* */ 块注释
+                        stripped = stripped.split("//", 1)[0]
+                        if in_block_comment:
+                            if "*/" in stripped:
+                                stripped = stripped.split("*/", 1)[1]
+                                in_block_comment = False
+                            else:
+                                continue
+                        if "/*" in stripped:
+                            parts = stripped.split("/*", 1)
+                            stripped = parts[0]
+                            # 同行闭合（/* ... */）不残留块注释状态（2026-08 Max 审查修正）
+                            in_block_comment = "*/" not in parts[1]
+                    # docstring 状态：按行内三引号出现次数奇偶翻转（单行 docstring
+                    # 成对出现为偶数 → 不翻转但该行跳过；2026-08 Max 审查 P1 修复，
+                    # 原实现每行只翻转一次导致单行 docstring 后真实代码被跳过漏检）
+                    q = stripped.count('"""') + stripped.count("'''")
+                    if q:
+                        if q % 2 == 1:
+                            in_docstring = not in_docstring
                         continue
                     if in_docstring:
                         continue
@@ -476,14 +496,17 @@ def _check_bare_input_calls() -> list[str]:
             continue
         # 仅匹配真正的调用：跳过注释/docstring 行（docstring 教学文字如「裸 input() 调用」
         # 会误报），且跳过含正则模式字面量的行（检查逻辑自身，如本函数里 `input|raw_input`
-        # 是正则串而非调用）。2026-08 Max 审查加固：新增 docstring 状态跟踪。
+        # 是正则串而非调用）。docstring 状态按行内三引号出现次数奇偶翻转（2026-08 Max 审查
+        # P1 修复：原实现每行只翻转一次，单行 docstring 后真实代码被跳过导致漏检）。
         in_docstring = False
         for line_no, line in enumerate(text.splitlines(), start=1):
             stripped = line.split("#", 1)[0]
             if "input|raw_input" in stripped or "re.search" in stripped:
                 continue
-            if '"""' in stripped or "'''" in stripped:
-                in_docstring = not in_docstring  # 单行 docstring 成对出现，两次翻转抵消
+            q = stripped.count('"""') + stripped.count("'''")
+            if q:
+                if q % 2 == 1:
+                    in_docstring = not in_docstring
                 continue
             if in_docstring:
                 continue

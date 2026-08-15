@@ -228,6 +228,17 @@ if ($found.Count -eq 0) {
     }
     $autoFilled = 0
     $warnUndeclared = @()
+    # 非交互（stdin 重定向）时聚合全部缺失的 core 无默认值占位符，一次性报错（镜像
+    # init-project.py 的聚合 fail-fast；2026-08 Max 审查：此前逐个 throw 需往返 N 次）
+    if ([Console]::IsInputRedirected) {
+        $missingCore = @($missing | Where-Object {
+            $mm = $manifest[$_]
+            $mm -and $mm.category -eq "core" -and -not $mm.default
+        })
+        if ($missingCore.Count -gt 0) {
+            throw "非交互模式下以下 core 占位符无默认值，请通过 -Values 提供：$($missingCore -join ', ')"
+        }
+    }
     foreach ($name in $missing) {
         $meta = $manifest[$name]
         if (-not $meta) {

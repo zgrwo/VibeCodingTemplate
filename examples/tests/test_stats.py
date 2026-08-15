@@ -48,6 +48,10 @@ class TestMean:
         """全部无效 → NaN"""
         assert math.isnan(mean([float("nan"), float("inf")]))
 
+    def test_overflow_returns_nan(self):
+        """极大值求和溢出 → NaN（结果守卫，防 sum→inf 污染，2026-08 Max 审查补测）"""
+        assert math.isnan(mean([1e308, 1e308]))
+
 
 class TestWeightedMean:
     def test_normal(self):

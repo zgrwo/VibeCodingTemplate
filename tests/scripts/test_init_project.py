@@ -433,6 +433,36 @@ class TestMainCLI:
         assert code == 1
         assert "符号链接" in out
 
+    def test_junction_target_rejected(self, monkeypatch, tmp_path):
+        """Windows junction 目标 → 拒绝（is_symlink() 对 junction 返回 False，
+        须走 FILE_ATTRIBUTE_REPARSE_POINT 位检测，2026-08 Max 审查修复）。"""
+        import subprocess
+        if not sys.platform.startswith("win"):
+            pytest.skip("mklink /J 仅 Windows")
+        real = tmp_path / "real"
+        real.mkdir()
+        link = tmp_path / "jlink"
+        r = subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(link), str(real)],
+            capture_output=True, text=True,
+        )
+        if r.returncode != 0:
+            pytest.skip("mklink 不可用（权限/环境）")
+        code, out = self._run(monkeypatch, [str(link), "--non-interactive", "--force"])
+        assert code == 1
+        assert "junction" in out
+
+    def test_value_sanity_warn_emitted(self, tmp_path, capsys):
+        """占位符值含换行/花括号 → WARN；干净值无 WARN（纵深防御，2026-08 Max 审查）。"""
+        f = tmp_path / "a.txt"
+        f.write_text("{{X}}", encoding="utf-8")
+        ip.replace_placeholders(tmp_path, {"X": "a\nb"})
+        assert "[WARN]" in capsys.readouterr().out
+        f.write_text("{{Y}}", encoding="utf-8")
+        ip.replace_placeholders(tmp_path, {"Y": "ok"})
+        assert "[WARN]" not in capsys.readouterr().out
+        assert f.read_text(encoding="utf-8") == "ok"
+
     def test_force_overrides_nonempty(self, monkeypatch, tmp_path):
         """--force 允许覆盖非空目标（与 init-project.ps1 -Force 对齐）。
 

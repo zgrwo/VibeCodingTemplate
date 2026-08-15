@@ -84,6 +84,9 @@ logs/
 *.pfx
 *.jks
 
+# === Rust 构建产物（2026-08 Max 审查补充）===
+target/
+
 # === 文档审查报告（运行时产物）===
 reports/
 output/

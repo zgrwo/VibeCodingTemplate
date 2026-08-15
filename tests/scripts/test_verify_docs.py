@@ -196,6 +196,53 @@ class TestSemanticConsistency:
         problems = vd.check_semantic_consistency()
         assert any("input" in p for p in problems)
 
+    def test_single_line_docstring_does_not_hide_bare_except(self, tmp_path, monkeypatch):
+        """单行 docstring 后跟裸 except: 必须检出（2026-08 Max 审查 P1 回归：
+        原 docstring 状态机每行只翻转一次，单行 `\"\"\"...\"\"\"` 后真实代码被跳过漏检）。"""
+        scripts = tmp_path / "scripts"
+        scripts.mkdir()
+        (scripts / "verify-x.py").write_text(
+            '"""module doc."""\n'
+            "def f():\n"
+            "    try:\n"
+            "        pass\n"
+            "    except:\n"
+            "        pass\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        problems = vd.check_semantic_consistency()
+        assert any("裸 except" in p for p in problems)
+
+    def test_docstring_mentions_except_not_flagged(self, tmp_path, monkeypatch):
+        """docstring 教学文字含 except: 不误报（跳过 docstring 的加固点）。"""
+        scripts = tmp_path / "scripts"
+        scripts.mkdir()
+        (scripts / "verify-y.py").write_text(
+            '"""禁止裸 except: 捕获（教学文字）。"""\n'
+            "x = 1\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        problems = vd.check_semantic_consistency()
+        assert not any("裸 except" in p for p in problems)
+
+    def test_cs_comment_catch_not_flagged(self, tmp_path, monkeypatch):
+        """C# 注释内 catch { 不误报（// 与 /* */ 剥离）；真实裸 catch {} 仍检出。"""
+        src = tmp_path / "src"
+        src.mkdir()
+        (src / "ok.cs").write_text(
+            "// catch { 教学文字\n"
+            "/* 块注释 catch { 教学 */\n"
+            "class C { void M() { try {} catch {} } }\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        problems = vd.check_semantic_consistency()
+        assert any("裸 catch" in p for p in problems)          # 第 3 行真实裸 catch
+        assert not any(p.endswith(":1") for p in problems)     # 行注释不误报
+        assert not any(p.endswith(":2") for p in problems)     # 块注释不误报
+
 
 class TestVersionConsistency:
     """版本号 SSOT 一致性门禁（P4 修复：防 manifest/pyproject/CHANGELOG 漂移）。"""
@@ -300,3 +347,25 @@ class TestHardGateDetection:
         monkeypatch.setattr(vd, "_parse_top_dirs", lambda: ["src", "ghost"])
         problems = vd.check_dirs()
         assert any("[缺失目录]" in p and "ghost" in p for p in problems)
+
+
+class TestExcludedDirsSSOT:
+    """EXCLUDED_DIRS 与 _excluded_dirs.py 基线的收敛断言（2026-08 Max 审查：防 SSOT 回归）。"""
+
+    def test_verify_docs_equals_base(self):
+        from _excluded_dirs import BASE_EXCLUDED_DIRS
+        assert set(BASE_EXCLUDED_DIRS) == vd.EXCLUDED_DIRS
+
+    def test_registries_base_plus_purpose_extras(self):
+        import contextlib as _ctx
+        import importlib.util as _ilu
+
+        from _excluded_dirs import BASE_EXCLUDED_DIRS
+
+        _spec = _ilu.spec_from_file_location(
+            "verify_registries", SCRIPTS_DIR / "verify-registries.py"
+        )
+        _vr = _ilu.module_from_spec(_spec)
+        with _ctx.suppress(SystemExit):
+            _spec.loader.exec_module(_vr)
+        assert set(BASE_EXCLUDED_DIRS) | {"build", "benchmarks", "tests"} == _vr.EXCLUDED_DIRS

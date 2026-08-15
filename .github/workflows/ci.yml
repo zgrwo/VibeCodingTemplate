@@ -163,8 +163,10 @@ jobs:
         # 必须在「手册数值一致性」（verify-manual.py）之前：verify-manual 会执行
         # examples/scripts/crossval/StatsCrossVal.py（顶层 import numpy），numpy 缺失时
         # run_crossval 计入 _FAIL → quality-gate 恒红（2026-08 Max 审查 F2 修复）。
+        # 同时安装 pytest/ruff：模板模式的 pytest/ruff 字面命令步骤需要（模板模式
+        # 跳过 .[dev] 安装步骤，2026-08 Max 审查 F3 补漏）。
         if: steps.detect.outputs.is_template == 'true'
-        run: python -m pip install numpy
+        run: python -m pip install numpy pytest ruff
       - name: 模板模式全量测试（pytest 字面命令）
         # 模板仓库自身门禁：quick-check 的 Test 步骤（{{TEST_CMD}} 占位符）在模板模式被跳过，
         # 模板自身的 191 项测试必须由本步骤硬门禁守护（2026-08 Max 审查 F3 修复）。
@@ -186,7 +188,11 @@ jobs:
       - name: 文档计数一致性（AUTO_COUNTS 标记比对）
         run: python scripts/gen-doc-counts.py --check
       - name: 测试质量守卫（弱断言/缺测/无意义命名）
-        run: python scripts/test-quality-guard.py
+        run: |
+          python scripts/test-quality-guard.py
+          # scripts/ 缺测检测（模板自身治理脚本守卫；默认 --src src 对模板为空转，
+          # 2026-08 Max 审查 #D8 修复，与 verify-all 保持一致）
+          python scripts/test-quality-guard.py --src scripts --tests tests/scripts
       - name: 安装门禁依赖（LINT/COVERAGE 所需）
         # Python：pip install -e ".[dev]"（含 ruff、pytest、pytest-cov）
         # C#：   actions/setup-dotnet + dotnet restore（按实际工具链替换）
@@ -266,11 +272,15 @@ jobs:
         #   - Python: pytest examples/tests/（16 tests，conftest.py 引导 src.stats）
         # GitHub 托管 runner（ubuntu/windows）均预装 Node/Go/Rust 工具链；
         # 仅模板模式运行（下游项目不强制多语言工具链）。
+        # 注意：只 cd 一次——bash run 块内 cd 跨行持久，重复 cd 会进入不存在的
+        # examples/examples 并短路后续命令（2026-08 Max 审查 P1 修复）。
         if: steps.detect.outputs.is_template == 'true'
         shell: bash
         run: |
           set -o pipefail
           python -m pytest examples/tests/ -q
-          cd examples && npm ci --no-audit --no-fund && npx vitest run
-          cd examples && go test ./tests/... -v
-          cd examples && cargo test
+          cd examples
+          npm ci --no-audit --no-fund
+          npx vitest run
+          go test ./tests/... -v
+          cargo test

@@ -33,6 +33,7 @@ docs:
 	$(PYTHON) scripts/verify-registries.py
 	$(PYTHON) scripts/gen-doc-counts.py --check
 	$(PYTHON) scripts/test-quality-guard.py
+	$(PYTHON) scripts/test-quality-guard.py --src scripts --tests tests/scripts
 
 doctor:
 	$(PYTHON) scripts/doctor.py

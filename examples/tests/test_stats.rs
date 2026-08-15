@@ -8,7 +8,7 @@ use examples::stats::{mean, weighted_mean};
 
 #[test]
 fn test_mean() {
-    let cases: [(&str, &[f64], f64, bool); 9] = [
+    let cases: [(&str, &[f64], f64, bool); 10] = [
         ("normal positive", &[1.0, 2.0, 3.0, 4.0, 5.0], 3.0, false),
         ("normal negative", &[-1.0, -2.0, -3.0], -2.0, false),
         ("mixed signs", &[-1.0, 1.0], 0.0, false),
@@ -18,6 +18,7 @@ fn test_mean() {
         ("NaN elements filtered", &[1.0, f64::NAN, 3.0], 2.0, false),
         ("Inf elements filtered", &[1.0, f64::INFINITY, 3.0], 2.0, false),
         ("all invalid returns NaN", &[f64::NAN, f64::INFINITY], 0.0, true),
+        ("overflow returns NaN", &[1e308, 1e308], 0.0, true),
     ];
     for (name, input, want, want_nan) in cases {
         let got = mean(input);
