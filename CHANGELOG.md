@@ -4,6 +4,57 @@ All notable changes to VibeCodingTemplate.
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.2.0](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.1.2...v0.2.0) (2026-08-15)
+
+
+### ✨ 新功能
+
+* **ci:** examples 四语言示例测试接入 template-self-test ([bea5dde](https://github.com/zgrwo/VibeCodingTemplate/commit/bea5ddeab03938d5ca5a8ac082801d6589f35d2b))
+* **skills:** 引入 Superpowers 过程技能精选 6 个（第三方，随模板分发） ([2edfe55](https://github.com/zgrwo/VibeCodingTemplate/commit/2edfe5588ff7bc760c078246d0c945d8638afbe6))
+* 从 5 个子项目反哺吸收 A+B+C 档高价值点（v0.2.0） ([3410791](https://github.com/zgrwo/VibeCodingTemplate/commit/3410791de9a0cfa0e20b364059bdd038a90d274e))
+* 全量修复 Max 审查 P1/P2/P3（模板可编译性 + CI 门禁 + SSOT 同步） ([05956c5](https://github.com/zgrwo/VibeCodingTemplate/commit/05956c5647debc647252bcdf45c8de20c7f20286))
+* 新增 Rust 支持完整闭环，并完成模板 5S 整理 ([25f04ce](https://github.com/zgrwo/VibeCodingTemplate/commit/25f04cecde1567e948dcbe7f08e486ac55179376))
+
+
+### 🐛 Bug 修复
+
+* **ci:** pip-audit 定向审计项目依赖，消除 runner 环境 CVE 假阳性 ([c6693e9](https://github.com/zgrwo/VibeCodingTemplate/commit/c6693e9f040659e85f021eabd6609efddb60d473))
+* **ci:** template-self-test 安装依赖补 pytest（示例多语言测试步骤可运行） ([8164fd5](https://github.com/zgrwo/VibeCodingTemplate/commit/8164fd5e6ac9da49df2f1b1c294e7d3529cf8fd8))
+* **ci:** 修复模板自举检测在 grep 3.11 下静默失效（release PR CI 全红） ([c2d825e](https://github.com/zgrwo/VibeCodingTemplate/commit/c2d825ebeb9056aa553e10c554013b49cb6363df))
+* **ci:** 提交前自检改调 verify-docs 向量 1，消除裸 grep 教学文字误报 ([409f324](https://github.com/zgrwo/VibeCodingTemplate/commit/409f324352a942472c88a4a617b2523e22cc33a5))
+* code-review Max 复查 P1/P2（CI 步骤/门禁漏检/防护对齐） ([839b650](https://github.com/zgrwo/VibeCodingTemplate/commit/839b650425ff54a652863bccb9701918b416c282))
+* **init:** 修复自删除护栏 TrimEnd 空字符串崩溃 ([002d604](https://github.com/zgrwo/VibeCodingTemplate/commit/002d6042982e3bf79252104c5a6b253e2bb60466))
+* **init:** 加固目标目录护栏并修复跨平台路径处理 ([390609c](https://github.com/zgrwo/VibeCodingTemplate/commit/390609c2136afeed6778e3b9ba557143c773ac0c))
+* **init:** 重命名 $isWindows 避免与 PowerShell Core 只读自动变量冲突 ([89c4003](https://github.com/zgrwo/VibeCodingTemplate/commit/89c40039cc20181df524dfad8b9b8490e96b64f7))
+* Max 级审查 P1 修复与知识库更新（ps1 对齐/CI 门禁/基线文档） ([03f9c88](https://github.com/zgrwo/VibeCodingTemplate/commit/03f9c88c1e80b30a3f5922b1a73370d336b443ec))
+* **release-prep:** 修正 CHANGELOG 计数漂移/补录缺失条目，ci.yml 注释去硬编码测试数，恢复 skills 脚本可执行位，AGENTS.md 登记新反模式 ([d81c91f](https://github.com/zgrwo/VibeCodingTemplate/commit/d81c91f848ff9b74bf593087d7247e0037b1598c))
+* 修复 code-review 审查发现的 8 项缺陷 ([22a2eca](https://github.com/zgrwo/VibeCodingTemplate/commit/22a2ecad80f81badc233bfb10a66d92d7b0a6bbe))
+* 修复 Max 审查全部 P1/P2 + 关键 P3 发现 ([aedd517](https://github.com/zgrwo/VibeCodingTemplate/commit/aedd517cfde04f1da43a72b943a29aa63047ce88))
+* 处理 2026-08 深度审查发现的全部问题（P0-P6 + 预存缺陷） ([792831b](https://github.com/zgrwo/VibeCodingTemplate/commit/792831b1b4f94c2d35006d38ad47b5a0c834bc8e))
+* 完成 Max 审查剩余项（junction 防护/SSOT 收敛/双语/补测） ([148a20a](https://github.com/zgrwo/VibeCodingTemplate/commit/148a20ae51bec440a12b45185218134fa1d1ecaa))
+* 执行 Max 审查改进计划（P2 批次：模板缺陷/SSOT/测试补强） ([1c5c84f](https://github.com/zgrwo/VibeCodingTemplate/commit/1c5c84ff0e8a98a196bfb487e94c5421150e903e))
+* 示例 CrossVal 支持独立运行并沉淀 P0 坑位（收尾） ([3d2c0f8](https://github.com/zgrwo/VibeCodingTemplate/commit/3d2c0f80a3b9ec44165cf541a8e7be0ef0c2ae72))
+
+
+### 📄 文档
+
+* 持久化 Max 审查报告与修复执行文档 + 登记目录树 ([897e172](https://github.com/zgrwo/VibeCodingTemplate/commit/897e172942d9248da5a1f8afce52b00ac9d0c667))
+
+
+### 🔧 重构
+
+* 将 AI 审查/审计文档收敛至 .claude 并清理 SSOT 引用 ([edc1476](https://github.com/zgrwo/VibeCodingTemplate/commit/edc1476934f0fa5ce384bd7fd1c731b450e97247))
+
+
+### ✅ 测试
+
+* **scripts:** falsy-audit 直接入口断言补强，消除 quality-guard 弱断言 WARN ([10baa3a](https://github.com/zgrwo/VibeCodingTemplate/commit/10baa3a151fcf143662bfef747da0bcfb50cef5b))
+
+
+### 🎨 代码风格
+
+* **scripts:** ruff format 全仓对齐（27 个 Python 文件，零逻辑变更） ([b2aa299](https://github.com/zgrwo/VibeCodingTemplate/commit/b2aa299f6e9a79cd6f427ff457d914564f89da22))
+
 ## [Unreleased]
 
 > 本模板自身的变更记录（新项目初始化时请重置为项目自己的变更历史）。
