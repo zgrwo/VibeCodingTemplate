@@ -246,6 +246,7 @@
 | 配置流断裂 | 4+ | 规则/参数在配置中声明但链路某节点断裂导致功能静默失效（PATTERN_1/2、ROOT_CAUSE_1/2 死条目：内容已固化文档但 manifest 未清理；2026-08 新增 CrossVal sys.path 层级错误致 `from src.stats` 无法解析） |
 | 初始实现防御不足 | 5×15轮 | 初始实现只考虑正常路径，未系统性考虑退化输入（每个项目平均经历 5-15 轮审查修复） |
 | 工具链声明与代码漂移 | 1 | 仓库声明了 ruff-format hook（.pre-commit-config.yaml）与 Makefile format target，但 27 个 Python 文件从未按 ruff format 排版——`pre-commit run --all-files` 会产生大 diff（2026-08-15 发行前审查实证；修复：ruff format 全仓对齐，后续在 CI 或 pre-commit 中兜底 `ruff format --check`） |
+| 工具版本行为变化致门禁静默失效 | 1 | CI detect 步骤用 BRE 转义 `grep -rq '\{\{PROJECT_NAME\}\}'` 检测模板模式：`\{` 是区间表达式起始符，旧版 GNU grep 宽容处理为字面量，新版（3.11，runner 镜像 20260810.271.1 升级后）直接报 `Invalid content of \{\}`（exit 2），且步骤内 `2>/dev/null` 吞掉错误 → `is_template` 恒 false → Build 执行字面 `{{BUILD_CMD}}`（exit 127），release PR CI 全红；本地 Git grep（3.1）与旧镜像均正常，故此前从未暴露（2026-08-15 实证；修复：`grep -F` 固定串匹配 + 模式运行时拼装防 init 替换，见 rules/tooling-pitfalls.md #25/#25b） |
 
 ### 关键设计经验
 

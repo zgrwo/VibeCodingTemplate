@@ -35,8 +35,12 @@ jobs:
       - name: Detect template mode
         id: detect
         run: |
-          # 防 init 替换（同 ci.yml，P0）：grep BRE 中 \{ 转义字面 {，检测未替换的 PROJECT_NAME 双花括号字面量
-          if grep -rq '\{\{PROJECT_NAME\}\}' AGENTS.md 2>/dev/null; then
+          # 防 init 替换（同 ci.yml，P0）：检测模式运行时拼装，文件内不出现可被 init 匹配的字面量；
+          # grep -F 固定串匹配：避免 BRE 转义 \{ 依赖 grep 版本宽容行为（新版 GNU grep 报
+          # "Invalid content of \{\}" exit 2，见 rules/tooling-pitfalls.md #25）。
+          open='{{'
+          close='}}'
+          if grep -Fq "${open}PROJECT_NAME${close}" AGENTS.md; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"

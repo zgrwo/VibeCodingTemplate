@@ -38,12 +38,17 @@ CI 检测 `AGENTS.md` 中是否残留未替换的核心占位符 `PROJECT_NAME`�
 2. **初始化不完整须显式失败**：特定 token 检测使"PROJECT_NAME 已替换但其他占位符残留"暴露为 CI 构建失败
    （占位符命令不可执行），而非静默跳过造成门禁假绿。
 
-**grep 模式必须反斜杠转义**（`\{\{PROJECT_NAME\}\}`，grep BRE 中 `\{` 匹配字面 `{`）：若不转义，
+**grep 模式必须防 init 替换 + 兼容所有 grep 版本**：检测串在运行时拼装（`open='{{'` / `close='}}'` +
+`grep -Fq "${open}PROJECT_NAME${close}"`），文件内不出现可被 init 匹配的字面占位符——否则
 `init-project` 会把 grep 模式里的占位符字面量一并替换成项目名，而生成项目 `AGENTS.md` 必然包含项目名
 → `is_template` 恒为 true，下游项目 CI 的构建/测试/质量门禁被永久跳过（2026-08 审查发现并修复的 P0 缺陷）。
+**不可用 BRE 转义 `\{\{PROJECT_NAME\}\}`**：`\{` 是区间表达式起始符，旧版 GNU grep 对"`\{` 后非数字"宽容
+处理为字面量，新版（3.11，runner 镜像 20260810.271.1 实证）直接报 `Invalid content of \{\}`（exit 2），
+且原实现 `2>/dev/null` 吞掉错误 → `is_template` 恒 false、模板模式跳过逻辑静默失效（2026-08-15 发行阻塞，
+见 rules/tooling-pitfalls.md #25）；`grep -F` 固定串匹配无正则解析，版本无关。
 
 实现：`.github/workflows/ci.yml`（quick-check / full-check / quality-gate / template-self-test 四处 detect 步骤）
-与 `.github/workflows/detect-template.yml`（reusable workflow）统一使用上述转义模式。
+与 `.github/workflows/detect-template.yml`（reusable workflow）统一使用上述运行时拼装 + `grep -F` 模式。
 
 （2026-08-14 审查修正：原 ADR 文字写的是 `grep -rq '{{'`，与实现不符，且该方案会被教学 token 反噬。）
 模板仓库无构建系统，占位符命令无法执行→自举检测跳过。

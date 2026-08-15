@@ -70,8 +70,15 @@ jobs:
       - name: 检测是否为模板仓库自身
         id: detect
         run: |
-          # 防 init 替换（P0）：grep BRE 中 \{ 转义字面 {，检测未替换的 PROJECT_NAME 双花括号字面量
-          if grep -rq '\{\{PROJECT_NAME\}\}' AGENTS.md 2>/dev/null; then
+          # 防 init 替换（P0）：检测模式若以字面双花括号占位符形式出现在本文件，会被 init 替换成项目名
+          # （生成项目 AGENTS.md 必然含项目名 → is_template 恒 true，下游 CI 门禁永久跳过）；
+          # 故模式运行时拼装（open/close 分离），文件内不出现可被 init 匹配的字面量。
+          # grep -F 固定串匹配：避免 BRE 转义 \{ 依赖 grep 版本宽容行为——新版 GNU grep（3.11）报
+          # "Invalid content of \{\}"（exit 2）且被 2>/dev/null 掩盖 → is_template 恒 false、模板模式
+          # 跳过逻辑失效（2026-08-15 runner 镜像 20260810.271.1 实证，见 rules/tooling-pitfalls.md #25）。
+          open='{{'
+          close='}}'
+          if grep -Fq "${open}PROJECT_NAME${close}" AGENTS.md; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
@@ -123,8 +130,15 @@ jobs:
       - name: 检测是否为模板仓库自身
         id: detect
         run: |
-          # 防 init 替换（P0）：grep BRE 中 \{ 转义字面 {，检测未替换的 PROJECT_NAME 双花括号字面量
-          if grep -rq '\{\{PROJECT_NAME\}\}' AGENTS.md 2>/dev/null; then
+          # 防 init 替换（P0）：检测模式若以字面双花括号占位符形式出现在本文件，会被 init 替换成项目名
+          # （生成项目 AGENTS.md 必然含项目名 → is_template 恒 true，下游 CI 门禁永久跳过）；
+          # 故模式运行时拼装（open/close 分离），文件内不出现可被 init 匹配的字面量。
+          # grep -F 固定串匹配：避免 BRE 转义 \{ 依赖 grep 版本宽容行为——新版 GNU grep（3.11）报
+          # "Invalid content of \{\}"（exit 2）且被 2>/dev/null 掩盖 → is_template 恒 false、模板模式
+          # 跳过逻辑失效（2026-08-15 runner 镜像 20260810.271.1 实证，见 rules/tooling-pitfalls.md #25）。
+          open='{{'
+          close='}}'
+          if grep -Fq "${open}PROJECT_NAME${close}" AGENTS.md; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
@@ -149,8 +163,15 @@ jobs:
       - name: 检测是否为模板仓库自身
         id: detect
         run: |
-          # 防 init 替换（P0）：grep BRE 中 \{ 转义字面 {，检测未替换的 PROJECT_NAME 双花括号字面量
-          if grep -rq '\{\{PROJECT_NAME\}\}' AGENTS.md 2>/dev/null; then
+          # 防 init 替换（P0）：检测模式若以字面双花括号占位符形式出现在本文件，会被 init 替换成项目名
+          # （生成项目 AGENTS.md 必然含项目名 → is_template 恒 true，下游 CI 门禁永久跳过）；
+          # 故模式运行时拼装（open/close 分离），文件内不出现可被 init 匹配的字面量。
+          # grep -F 固定串匹配：避免 BRE 转义 \{ 依赖 grep 版本宽容行为——新版 GNU grep（3.11）报
+          # "Invalid content of \{\}"（exit 2）且被 2>/dev/null 掩盖 → is_template 恒 false、模板模式
+          # 跳过逻辑失效（2026-08-15 runner 镜像 20260810.271.1 实证，见 rules/tooling-pitfalls.md #25）。
+          open='{{'
+          close='}}'
+          if grep -Fq "${open}PROJECT_NAME${close}" AGENTS.md; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
@@ -242,8 +263,15 @@ jobs:
         id: detect
         shell: bash
         run: |
-          # 防 init 替换（P0）：grep BRE 中 \{ 转义字面 {，检测未替换的 PROJECT_NAME 双花括号字面量
-          if grep -rq '\{\{PROJECT_NAME\}\}' AGENTS.md 2>/dev/null; then
+          # 防 init 替换（P0）：检测模式若以字面双花括号占位符形式出现在本文件，会被 init 替换成项目名
+          # （生成项目 AGENTS.md 必然含项目名 → is_template 恒 true，下游 CI 门禁永久跳过）；
+          # 故模式运行时拼装（open/close 分离），文件内不出现可被 init 匹配的字面量。
+          # grep -F 固定串匹配：避免 BRE 转义 \{ 依赖 grep 版本宽容行为——新版 GNU grep（3.11）报
+          # "Invalid content of \{\}"（exit 2）且被 2>/dev/null 掩盖 → is_template 恒 false、模板模式
+          # 跳过逻辑失效（2026-08-15 runner 镜像 20260810.271.1 实证，见 rules/tooling-pitfalls.md #25）。
+          open='{{'
+          close='}}'
+          if grep -Fq "${open}PROJECT_NAME${close}" AGENTS.md; then
             echo "is_template=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_template=false" >> "$GITHUB_OUTPUT"
