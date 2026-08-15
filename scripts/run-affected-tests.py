@@ -18,6 +18,7 @@ run-affected-tests.py — 影响范围测试路由（git-diff → 受影响测�
 
 退出码：0 = 找到并（尝试）运行；1 = 无对应测试 / git 错误
 """
+
 import argparse
 import contextlib
 import subprocess
@@ -42,23 +43,35 @@ def get_changed_files(base: str) -> list[str] | None:
         # 已提交变更：base..HEAD
         r1 = subprocess.run(
             ["git", "diff", "--name-only", base, "HEAD"],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            timeout=15, cwd=ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=15,
+            cwd=ROOT,
         )
         if r1.returncode == 0:
             results.extend(r1.stdout.splitlines())
         # 未提交工作区改动（未暂存 + 已暂存）
         r2 = subprocess.run(
             ["git", "diff", "--name-only"],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            timeout=15, cwd=ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=15,
+            cwd=ROOT,
         )
         if r2.returncode == 0:
             results.extend(r2.stdout.splitlines())
         r3 = subprocess.run(
             ["git", "diff", "--cached", "--name-only"],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            timeout=15, cwd=ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=15,
+            cwd=ROOT,
         )
         if r3.returncode == 0:
             results.extend(r3.stdout.splitlines())
@@ -118,8 +131,7 @@ def main(argv: list[str] | None = None) -> int:
         print("[FAIL] git 命令失败，无法确定变更文件（docstring 约定：git 错误退出码 1）")
         return 1
     # 纳入 src/ 与 scripts/ 变更（scripts/ 是本模板治理逻辑所在，src/ 可能为空）
-    src_changes = [f for f in changed
-                   if f.startswith(("src/", "scripts/"))]
+    src_changes = [f for f in changed if f.startswith(("src/", "scripts/"))]
     if not src_changes:
         print("[SKIP] 无 src/ 或 scripts/ 变更（影响范围测试路由无需运行）")
         return 0
@@ -147,8 +159,10 @@ def main(argv: list[str] | None = None) -> int:
     if unmatched:
         # 混合场景：部分源文件有测试、部分没有。逐个输出缺测文件，并返回非零，
         # 使提示与实际退出码一致（不再出现"见上 FAIL 提示"却无 FAIL 块、退出码为 0 的谎报）。
-        print(f"[FAIL] {len(unmatched)} 个源文件无对应测试——疑似缺测，请补测试"
-              "（或确认由 E2E/CI 覆盖并登记豁免）：")
+        print(
+            f"[FAIL] {len(unmatched)} 个源文件无对应测试——疑似缺测，请补测试"
+            "（或确认由 E2E/CI 覆盖并登记豁免）："
+        )
         for f in unmatched:
             print(f"  - {f}")
         return 1

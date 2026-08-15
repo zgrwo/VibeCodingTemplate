@@ -6,6 +6,7 @@
 - 哨兵契约：空列表/NaN 输入返回 NaN，不抛异常
 - 零外部依赖：纯逻辑实现，可独立单元测试
 """
+
 from __future__ import annotations
 
 import math
@@ -43,10 +44,7 @@ def mean(values: list[float] | None) -> float:
     return result
 
 
-def weighted_mean(
-    values: list[float] | None,
-    weights: list[float] | None
-) -> float:
+def weighted_mean(values: list[float] | None, weights: list[float] | None) -> float:
     """计算加权均值。
 
     Args:
@@ -66,9 +64,14 @@ def weighted_mean(
         return float("nan")
 
     # 与 mean() 对齐：逐对过滤非有限（NaN/Inf）值及其配对权重，否则 NaN 会毒化整个结果
-    pairs = [(v, w) for v, w in zip(values, weights, strict=True)
-             if isinstance(v, (int, float)) and math.isfinite(v)
-             and isinstance(w, (int, float)) and math.isfinite(w)]
+    pairs = [
+        (v, w)
+        for v, w in zip(values, weights, strict=True)
+        if isinstance(v, (int, float))
+        and math.isfinite(v)
+        and isinstance(w, (int, float))
+        and math.isfinite(w)
+    ]
     total_weight = sum(w for _, w in pairs)
     if total_weight == 0:
         return float("nan")

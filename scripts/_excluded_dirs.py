@@ -12,8 +12,18 @@ SKIP_TOP_DIRS 且集合已发散（如 verify-docs 缺 build/benchmarks/tests、
 注意：init-project.ps1 的跳过/清理清单为 PowerShell 实现，修改 BASE 后需同步
 （见 scripts/init-project.ps1 步骤 2 注释）。
 """
-BASE_EXCLUDED_DIRS = frozenset({
-    ".git", ".claude", ".codegraph", ".qoder",
-    "logs", "__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache",
-    ".coverage",
-})
+
+BASE_EXCLUDED_DIRS = frozenset(
+    {
+        ".git",
+        ".claude",
+        ".codegraph",
+        ".qoder",
+        "logs",
+        "__pycache__",
+        ".pytest_cache",
+        ".ruff_cache",
+        ".mypy_cache",
+        ".coverage",
+    }
+)

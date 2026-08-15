@@ -26,6 +26,7 @@ retry.py — 瞬态错误重试装饰器
   - 非瞬态错误立即重抛（不浪费重试）
   - 达到上限后抛最后一次异常（保留原因链）
 """
+
 import functools
 import time
 from collections.abc import Callable

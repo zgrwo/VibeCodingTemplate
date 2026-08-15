@@ -10,6 +10,7 @@
   - _reset_changelog() / _reset_release_manifest()：新项目初始态重置（CHANGELOG / 版本基线）
   - _strip_template_only_blocks() / strip_template_only_sections()：TEMPLATE_ONLY 段落裁剪
 """
+
 import importlib.util
 import json
 import sys
@@ -20,9 +21,7 @@ import pytest
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-_spec = importlib.util.spec_from_file_location(
-    "init_project_mod", SCRIPTS_DIR / "init-project.py"
-)
+_spec = importlib.util.spec_from_file_location("init_project_mod", SCRIPTS_DIR / "init-project.py")
 ip = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(ip)
 
@@ -35,9 +34,7 @@ class TestLoadManifest:
             encoding="utf-8",
         )
         monkeypatch.setattr(ip, "PLACEHOLDERS_JSON", manifest)
-        assert ip.load_manifest() == {
-            "PROJECT_NAME": {"category": "core", "test": "App"}
-        }
+        assert ip.load_manifest() == {"PROJECT_NAME": {"category": "core", "test": "App"}}
 
     def test_missing_returns_empty(self, tmp_path, monkeypatch):
         monkeypatch.setattr(ip, "PLACEHOLDERS_JSON", tmp_path / "nope.json")
@@ -142,9 +139,7 @@ class TestReplacePlaceholders:
         """字节级替换：CRLF 换行必须原样保留（Windows 模板文件）。"""
         f = tmp_path / "AGENTS.md"
         f.write_bytes(b"# {{PROJECT_NAME}}\r\nsecond line {{PROJECT_NAME}}\r\n")
-        replaced, remaining = ip.replace_placeholders(
-            tmp_path, {"PROJECT_NAME": "MyApp"}
-        )
+        replaced, remaining = ip.replace_placeholders(tmp_path, {"PROJECT_NAME": "MyApp"})
         assert replaced == 1
         assert remaining == 0
         raw = f.read_bytes()
@@ -154,9 +149,7 @@ class TestReplacePlaceholders:
         """.pyc 后缀文件不参与替换（防损坏二进制）。"""
         f = tmp_path / "data.pyc"
         f.write_bytes(b"{{PROJECT_NAME}}")
-        replaced, remaining = ip.replace_placeholders(
-            tmp_path, {"PROJECT_NAME": "MyApp"}
-        )
+        replaced, remaining = ip.replace_placeholders(tmp_path, {"PROJECT_NAME": "MyApp"})
         assert replaced == 0
         assert remaining == 0
         assert f.read_bytes() == b"{{PROJECT_NAME}}"
@@ -175,7 +168,8 @@ class TestBuildReplacements:
         repl, undeclared = ip.build_replacements(
             tmp_path,
             {"PROJECT_NAME": {"category": "core", "default": "App"}},
-            {}, False,
+            {},
+            False,
         )
         assert repl["PROJECT_NAME"] == "App"  # core 有默认值 → default
         # CONT 未登记 → 归入 undeclared，保留原样（防元占位符污染）
@@ -206,8 +200,8 @@ class TestBuildReplacements:
         with pytest.raises(SystemExit) as ei:
             ip.build_replacements(tmp_path, manifest, {}, False)
         msg = str(ei.value)
-        assert "A1" in msg and "B1" in msg      # 两个缺失的 core 一次性列出
-        assert "C1" not in msg                  # content 类不参与 fail-fast
+        assert "A1" in msg and "B1" in msg  # 两个缺失的 core 一次性列出
+        assert "C1" not in msg  # content 类不参与 fail-fast
         assert "--values" in msg
 
 
@@ -260,9 +254,7 @@ class TestPrunePlaceholderManifest:
         )
         (tmp_path / "f.txt").write_text("{{KEEP}} 保留引用", encoding="utf-8")
         ip._prune_placeholder_manifest(tmp_path)
-        data = json.loads(
-            (tmp_path / "scripts" / "placeholders.json").read_text(encoding="utf-8")
-        )
+        data = json.loads((tmp_path / "scripts" / "placeholders.json").read_text(encoding="utf-8"))
         assert data["placeholders"] == {"KEEP": {"category": "core"}}
 
     def test_all_replaced_prunes_to_empty(self, tmp_path):
@@ -273,9 +265,7 @@ class TestPrunePlaceholderManifest:
         )
         (tmp_path / "f.txt").write_text("无占位符残留", encoding="utf-8")
         ip._prune_placeholder_manifest(tmp_path)
-        data = json.loads(
-            (tmp_path / "scripts" / "placeholders.json").read_text(encoding="utf-8")
-        )
+        data = json.loads((tmp_path / "scripts" / "placeholders.json").read_text(encoding="utf-8"))
         assert data["placeholders"] == {}
 
     def test_missing_manifest_noop(self, tmp_path):
@@ -371,9 +361,7 @@ class TestStripTemplateOnly:
         modified = ip.strip_template_only_sections(tmp_path)
         assert modified == 1
         assert (tmp_path / "README.md").read_bytes() == b"keep\n"
-        assert (tests / "README.md").read_bytes().startswith(
-            b"keep\n<!-- TEMPLATE_ONLY_START -->"
-        )
+        assert (tests / "README.md").read_bytes().startswith(b"keep\n<!-- TEMPLATE_ONLY_START -->")
         assert b"<!-- TEMPLATE_ONLY_START -->" in (tmp_path / "data.py").read_bytes()
 
 
@@ -383,6 +371,7 @@ class TestMainCLI:
     def _run(self, monkeypatch, argv):
         import io
         from contextlib import redirect_stdout
+
         out = io.StringIO()
         monkeypatch.setattr("sys.argv", ["init-project.py"] + argv)
         with redirect_stdout(out):
@@ -422,6 +411,7 @@ class TestMainCLI:
     def test_symlink_target_rejected(self, monkeypatch, tmp_path):
         """目标为符号链接 → 拒绝（镜像 ps1 重解析点防护，2026-08 Max 审查 #7）。"""
         import os
+
         real = tmp_path / "real"
         real.mkdir()
         link = tmp_path / "link"
@@ -437,6 +427,7 @@ class TestMainCLI:
         """Windows junction 目标 → 拒绝（is_symlink() 对 junction 返回 False，
         须走 FILE_ATTRIBUTE_REPARSE_POINT 位检测，2026-08 Max 审查修复）。"""
         import subprocess
+
         if not sys.platform.startswith("win"):
             pytest.skip("mklink /J 仅 Windows")
         real = tmp_path / "real"
@@ -444,7 +435,8 @@ class TestMainCLI:
         link = tmp_path / "jlink"
         r = subprocess.run(
             ["cmd", "/c", "mklink", "/J", str(link), str(real)],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
         if r.returncode != 0:
             pytest.skip("mklink 不可用（权限/环境）")

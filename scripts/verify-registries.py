@@ -36,6 +36,7 @@ registry 来源类型：
 
 退出码：0 = 通过；1 = 任一组存在死条目/缺失
 """
+
 import argparse
 import contextlib
 import json
@@ -65,7 +66,14 @@ _PLACEHOLDER_RE = re.compile(r"\{\{([A-Z0-9_]+)\}\}")
 # 恒定输出噪声，淹没真实未登记占位符信号（与 EXCLUDED_DIRS 排除 tests/ 的设计理由一致）。
 # B 来自 scripts/init-project.ps1 的扫描注释（{{A}}/{{B}}/{{FOO}}，2026-08 审查 P3 补录）。
 TEACHING_TOKENS = {
-    "A", "B", "FOO", "NAME", "UPPER", "UPPER_CASE", "X", "X1_",
+    "A",
+    "B",
+    "FOO",
+    "NAME",
+    "UPPER",
+    "UPPER_CASE",
+    "X",
+    "X1_",
 }
 
 
@@ -174,7 +182,8 @@ def check_group(group: dict) -> list[str]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="多注册表一致性门禁")
     parser.add_argument(
-        "--config", default=str(ROOT / "scripts" / "registries.json"),
+        "--config",
+        default=str(ROOT / "scripts" / "registries.json"),
         help="注册表对配置文件（默认 scripts/registries.json）",
     )
     args = parser.parse_args(argv)

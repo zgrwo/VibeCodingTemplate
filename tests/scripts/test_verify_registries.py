@@ -7,6 +7,7 @@ test_verify_registries.py — verify-registries.py 自身测试套件
   - check_group 死条目 FAIL / 未声明 WARN 语义
   - main CLI 退出码（纯 WARN→0，含 FAIL→1，配置缺失→1）
 """
+
 import importlib.util
 import json
 import sys

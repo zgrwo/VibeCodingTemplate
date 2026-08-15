@@ -23,6 +23,7 @@ crossval 脚本发现目录（两处均自动发现并执行）：
 
 退出码：0 = 通过（crossval 缺失时 SKIP 不算失败）；1 = 发现不一致
 """
+
 import argparse
 import contextlib
 import importlib.util
@@ -45,9 +46,7 @@ CROSSVAL_DIRS = [
 # 自校验模式：check(name, X, X) —— 永远 PASS，无验证价值。
 # 操作数用 [^\s,]+ 而非 \w+：须覆盖 self.mean / obj.attr / d["k"] / mean(...)
 # 等属性访问、下标、调用形态，否则此类自校验可绕过「禁止自校验」红线。
-SELF_CHECK_RE = re.compile(
-    r"check\s*\(\s*['\"]?[^,]+['\"]?\s*,\s*([^\s,]+)\s*,\s*\1\s*\)"
-)
+SELF_CHECK_RE = re.compile(r"check\s*\(\s*['\"]?[^,]+['\"]?\s*,\s*([^\s,]+)\s*,\s*\1\s*\)")
 
 
 def _display(path: Path) -> str:
@@ -61,7 +60,8 @@ def _display(path: Path) -> str:
 def _is_comment_or_docstring(line: str) -> bool:
     """判断是否为注释/docstring 行（自校验扫描应跳过，避免文档反例被误判）。"""
     stripped = line.lstrip()
-    return stripped.startswith(("#", "\"", "'"))
+    return stripped.startswith(("#", '"', "'"))
+
 
 # ============================================================================
 # CrossVal 辅助 API（供 scripts/crossval/*.py 脚本 import）
@@ -107,12 +107,12 @@ def cross_check(
 
 # 容差分层常量（来源：ExcelVBA build_common.py）——供 crossval 脚本按算法类型选档
 TOLERANCE_TIERS = {
-    "exact": 0.0,        # 精确：字符串/布尔结果
-    "standard": 1e-10,   # 基本运算/排序/数组操作
-    "numeric": 1e-6,     # 迭代算法（PolyFit/矩阵分解）
-    "loose": 1e-5,       # SVD 奇异值（迭代收敛）
-    "stats": 1e-2,       # 高阶矩（偏度/峰度）
-    "physical": 0.1,     # 物理常数（分子量/单位换算）
+    "exact": 0.0,  # 精确：字符串/布尔结果
+    "standard": 1e-10,  # 基本运算/排序/数组操作
+    "numeric": 1e-6,  # 迭代算法（PolyFit/矩阵分解）
+    "loose": 1e-5,  # SVD 奇异值（迭代收敛）
+    "stats": 1e-2,  # 高阶矩（偏度/峰度）
+    "physical": 0.1,  # 物理常数（分子量/单位换算）
 }
 
 
@@ -143,8 +143,10 @@ def compare(name: str, actual: object, expected: object, tol: float = 1e-10) -> 
                         a_f = float(a)
                     except (TypeError, ValueError):
                         _FAIL += 1
-                        print(f"  [FAIL] {name}[{i}]: 类型不匹配——期望数值 {e!r}，"
-                              f"实际 {a!r} 无法转数值")
+                        print(
+                            f"  [FAIL] {name}[{i}]: 类型不匹配——期望数值 {e!r}，"
+                            f"实际 {a!r} 无法转数值"
+                        )
                         return
                     if not math.isfinite(a_f) or abs(a_f - float(e)) > tol * scale:
                         _FAIL += 1
@@ -233,8 +235,10 @@ def manual_check(name: str, actual: float | None, tol: float = 1e-10) -> None:
     expected = claims.get(name)
     if expected is None:
         _FAIL += 1
-        print(f"  [FAIL] {name}: user-manual.md 无对应 `<!-- CLAIM:{name} -->` 声称值"
-              "（请先在手册标注该数值）")
+        print(
+            f"  [FAIL] {name}: user-manual.md 无对应 `<!-- CLAIM:{name} -->` 声称值"
+            "（请先在手册标注该数值）"
+        )
         return
     cross_check(name, actual, expected, tol)
 
@@ -247,9 +251,11 @@ def run_crossval() -> bool:
     _FAIL = 0
     dirs = [d for d in CROSSVAL_DIRS if d.is_dir()]
     if not dirs:
-        print("[SKIP] 未发现 scripts/crossval/ 或 examples/scripts/crossval/，"
-              "数值比对待项目初始化实现"
-              "（将 {Name}CrossVal 模板放入 scripts/crossval/ 后自动执行）")
+        print(
+            "[SKIP] 未发现 scripts/crossval/ 或 examples/scripts/crossval/，"
+            "数值比对待项目初始化实现"
+            "（将 {Name}CrossVal 模板放入 scripts/crossval/ 后自动执行）"
+        )
         return True
     scripts = sorted({s for d in dirs for s in d.glob("*.py")})
     if not scripts:
@@ -275,8 +281,10 @@ def run_crossval() -> bool:
     # 防门禁说谎：crossval 脚本若被 `if __name__ == "__main__"` 包裹则不会执行任何校验
     # （spec_from_file_location 加载时 __name__ 恒为模块 stem），0 PASS/0 FAIL 必须显式失败。
     if _PASS + _FAIL == 0:
-        print("[FAIL] crossval 脚本未产生任何校验项（检查是否误用了 "
-              "`if __name__ == '__main__':` 守卫，它会被 spec 加载绕过）")
+        print(
+            "[FAIL] crossval 脚本未产生任何校验项（检查是否误用了 "
+            "`if __name__ == '__main__':` 守卫，它会被 spec 加载绕过）"
+        )
         _FAIL += 1
     return _FAIL == 0
 
@@ -319,9 +327,7 @@ def check_example_blocks() -> list[str]:
             elif lang:
                 in_block = True
             else:
-                problems.append(
-                    f"[未标注语言] {MANUAL.name}:{i} 代码块必须标注语言"
-                )
+                problems.append(f"[未标注语言] {MANUAL.name}:{i} 代码块必须标注语言")
     if in_block:
         problems.append(f"[未闭合代码块] {MANUAL.name} 结尾存在未闭合的代码块")
     return problems
@@ -329,8 +335,9 @@ def check_example_blocks() -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="手册一致性验证")
-    parser.add_argument("--check-only", action="store_true",
-                        help="仅检查自校验模式与代码块标注，不执行数值比对")
+    parser.add_argument(
+        "--check-only", action="store_true", help="仅检查自校验模式与代码块标注，不执行数值比对"
+    )
     args = parser.parse_args()
 
     problems = check_self_validation() + check_example_blocks()

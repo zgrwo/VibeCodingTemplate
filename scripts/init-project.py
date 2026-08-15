@@ -23,6 +23,7 @@ init-project.py — 从模板初始化新项目（跨平台 Python 版）
 
 退出码：0 = 全部占位符已替换；1 = 存在未替换占位符
 """
+
 from __future__ import annotations
 
 import argparse
@@ -49,15 +50,26 @@ PLACEHOLDERS_JSON = TEMPLATE_ROOT / "scripts" / "placeholders.json"
 # 注意：与 init-project.ps1 对齐——仅跳过顶级目录，不递归跳过子目录中的同名目录
 # build/ 在模板中是源目录（含 .gitkeep），仅在作为构建产物时才应跳过
 SKIP_TOP_DIRS = {
-    d for d in BASE_EXCLUDED_DIRS
+    d
+    for d in BASE_EXCLUDED_DIRS
     if d not in ("__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache", ".coverage")
 }
 # 跳过的根级文件（运行产物，非模板内容；如 pytest-cov 生成的 .coverage）
 SKIP_TOP_FILES = {".coverage"}
 # 复制后清理的目录（递归，构建产物/缓存）
 CLEANUP_DIRS = {
-    "__pycache__", "bin", "obj", ".venv", "venv", "env", "node_modules",
-    ".pytest_cache", ".ruff_cache", ".mypy_cache", "TestResults", "dist",
+    "__pycache__",
+    "bin",
+    "obj",
+    ".venv",
+    "venv",
+    "env",
+    "node_modules",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".mypy_cache",
+    "TestResults",
+    "dist",
 }
 # 占位符扫描/替换时跳过的顶层目录：tests/ 内含 scanner 测试夹具（如 {{A}}/{{X1_}}），
 # 这些 {{...}} 字面量是测试输入而非待替换占位符，替换会破坏生成项目的测试套件。
@@ -89,9 +101,7 @@ def scan_placeholders(text: str) -> list[str]:
     与 init-project.ps1 / test-template.ps1 的 `[A-Z0-9_]+` 保持一致：
     仅识别大写占位符（{PascalCase} 模块级占位符不应被 init 匹配）。
     """
-    return list(dict.fromkeys(
-        m for m in re.findall(r"\{\{([A-Z0-9_]+)\}\}", text)
-    ))
+    return list(dict.fromkeys(m for m in re.findall(r"\{\{([A-Z0-9_]+)\}\}", text)))
 
 
 def get_placeholder_value(
@@ -128,7 +138,7 @@ def get_placeholder_value(
             # 生成损坏的 .github/workflows/ci.yml（P5 审查修复）。
             raise SystemExit(
                 f"[FATAL] 非交互模式下 core 占位符 {name} 无默认值："
-                f"请通过 --values 提供（如 --values '{{\"{name}\": \"...\"}}'）"
+                f'请通过 --values 提供（如 --values \'{{"{name}": "..."}}\'）'
             )
         if interactive:
             prompt = entry.get("prompt", name)
@@ -159,12 +169,13 @@ def copy_template(target: Path) -> list[str]:
     # 安全护栏：禁止复制到模板仓库自身内部（递归清理会摧毁模板源文件）。
     resolved_target = target.resolve()
     resolved_template = TEMPLATE_ROOT.resolve()
-    if (resolved_target == resolved_template
-            or resolved_template in resolved_target.parents
-            or resolved_target in resolved_template.parents):
+    if (
+        resolved_target == resolved_template
+        or resolved_template in resolved_target.parents
+        or resolved_target in resolved_template.parents
+    ):
         raise SystemExit(
-            f"[FATAL] 目标目录 {target} 位于模板仓库内部或包含模板仓库，"
-            "拒绝复制（防自删除）"
+            f"[FATAL] 目标目录 {target} 位于模板仓库内部或包含模板仓库，拒绝复制（防自删除）"
         )
 
     if target.exists():
@@ -218,9 +229,7 @@ def collect_placeholders(target: Path) -> set[str]:
     for f in target.rglob("*"):
         if f.is_file() and not _in_skip_dirs(f, target):
             try:
-                all_placeholders.update(
-                    scan_placeholders(f.read_text(encoding="utf-8"))
-                )
+                all_placeholders.update(scan_placeholders(f.read_text(encoding="utf-8")))
             except (UnicodeDecodeError, OSError):
                 continue
     return all_placeholders
@@ -241,7 +250,8 @@ def build_replacements(
     names = sorted(collect_placeholders(target))
     if not interactive:
         missing_core = [
-            name for name in names
+            name
+            for name in names
             if name not in values
             and name in manifest
             and manifest[name].get("category") == "core"
@@ -281,8 +291,10 @@ def replace_placeholders(
     # 但含换行/花括号（含 GH Actions `${{ }}`）的值会直接改写生成项目的 CI 工作流或代码语义。
     for name, val in replacements.items():
         if ("\n" in val) or ("\r" in val) or ("{{" in val):
-            print(f"[WARN] 占位符 {name} 的值含换行/花括号等特殊字符，"
-                  f"可能破坏目标文件语义: {val[:40]!r}")
+            print(
+                f"[WARN] 占位符 {name} 的值含换行/花括号等特殊字符，"
+                f"可能破坏目标文件语义: {val[:40]!r}"
+            )
 
     for f in target.rglob("*"):
         if not f.is_file() or _in_skip_dirs(f, target):
@@ -316,10 +328,7 @@ def replace_placeholders(
 
 def _normalize_values(raw: dict) -> dict[str, str]:
     """归一化 --values 键：兼容带/不带 {{}} 两种写法（与 init-project.ps1 对齐）。"""
-    return {
-        k.strip().strip("{}"): v
-        for k, v in raw.items()
-    }
+    return {k.strip().strip("{}"): v for k, v in raw.items()}
 
 
 def _reset_changelog(target: Path) -> None:
@@ -353,9 +362,7 @@ def _reset_release_manifest(target: Path, replacements: dict[str, str]) -> None:
     if not manifest_path.exists():
         return
     version = replacements.get("VERSION") or "0.1.0"
-    manifest_path.write_text(
-        json.dumps({".": version}, indent=2) + "\n", encoding="utf-8"
-    )
+    manifest_path.write_text(json.dumps({".": version}, indent=2) + "\n", encoding="utf-8")
     print(f"==> .release-please-manifest.json 已重置为版本 {version}")
 
 
@@ -417,11 +424,11 @@ def _prune_placeholder_manifest(target: Path) -> None:
     if len(kept) == len(manifest):
         return
     data["placeholders"] = kept
-    path.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(
+        f"==> scripts/placeholders.json 已裁剪：{len(manifest)} → {len(kept)} 个占位符"
+        "（仅保留替换后仍被引用的条目）"
     )
-    print(f"==> scripts/placeholders.json 已裁剪：{len(manifest)} → {len(kept)} 个占位符"
-          "（仅保留替换后仍被引用的条目）")
 
 
 _TEMPLATE_ONLY_START = b"<!-- TEMPLATE_ONLY_START -->"
@@ -433,11 +440,11 @@ def _trim_trailing_blank_lines(data: bytes) -> bytes:
     base = data.rstrip(b" \t\r\n")
     if not base:
         return data  # 整文件为空白：原样返回，不动
-    rest = data[len(base):]  # 原文件尾部空白区（空格/换行）
+    rest = data[len(base) :]  # 原文件尾部空白区（空格/换行）
     nl = rest.find(b"\n")
     if nl < 0:
         return base + b"\n"  # 尾部无换行：补一个 LF
-    term = b"\r\n" if nl > 0 and rest[nl - 1:nl] == b"\r" else b"\n"
+    term = b"\r\n" if nl > 0 and rest[nl - 1 : nl] == b"\r" else b"\n"
     return base + term
 
 
@@ -480,9 +487,9 @@ def _strip_template_only_blocks(data: bytes) -> bytes:
         removed = True
         j = end_pos + len(_TEMPLATE_ONLY_END)
         # 吞掉 END 标记所在行末尾的一个换行（CRLF/LF）
-        if j < len(result) and result[j:j + 1] in (b"\r", b"\n"):
+        if j < len(result) and result[j : j + 1] in (b"\r", b"\n"):
             j += 1
-            if j < len(result) and result[j:j + 1] == b"\n":
+            if j < len(result) and result[j : j + 1] == b"\n":
                 j += 1
         result = result[:i] + result[j:]
     if removed:
@@ -524,6 +531,7 @@ def strip_template_only_sections(target: Path) -> int:
 def _setup_git(target: Path) -> bool:
     """初始化 git 仓库并配置 commit-msg hook。成功返回 True。"""
     import subprocess
+
     print("\n==> 初始化 git 仓库")
     try:
         r = subprocess.run(["git", "init"], cwd=target, capture_output=True)
@@ -535,8 +543,7 @@ def _setup_git(target: Path) -> bool:
         return False
     hook_path = target / "scripts" / "git-hooks"
     r2 = subprocess.run(
-        ["git", "config", "core.hooksPath", "scripts/git-hooks"],
-        cwd=target, capture_output=True
+        ["git", "config", "core.hooksPath", "scripts/git-hooks"], cwd=target, capture_output=True
     )
     if r2.returncode != 0:
         err = r2.stderr.decode("utf-8", "replace").strip()
@@ -576,24 +583,33 @@ def _is_reparse_point(p: Path) -> bool:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="从模板初始化新项目（跨平台 Python 版）"
-    )
+    parser = argparse.ArgumentParser(description="从模板初始化新项目（跨平台 Python 版）")
     parser.add_argument("target", help="目标目录路径")
     parser.add_argument(
-        "--values", default="",
-        help='占位符值 JSON，如 \'{"PROJECT_NAME": "MyApp", "VERSION": "1.0.0"}\''
+        "--values",
+        default="",
+        help='占位符值 JSON，如 \'{"PROJECT_NAME": "MyApp", "VERSION": "1.0.0"}\'',
     )
-    parser.add_argument("--non-interactive", action="store_true",
-                        help="非交互模式（core 占位符用 default 填充；无默认值必须 --values 提供，"
-                             "否则报错退出——与 init-project.ps1 对齐，"
-                             "防生成 build_cmd 式损坏命令）")
-    parser.add_argument("--force", action="store_true",
-                        help="覆盖已存在的非空目标目录（与 init-project.ps1 -Force 对齐）")
-    parser.add_argument("--git-init", action="store_true",
-                        help="初始化 git 仓库并配置 commit-msg hook")
-    parser.add_argument("--create-compatibility-links", action="store_true",
-                        help="创建 CLAUDE.md 副本（Claude Code 兼容）")
+    parser.add_argument(
+        "--non-interactive",
+        action="store_true",
+        help="非交互模式（core 占位符用 default 填充；无默认值必须 --values 提供，"
+        "否则报错退出——与 init-project.ps1 对齐，"
+        "防生成 build_cmd 式损坏命令）",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="覆盖已存在的非空目标目录（与 init-project.ps1 -Force 对齐）",
+    )
+    parser.add_argument(
+        "--git-init", action="store_true", help="初始化 git 仓库并配置 commit-msg hook"
+    )
+    parser.add_argument(
+        "--create-compatibility-links",
+        action="store_true",
+        help="创建 CLAUDE.md 副本（Claude Code 兼容）",
+    )
     args = parser.parse_args()
 
     # 目标自身是符号链接/junction（重解析点）时拒绝：resolve() 会解引用链接，copy_template 的
@@ -614,9 +630,11 @@ def main() -> int:
             return 1
     # target 不能在模板仓库内、等于模板根、或是模板仓库的祖先：copy_template 会先删除
     # target 自身内容，若目标是模板祖先会连模板仓库与同级项目一并删除（防自删除，P3-20）
-    if (target == TEMPLATE_ROOT
-            or target.is_relative_to(TEMPLATE_ROOT)
-            or TEMPLATE_ROOT.is_relative_to(target)):
+    if (
+        target == TEMPLATE_ROOT
+        or target.is_relative_to(TEMPLATE_ROOT)
+        or TEMPLATE_ROOT.is_relative_to(target)
+    ):
         print(f"[ERROR] target 不能在模板仓库内、等于模板根或包含模板仓库: {target}")
         return 1
 
@@ -627,8 +645,10 @@ def main() -> int:
         # P6 审查修复：examples/ 为参考示例，明确告知去向（不需要可删除，
         # 删除后需同步 project-structure.md/AGENTS.md 目录树，否则
         # verify-docs --strict 报未声明/缺失）
-        print("    [提示] examples/ 示例项目已复制（参考用途：演示多语言 Core/CrossVal/测试写法，"
-              "不需要可整体删除；删除后请同步 rules/project-structure.md 与 AGENTS.md 目录树）")
+        print(
+            "    [提示] examples/ 示例项目已复制（参考用途：演示多语言 Core/CrossVal/测试写法，"
+            "不需要可整体删除；删除后请同步 rules/project-structure.md 与 AGENTS.md 目录树）"
+        )
 
     # 删除模板专属段落（README 的「从本模板初始化新项目」等不进入新项目；
     # 在占位符收集前执行，被删段落内的 {{...}} 示例不计入下游替换清单）
@@ -660,8 +680,10 @@ def main() -> int:
     print(f"    替换文件数: {replaced_files}")
     if undeclared:
         names = ", ".join(sorted(undeclared))
-        print(f"    [WARN] {len(undeclared)} 个未登记占位符保留原样"
-              f"（如需替换请登记 placeholders.json）: {names}")
+        print(
+            f"    [WARN] {len(undeclared)} 个未登记占位符保留原样"
+            f"（如需替换请登记 placeholders.json）: {names}"
+        )
     if remaining:
         print(f"    [WARN] {remaining} 个占位符未替换（content 类，需开发期手动填充）")
 

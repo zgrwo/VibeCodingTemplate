@@ -6,6 +6,7 @@ ModuleNotFoundError: No module named 'src.stats'。
 本文件将 examples/ 加入模块搜索路径，使 `from src.stats...` 可从 examples/ 解析，
 文档化的运行命令直接可用。
 """
+
 import sys
 from pathlib import Path
 

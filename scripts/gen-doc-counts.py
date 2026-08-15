@@ -34,6 +34,7 @@ counts 类型：
 
 退出码：0 = 一致/更新完成；1 = --check 模式下发现不一致
 """
+
 import argparse
 import contextlib
 import json
@@ -133,12 +134,10 @@ def update_doc(path: Path, values: dict[str, int], check_only: bool) -> list[str
                         f"[错误] {path} 内联 {sm.group(1)}_START 无对应 END（未闭合标记）"
                     )
                     break
-                seg = new_line[sm.end():em.start()]
+                seg = new_line[sm.end() : em.start()]
                 expected = values.get(sm.group(1))
                 if expected is None or expected < 0:
-                    problems.append(
-                        f"[配置错误] 文档引用未定义的计数源 `{sm.group(1)}`"
-                    )
+                    problems.append(f"[配置错误] 文档引用未定义的计数源 `{sm.group(1)}`")
                     # 值未定义：跳过该对标记（保留原样），从 em.end() 后继续
                     pos = em.end()
                     continue
@@ -149,7 +148,7 @@ def update_doc(path: Path, values: dict[str, int], check_only: bool) -> list[str
                     + str(expected)
                     + f"<!-- AUTO_COUNTS:{sm.group(1)}_END -->"
                 )
-                new_line = new_line[:sm.start()] + replacement + new_line[em.end():]
+                new_line = new_line[: sm.start()] + replacement + new_line[em.end() :]
                 pos = sm.start() + len(replacement)
             out.append(new_line)
             i += 1
@@ -172,7 +171,7 @@ def update_doc(path: Path, values: dict[str, int], check_only: bool) -> list[str
         expected = values.get(key)
         if expected is None or expected < 0:
             problems.append(f"[配置错误] 文档引用未定义的计数源 `{key}`")
-            out.extend(lines[i:j + 1])
+            out.extend(lines[i : j + 1])
         else:
             current_text = "".join(block_lines).strip()
             if current_text != str(expected):
@@ -180,10 +179,10 @@ def update_doc(path: Path, values: dict[str, int], check_only: bool) -> list[str
             # 提取 START 行的缩进与前缀（`    <!-- AUTO_COUNTS:X_START --> 文字`）
             indent_match = re.match(r"^(\s*)", line)
             indent = indent_match.group(1) if indent_match else ""
-            prefix = line[:m.start()]  # START 前文本（含缩进）
+            prefix = line[: m.start()]  # START 前文本（含缩进）
             # _MARK_START 已吞掉尾部 `-->`，故 m.end() 之后即同行尾随文本（如「 文字」）。
             # 原 `.split("-->", 1)[1]` 永远取不到（无 `-->` 可分割），块状标记尾文字被静默丢弃。
-            suffix = line[m.end():]
+            suffix = line[m.end() :]
             # 沿用原行尾（CRLF/LF），避免混合行尾触发 eol=lf / mixed-line-ending 门禁
             term = "\r\n" if line.endswith("\r\n") else "\n"
             out.append(f"{prefix}<!-- AUTO_COUNTS:{key}_START -->{suffix}{term}")
@@ -194,8 +193,7 @@ def update_doc(path: Path, values: dict[str, int], check_only: bool) -> list[str
     if check_only:
         if changed:
             problems.append(
-                f"[FAIL] {path} 的 AUTO_COUNTS 计数已过时"
-                "（运行 gen-doc-counts.py 更新）"
+                f"[FAIL] {path} 的 AUTO_COUNTS 计数已过时（运行 gen-doc-counts.py 更新）"
             )
     else:
         new_text = "".join(out)

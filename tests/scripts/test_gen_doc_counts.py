@@ -7,6 +7,7 @@ test_gen_doc_counts.py — gen-doc-counts.py 自身测试套件
   - update_doc 内联与块状标记的更新/比对
   - main CLI 退出码（check 一致→0，过时→1，配置缺失→1）
 """
+
 import importlib.util
 import sys
 from pathlib import Path
@@ -14,9 +15,7 @@ from pathlib import Path
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-_spec = importlib.util.spec_from_file_location(
-    "gen_doc_counts", SCRIPTS_DIR / "gen-doc-counts.py"
-)
+_spec = importlib.util.spec_from_file_location("gen_doc_counts", SCRIPTS_DIR / "gen-doc-counts.py")
 gdc = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(gdc)
 

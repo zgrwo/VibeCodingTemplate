@@ -15,6 +15,7 @@ test-quality-guard.py — 测试质量守卫（弱断言/缺测/命名）
 
 退出码：0 = 通过（弱断言仅 WARN）；1 = 存在 FAIL（缺测/命名）
 """
+
 import argparse
 import ast
 import contextlib
@@ -29,26 +30,24 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # 弱断言模式：只有这类断言，无具体值验证
 _WEAK_ASSERT_RE = re.compile(
-    r"assert\s+\w+\s+is\s+not\s+None"       # assert x is not None
+    r"assert\s+\w+\s+is\s+not\s+None"  # assert x is not None
     r"|assert\s+len\([^)]*\)\s*[><]=?\s*0"  # assert len(x) > 0
-    r"|assert\s+\w+\s*!=\s*None"             # assert x != None
-    r"|assert\s+bool\("                       # assert bool(x)
+    r"|assert\s+\w+\s*!=\s*None"  # assert x != None
+    r"|assert\s+bool\("  # assert bool(x)
 )
 # 真实断言（验证具体值）
 # expr 支持下标/属性/方法调用（df["col"].sum() == 5）、len(...)==N/!=N 形式
 _STRONG_ASSERT_RE = re.compile(
     r"assert\s+\w+(?:\[.*?\]|\.\w+(?:\(.*?\))?)*\s*[=!]=\s*\w+(?:\(.*?\))?"
-    r"|assert\s+\w+\s*in\s+"                  # assert x in ...
+    r"|assert\s+\w+\s*in\s+"  # assert x in ...
     r"|assert\s+\w+(?:\[.*?\]|\.\w+(?:\(.*?\))?)*\s*[<>]=?\s*\w+(?:\(.*?\))?"
-    r"|assert\s+\w+\s*is\s+True"              # assert x is True
+    r"|assert\s+\w+\s*is\s+True"  # assert x is True
     r"|assert\s+\w+\s*is\s+False"
-    r"|assert\s+len\([^)]*\)\s*[=!]=\s*\S+"    # assert len(x) == N / != N
-    r"|pytest\.raises"                         # 异常断言
+    r"|assert\s+len\([^)]*\)\s*[=!]=\s*\S+"  # assert len(x) == N / != N
+    r"|pytest\.raises"  # 异常断言
 )
 # 无意义测试名：test_<纯数字/序号/caseN>
-_BAD_NAME_RE = re.compile(
-    r"test_(?:\d+|case\d+|test\d+|a|b|c|foo|bar|dummy)$"
-)
+_BAD_NAME_RE = re.compile(r"test_(?:\d+|case\d+|test\d+|a|b|c|foo|bar|dummy)$")
 
 
 def _rel(path: Path) -> str:
@@ -151,9 +150,7 @@ def check_missing_tests(src_dir: Path, tests_dir: Path) -> list[str]:
             is_public = isinstance(node, ast.FunctionDef) and not node.name.startswith("_")
             if is_public and node.name not in tested:
                 rel = _rel(p)
-                problems.append(
-                    f"[FAIL] {rel}:{node.name} 无对应测试引用——新增公共函数必须配测试"
-                )
+                problems.append(f"[FAIL] {rel}:{node.name} 无对应测试引用——新增公共函数必须配测试")
     return problems
 
 

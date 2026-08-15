@@ -19,6 +19,7 @@ doctor.py — 环境就绪性诊断（Environment Doctor）
 
 退出码：0 = 全部就绪；1 = 存在失败项（输出修复指引）
 """
+
 import argparse
 import contextlib
 import json
@@ -54,7 +55,8 @@ def check_python() -> tuple[bool, str]:
     ok = cur >= MIN_PYTHON
     return ok, (
         f"Python {cur[0]}.{cur[1]} >= {MIN_PYTHON[0]}.{MIN_PYTHON[1]}"
-        if ok else f"Python {cur[0]}.{cur[1]} < {MIN_PYTHON[0]}.{MIN_PYTHON[1]}"
+        if ok
+        else f"Python {cur[0]}.{cur[1]} < {MIN_PYTHON[0]}.{MIN_PYTHON[1]}"
     )
 
 

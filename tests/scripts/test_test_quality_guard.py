@@ -8,6 +8,7 @@ test_test_quality_guard.py — test-quality-guard.py 自身测试套件
   - 缺测检测
   - main CLI 退出码（弱断言→0，FAIL→1）
 """
+
 import importlib.util
 import sys
 from pathlib import Path

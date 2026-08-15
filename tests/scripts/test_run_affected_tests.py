@@ -7,6 +7,7 @@ test_run_affected_tests.py — run-affected-tests.py 自身测试套件
   - find_tests_for 命名映射
   - main --dry-run 退出码（有 src 变更→0，无→0）
 """
+
 import importlib.util
 import subprocess
 import sys
@@ -67,25 +68,27 @@ class TestGetChangedFiles:
     def test_merges_three_diffs_and_dedups(self, monkeypatch):
         results = [
             self._make_result(0, "src/a.py\nscripts/b.py\n"),
-            self._make_result(0, "src/a.py\n"),      # 工作区改动与已提交重复
+            self._make_result(0, "src/a.py\n"),  # 工作区改动与已提交重复
             self._make_result(0, "scripts/c.py\n"),  # 已暂存
         ]
-        monkeypatch.setattr(
-            rat.subprocess, "run", lambda cmd, **kw: results.pop(0)
-        )
+        monkeypatch.setattr(rat.subprocess, "run", lambda cmd, **kw: results.pop(0))
         assert rat.get_changed_files("HEAD~1") == [
-            "src/a.py", "scripts/b.py", "scripts/c.py",
+            "src/a.py",
+            "scripts/b.py",
+            "scripts/c.py",
         ]
 
     def test_timeout_returns_none(self, monkeypatch):
         def boom(cmd, **kw):
             raise subprocess.TimeoutExpired(cmd, 15)
+
         monkeypatch.setattr(rat.subprocess, "run", boom)
         assert rat.get_changed_files("HEAD~1") is None
 
     def test_git_missing_returns_none(self, monkeypatch):
         def boom(cmd, **kw):
             raise FileNotFoundError()
+
         monkeypatch.setattr(rat.subprocess, "run", boom)
         assert rat.get_changed_files("HEAD~1") is None
 

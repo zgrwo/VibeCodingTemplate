@@ -6,6 +6,7 @@
   - SELF_CHECK_RE 自校验模式检测
   - check_example_blocks 代码块标注/闭合检查
 """
+
 import importlib.util
 import io
 import subprocess
@@ -111,7 +112,7 @@ class TestRunCrossval:
         crossval = tmp_path / "crossval"
         crossval.mkdir()
         (crossval / "bad.py").write_text(
-            'from verify_manual import check\n'
+            "from verify_manual import check\n"
             'if __name__ == "__main__":\n'
             '    check("G.BAD", 1.0, 2.0)\n',
             encoding="utf-8",
@@ -130,8 +131,7 @@ class TestRunCrossval:
         crossval = tmp_path / "crossval"
         crossval.mkdir()
         (crossval / "good.py").write_text(
-            'from verify_manual import check\n'
-            'check("G.OK", 1.0, 1.0)\n',
+            'from verify_manual import check\ncheck("G.OK", 1.0, 1.0)\n',
             encoding="utf-8",
         )
         monkeypatch.setattr(vm, "CROSSVAL_DIRS", [crossval])
@@ -174,8 +174,12 @@ class TestRunCrossval:
             pytest.skip("examples/scripts/crossval 不存在（示例目录已被裁剪）")
         r = subprocess.run(
             [sys.executable, str(example)],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            cwd=vm.ROOT, timeout=60,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=vm.ROOT,
+            timeout=60,
         )
         assert r.returncode == 0, r.stderr
         assert "STATS.MEAN" in r.stdout
@@ -225,6 +229,7 @@ class TestMainCLI:
         """--check-only 干净手册 → exit 0。"""
         import io
         from contextlib import redirect_stdout
+
         monkeypatch.setattr("sys.argv", ["verify-manual.py", "--check-only"])
         out = io.StringIO()
         with redirect_stdout(out):
@@ -310,7 +315,12 @@ class TestCompareAndTiers:
 
     def test_tolerance_tiers_defined(self):
         assert set(vm.TOLERANCE_TIERS) == {
-            "exact", "standard", "numeric", "loose", "stats", "physical",
+            "exact",
+            "standard",
+            "numeric",
+            "loose",
+            "stats",
+            "physical",
         }
         assert vm.TOLERANCE_TIERS["standard"] == 1e-10
         assert vm.TOLERANCE_TIERS["stats"] == 1e-2

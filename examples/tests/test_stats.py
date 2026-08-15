@@ -6,6 +6,7 @@
   - Falsy 守卫（None → NaN，0 是有效值）
   - 异常输入（NaN/Inf 元素被过滤）
 """
+
 import math
 
 from src.stats.StatsCore import mean, weighted_mean

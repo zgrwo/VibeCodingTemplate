@@ -21,6 +21,7 @@ verify-docs.py — 文档一致性验证
 
 退出码：0 = 通过；1 = 发现断链/缺失
 """
+
 import argparse
 import contextlib
 import json
@@ -249,11 +250,27 @@ def check_links() -> list[str]:
 # 为控制误报，仅检查"以已知根目录前缀开头"的引用（语义明确指向仓库内路径），
 # 并跳过：CHANGELOG（历史记录，引用已删文件属正常）、占位符/模式串、AI 工具本地目录。
 _KNOWN_ROOT_PREFIXES = (
-    "scripts/", "rules/", "skills/", "templates/", ".github/",
-    "docs/", "tests/", "src/", "tools/", "build/",
+    "scripts/",
+    "rules/",
+    "skills/",
+    "templates/",
+    ".github/",
+    "docs/",
+    "tests/",
+    "src/",
+    "tools/",
+    "build/",
 )
 _BACKTICK_SKIP_MARKERS = (
-    "xxx", "nnn", "{{", "{", "}", "<", ">", "*", "...",  # 占位符 / 模式串
+    "xxx",
+    "nnn",
+    "{{",
+    "{",
+    "}",
+    "<",
+    ">",
+    "*",
+    "...",  # 占位符 / 模式串
 )
 _BACKTICK_SKIP_PREFIXES = (".claude/", ".codegraph/", ".qoder/")  # AI 工具本地目录
 # CHANGELOG 为历史记录，引用已删除/重建文件属正常，不做反引号路径校验
@@ -307,14 +324,11 @@ def check_agents_tree() -> list[str]:
     agents_dirs = set(_parse_agents_top_dirs())
     if not ps_dirs or not agents_dirs:
         if not agents_dirs:
-            problems.append(
-                "[配置错误] 无法从 AGENTS.md 目录树解析顶层目录（格式异常？）"
-            )
+            problems.append("[配置错误] 无法从 AGENTS.md 目录树解析顶层目录（格式异常？）")
         return problems
     for d in sorted(ps_dirs - agents_dirs):
         problems.append(
-            f"[目录树漂移] project-structure.md 声明 {d}/，"
-            f"AGENTS.md 未收录（请同步 AGENTS.md）"
+            f"[目录树漂移] project-structure.md 声明 {d}/，AGENTS.md 未收录（请同步 AGENTS.md）"
         )
     for d in sorted(agents_dirs - ps_dirs):
         problems.append(
@@ -361,8 +375,7 @@ def check_undeclared(strict: bool) -> list[str]:
             problems.append(f"[未声明文件] {p.name}（请同步 project-structure.md 目录树）")
         elif p.is_dir():
             problems.append(
-                f"[未声明目录] {p.name}/（请同步 project-structure.md 目录树，"
-                f"或裁剪时同步删除）"
+                f"[未声明目录] {p.name}/（请同步 project-structure.md 目录树，或裁剪时同步删除）"
             )
     return problems
 
@@ -389,9 +402,7 @@ def check_subdir_undeclared(strict: bool) -> list[str]:
                 continue
             if p.name in declared:
                 continue
-            problems.append(
-                f"[未声明文件] {sub}/{p.name}（请同步 project-structure.md 目录树）"
-            )
+            problems.append(f"[未声明文件] {sub}/{p.name}（请同步 project-structure.md 目录树）")
     return problems
 
 
@@ -473,7 +484,7 @@ def _check_unclosed_todos() -> list[str]:
         for m in re.finditer(r"^\s*(?:[-*]?\s*)?(TODO|FIXME)\s*[:：]", text, re.MULTILINE):
             problems.append(
                 f"[语义检查] {doc} 含未闭合 {m.group(1)} 待办（第 "
-                f"{text[:m.start()].count(chr(10)) + 1} 行）——已完成请移除，未完成请登记"
+                f"{text[: m.start()].count(chr(10)) + 1} 行）——已完成请移除，未完成请登记"
             )
     return problems
 
@@ -486,7 +497,8 @@ def _check_bare_input_calls() -> list[str]:
     """
     problems: list[str] = []
     ci_scripts = [
-        p for p in (ROOT / "scripts").glob("*.py")
+        p
+        for p in (ROOT / "scripts").glob("*.py")
         if p.name.startswith(("verify-", "falsy-", "gen-doc-"))
     ]
     for p in sorted(ci_scripts):

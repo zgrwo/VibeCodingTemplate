@@ -4,6 +4,7 @@
   - detect_build_system()：.NET / Python / 无构建系统三分支
   - run_step()：成功 / 非零退出 / 工具缺失失败
 """
+
 import importlib.util
 import sys
 from pathlib import Path
@@ -11,9 +12,7 @@ from pathlib import Path
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-_spec = importlib.util.spec_from_file_location(
-    "verify_all_mod", SCRIPTS_DIR / "verify-all.py"
-)
+_spec = importlib.util.spec_from_file_location("verify_all_mod", SCRIPTS_DIR / "verify-all.py")
 va = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(va)
 
@@ -76,7 +75,8 @@ class TestMainCLI:
 
         monkeypatch.setattr(va, "run_step", fake_run_step)
         monkeypatch.setattr(
-            va, "detect_build_system",
+            va,
+            "detect_build_system",
             lambda: ("Python", ["python", "-m", "compileall", "-q", "src"], ["pytest-cmd"]),
         )
         monkeypatch.setattr("sys.argv", ["verify-all.py"] + argv)
@@ -112,9 +112,7 @@ class TestMainCLI:
         from contextlib import redirect_stdout
 
         calls: list[list[str]] = []
-        monkeypatch.setattr(
-            va, "run_step", lambda name, cmd, cwd=None: calls.append(cmd) or True
-        )
+        monkeypatch.setattr(va, "run_step", lambda name, cmd, cwd=None: calls.append(cmd) or True)
         monkeypatch.setattr(va, "detect_build_system", lambda: (None, [], []))
         monkeypatch.setattr("sys.argv", ["verify-all.py"])
         out = io.StringIO()

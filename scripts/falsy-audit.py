@@ -32,6 +32,7 @@ AST 增强（相比纯正则）：
 验收标准：零 HIGH 风险警告（CI quality-gate 硬门禁）。
 详见 rules/falsy-pitfalls.md（检查清单唯一定义处）。
 """
+
 from __future__ import annotations
 
 import argparse
@@ -117,6 +118,7 @@ def _classify(var: str) -> str:
 
 # ========== AST 审计器 ==========
 
+
 class FalsyAuditor(ast.NodeVisitor):
     """AST 遍历器：检测 falsy 陷阱 + 类型注解感知。"""
 
@@ -153,8 +155,7 @@ class FalsyAuditor(ast.NodeVisitor):
         name = _top_type_name(ann)
         return name in SAFE_TYPES_BOOL or name in SAFE_TYPES_COLLECTION
 
-    def _check_truthy(self, test: ast.expr, kind: str, lineno: int,
-                      line_text: str) -> None:
+    def _check_truthy(self, test: ast.expr, kind: str, lineno: int, line_text: str) -> None:
         """检查 if/while 的条件是否为 falsy 风险。"""
         # 跳过：is None / is not None / 比较
         if isinstance(test, ast.Compare):
@@ -202,9 +203,7 @@ class FalsyAuditor(ast.NodeVisitor):
             if level:
                 base_var = var.split(".")[0] if "." in var else var
                 if not self._is_safe_type(base_var):
-                    self.findings.append(
-                        (level, var, node.lineno, ast.unparse(node), kind)
-                    )
+                    self.findings.append((level, var, node.lineno, ast.unparse(node), kind))
                 break  # 已分类操作数即值操作数，检查后停止
             # 未命中名单的变量操作数：继续扫描后续操作数（与函数调用操作数一致）
 
@@ -275,6 +274,7 @@ def audit_file_ast(path: Path) -> list[tuple[str, str, int, str, str]] | None:
 
 # ========== 正则兜底审计器 ==========
 
+
 def audit_file_regex(path: Path) -> list[tuple[str, str, int, str, str]]:
     """正则兜底：AST 解析失败时使用。"""
     findings: list[tuple[str, str, int, str, str]] = []
@@ -334,7 +334,7 @@ def main(argv: list[str] | None = None) -> int:
     low: list[tuple[str, str, int, str, str]] = []
     for p in sorted(scope.rglob("*.py")):
         for level, var, lineno, code, kind in audit_file(p, use_ast=use_ast):
-            target = (high if level == "HIGH" else medium if level == "MEDIUM" else low)
+            target = high if level == "HIGH" else medium if level == "MEDIUM" else low
             try:
                 rel = str(p.relative_to(ROOT))
             except ValueError:
@@ -344,8 +344,10 @@ def main(argv: list[str] | None = None) -> int:
     if high:
         print(f"[FAIL] 发现 {len(high)} 个 HIGH 风险（falsy 误判，必须修复）：")
         for path, _var, lineno, code, kind in high:
-            print(f"  {path}:{lineno} [{kind}] {code} — 数值 0 可能被误判为 False，"
-                  f"应改为 `is not None`")
+            print(
+                f"  {path}:{lineno} [{kind}] {code} — 数值 0 可能被误判为 False，"
+                f"应改为 `is not None`"
+            )
     if medium:
         print(f"[WARN] {len(medium)} 个 MEDIUM 风险（排序/排名量，需人工确认 0 是否有效）：")
         for path, var, lineno, code, _kind in medium:

@@ -6,6 +6,7 @@ test_doctor.py — doctor.py 自身测试套件
   - 各 check 函数（python/git/tool/dir/file/placeholders）
   - main CLI 退出码（全就绪→0，有失败→1）
 """
+
 import importlib.util
 import sys
 from pathlib import Path

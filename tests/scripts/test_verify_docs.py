@@ -8,6 +8,7 @@ test_verify_docs.py — verify-docs.py 自身测试套件
   - 双目录树一致性校验
   - 排除目录配置
 """
+
 import contextlib
 import importlib.util
 import json
@@ -19,9 +20,7 @@ from pathlib import Path
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-_spec = importlib.util.spec_from_file_location(
-    "verify_docs", SCRIPTS_DIR / "verify-docs.py"
-)
+_spec = importlib.util.spec_from_file_location("verify_docs", SCRIPTS_DIR / "verify-docs.py")
 vd = importlib.util.module_from_spec(_spec)
 with contextlib.suppress(SystemExit):
     _spec.loader.exec_module(vd)  # verify-docs.py 在 import 时不会 exit，但以防万一
@@ -133,6 +132,7 @@ class TestMainCLI:
         """全绿时 main() 返回 0。"""
         import io
         from contextlib import redirect_stdout
+
         monkeypatch.setattr("sys.argv", ["verify-docs.py", "--strict"])
         out = io.StringIO()
         with redirect_stdout(out):
@@ -145,23 +145,15 @@ class TestCheckFunctionsDetection:
 
     def test_agents_tree_drift_detected(self, monkeypatch):
         """单边漂移：AGENTS.md 多声明一个目录 → 必须被 check_agents_tree 检出。"""
-        monkeypatch.setattr(
-            vd, "_parse_top_dirs", lambda: ["src", "tests"]
-        )
-        monkeypatch.setattr(
-            vd, "_parse_agents_top_dirs", lambda: ["src", "tests", "drifted"]
-        )
+        monkeypatch.setattr(vd, "_parse_top_dirs", lambda: ["src", "tests"])
+        monkeypatch.setattr(vd, "_parse_agents_top_dirs", lambda: ["src", "tests", "drifted"])
         problems = vd.check_agents_tree()
         assert any("目录树漂移" in p and "drifted" in p for p in problems)
 
     def test_agents_tree_clean_no_problems(self, monkeypatch):
         """双树一致 → 无目录树漂移问题。"""
-        monkeypatch.setattr(
-            vd, "_parse_top_dirs", lambda: ["src", "tests"]
-        )
-        monkeypatch.setattr(
-            vd, "_parse_agents_top_dirs", lambda: ["src", "tests"]
-        )
+        monkeypatch.setattr(vd, "_parse_top_dirs", lambda: ["src", "tests"])
+        monkeypatch.setattr(vd, "_parse_agents_top_dirs", lambda: ["src", "tests"])
         problems = vd.check_agents_tree()
         assert not any("目录树漂移" in p for p in problems)
 
@@ -202,12 +194,7 @@ class TestSemanticConsistency:
         scripts = tmp_path / "scripts"
         scripts.mkdir()
         (scripts / "verify-x.py").write_text(
-            '"""module doc."""\n'
-            "def f():\n"
-            "    try:\n"
-            "        pass\n"
-            "    except:\n"
-            "        pass\n",
+            '"""module doc."""\ndef f():\n    try:\n        pass\n    except:\n        pass\n',
             encoding="utf-8",
         )
         monkeypatch.setattr(vd, "ROOT", tmp_path)
@@ -219,8 +206,7 @@ class TestSemanticConsistency:
         scripts = tmp_path / "scripts"
         scripts.mkdir()
         (scripts / "verify-y.py").write_text(
-            '"""禁止裸 except: 捕获（教学文字）。"""\n'
-            "x = 1\n",
+            '"""禁止裸 except: 捕获（教学文字）。"""\nx = 1\n',
             encoding="utf-8",
         )
         monkeypatch.setattr(vd, "ROOT", tmp_path)
@@ -239,9 +225,9 @@ class TestSemanticConsistency:
         )
         monkeypatch.setattr(vd, "ROOT", tmp_path)
         problems = vd.check_semantic_consistency()
-        assert any("裸 catch" in p for p in problems)          # 第 3 行真实裸 catch
-        assert not any(p.endswith(":1") for p in problems)     # 行注释不误报
-        assert not any(p.endswith(":2") for p in problems)     # 块注释不误报
+        assert any("裸 catch" in p for p in problems)  # 第 3 行真实裸 catch
+        assert not any(p.endswith(":1") for p in problems)  # 行注释不误报
+        assert not any(p.endswith(":2") for p in problems)  # 块注释不误报
 
 
 class TestVersionConsistency:
@@ -354,6 +340,7 @@ class TestExcludedDirsSSOT:
 
     def test_verify_docs_equals_base(self):
         from _excluded_dirs import BASE_EXCLUDED_DIRS
+
         assert set(BASE_EXCLUDED_DIRS) == vd.EXCLUDED_DIRS
 
     def test_registries_base_plus_purpose_extras(self):

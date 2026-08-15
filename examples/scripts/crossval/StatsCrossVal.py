@@ -12,6 +12,7 @@
   - 禁止自校验：check(name, X, Y) 中 X 与 Y 相同则永远 PASS，无验证价值
   - 数值型必须 cross_check()（与 numpy 独立参考实现比对）
 """
+
 import sys
 from pathlib import Path
 
@@ -37,13 +38,9 @@ except ModuleNotFoundError:
     import importlib.util as _ilu
 
     _root = Path(__file__).resolve().parent
-    while _root.parent != _root and not (
-        _root / "scripts" / "verify-manual.py"
-    ).exists():
+    while _root.parent != _root and not (_root / "scripts" / "verify-manual.py").exists():
         _root = _root.parent
-    _spec = _ilu.spec_from_file_location(
-        "verify_manual", _root / "scripts" / "verify-manual.py"
-    )
+    _spec = _ilu.spec_from_file_location("verify_manual", _root / "scripts" / "verify-manual.py")
     _vm = _ilu.module_from_spec(_spec)
     _spec.loader.exec_module(_vm)
     sys.modules["verify_manual"] = _vm

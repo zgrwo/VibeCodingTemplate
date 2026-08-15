@@ -17,6 +17,7 @@ verify-all.py — 全量验证入口（跨平台 Python 版）
 
 退出码：0 = 通过；非 0 = 失败（CI 可直接调用）
 """
+
 from __future__ import annotations
 
 import argparse
@@ -72,8 +73,7 @@ def detect_build_system() -> tuple[str | None, list[str], list[str]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="全量验证入口")
-    parser.add_argument("--quick", action="store_true",
-                        help="仅构建 + 测试（跳过文档检查）")
+    parser.add_argument("--quick", action="store_true", help="仅构建 + 测试（跳过文档检查）")
     args = parser.parse_args()
 
     build_type, build_cmd, test_cmd = detect_build_system()
@@ -96,9 +96,19 @@ def main() -> int:
         steps.append(("测试质量守卫", [py, "scripts/test-quality-guard.py"]))
         # 模板自身治理脚本的"缺测"检测（默认 --src src 在模板仓库为空转；
         # 2026-08 Max 审查 #D8 修复：scripts/ 公共函数必须被 tests/scripts 引用）
-        steps.append(("测试质量守卫（scripts 缺测）",
-                      [py, "scripts/test-quality-guard.py",
-                       "--src", "scripts", "--tests", "tests/scripts"]))
+        steps.append(
+            (
+                "测试质量守卫（scripts 缺测）",
+                [
+                    py,
+                    "scripts/test-quality-guard.py",
+                    "--src",
+                    "scripts",
+                    "--tests",
+                    "tests/scripts",
+                ],
+            )
+        )
 
     all_passed = True
     for name, cmd in steps:
