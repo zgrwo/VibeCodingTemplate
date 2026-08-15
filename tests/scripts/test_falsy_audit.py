@@ -9,6 +9,7 @@ test_falsy_audit.py — falsy-audit.py 自身测试套件
   - 各检测模式（if x / if not x / while x / x or default）
   - 类型注解感知（bool/collection 安全）
 """
+
 import importlib.util
 import sys
 from pathlib import Path
@@ -17,9 +18,7 @@ from pathlib import Path
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-_spec = importlib.util.spec_from_file_location(
-    "falsy_audit", SCRIPTS_DIR / "falsy-audit.py"
-)
+_spec = importlib.util.spec_from_file_location("falsy_audit", SCRIPTS_DIR / "falsy-audit.py")
 fa = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(fa)
 
@@ -67,11 +66,7 @@ class TestASTAudit:
     def test_if_truthy_detected(self, tmp_path):
         """if count: 应被检测。"""
         f = tmp_path / "risky.py"
-        f.write_text(
-            "def process(count):\n"
-            "    if count:\n"
-            "        return count\n"
-        )
+        f.write_text("def process(count):\n    if count:\n        return count\n")
         results = fa.audit_file(f, use_ast=True)
         assert len(results) >= 1
         assert results[0][0] == "HIGH"  # level
@@ -80,33 +75,21 @@ class TestASTAudit:
     def test_if_not_truthy_detected(self, tmp_path):
         """if not count: 应被检测。"""
         f = tmp_path / "risky.py"
-        f.write_text(
-            "def process(count):\n"
-            "    if not count:\n"
-            "        return 0\n"
-        )
+        f.write_text("def process(count):\n    if not count:\n        return 0\n")
         results = fa.audit_file(f, use_ast=True)
         assert len(results) >= 1
 
     def test_while_truthy_detected(self, tmp_path):
         """while count: 应被检测。"""
         f = tmp_path / "risky.py"
-        f.write_text(
-            "def process(count):\n"
-            "    while count:\n"
-            "        count -= 1\n"
-        )
+        f.write_text("def process(count):\n    while count:\n        count -= 1\n")
         results = fa.audit_file(f, use_ast=True)
         assert len(results) >= 1
 
     def test_or_fallback_detected(self, tmp_path):
         """threshold or 0.05 应被检测。"""
         f = tmp_path / "risky.py"
-        f.write_text(
-            "def process(threshold):\n"
-            "    result = threshold or 0.05\n"
-            "    return result\n"
-        )
+        f.write_text("def process(threshold):\n    result = threshold or 0.05\n    return result\n")
         results = fa.audit_file(f, use_ast=True)
         assert len(results) >= 1
         assert "threshold" in results[0][1]
@@ -114,32 +97,21 @@ class TestASTAudit:
     def test_return_or_detected(self, tmp_path):
         """return count or 0 应被检测。"""
         f = tmp_path / "risky.py"
-        f.write_text(
-            "def process(count):\n"
-            "    return count or 0\n"
-        )
+        f.write_text("def process(count):\n    return count or 0\n")
         results = fa.audit_file(f, use_ast=True)
         assert len(results) >= 1
 
     def test_is_not_none_safe(self, tmp_path):
         """if x is not None: 不应被报告。"""
         f = tmp_path / "safe.py"
-        f.write_text(
-            "def process(count):\n"
-            "    if count is not None:\n"
-            "        return count\n"
-        )
+        f.write_text("def process(count):\n    if count is not None:\n        return count\n")
         results = fa.audit_file(f, use_ast=True)
         assert len(results) == 0
 
     def test_compare_safe(self, tmp_path):
         """if count > 0: 不应被报告。"""
         f = tmp_path / "safe.py"
-        f.write_text(
-            "def process(count):\n"
-            "    if count > 0:\n"
-            "        return count\n"
-        )
+        f.write_text("def process(count):\n    if count > 0:\n        return count\n")
         results = fa.audit_file(f, use_ast=True)
         assert len(results) == 0
 
@@ -158,11 +130,7 @@ class TestASTAudit:
     def test_bool_annotation_safe(self, tmp_path):
         """flag: bool → if flag: 安全，不报告。"""
         f = tmp_path / "safe_bool.py"
-        f.write_text(
-            "def process(flag: bool) -> None:\n"
-            "    if flag:\n"
-            "        print('yes')\n"
-        )
+        f.write_text("def process(flag: bool) -> None:\n    if flag:\n        print('yes')\n")
         results = fa.audit_file(f, use_ast=True)
         assert len(results) == 0
 
@@ -185,21 +153,13 @@ class TestRegexFallback:
     def test_regex_if_detected(self, tmp_path):
         """正则模式下 if count: 应被检测。"""
         f = tmp_path / "risky.py"
-        f.write_text(
-            "def process(count):\n"
-            "    if count:\n"
-            "        return count\n"
-        )
+        f.write_text("def process(count):\n    if count:\n        return count\n")
         results = fa.audit_file(f, use_ast=False)
         assert len(results) >= 1
 
     def test_regex_clean_file(self, tmp_path):
         f = tmp_path / "clean.py"
-        f.write_text(
-            "def compute(value):\n"
-            "    if value is not None:\n"
-            "        return value * 2\n"
-        )
+        f.write_text("def compute(value):\n    if value is not None:\n        return value * 2\n")
         results = fa.audit_file(f, use_ast=False)
         assert len(results) == 0
 
@@ -223,6 +183,7 @@ class TestMainCLI:
     def _run(self, monkeypatch, argv):
         import io
         from contextlib import redirect_stdout
+
         out = io.StringIO()
         monkeypatch.setattr("sys.argv", ["falsy-audit.py"] + argv)
         with redirect_stdout(out):
@@ -257,8 +218,8 @@ class TestMediumRisk:
         assert fa._classify("rank") == "MEDIUM"
         assert fa._classify("user_rank") == "MEDIUM"
         assert fa._classify("priority") == "MEDIUM"
-        assert fa._classify("mean") == "HIGH"   # 统计量仍是 HIGH
-        assert fa._classify("ratio") == "LOW"   # 领域量仍是 LOW
+        assert fa._classify("mean") == "HIGH"  # 统计量仍是 HIGH
+        assert fa._classify("ratio") == "LOW"  # 领域量仍是 LOW
 
     def test_medium_reported_as_warn_not_fail(self, tmp_path, monkeypatch):
         # 含 rank 变量的 if x: 应归 MEDIUM → WARN 不硬失败
@@ -285,7 +246,8 @@ class TestPublicEntryPoints:
         f.write_text("if count:\n    pass\n", encoding="utf-8")
         findings = fa.audit_file_ast(f)
         assert findings is not None
-        assert any(level == "HIGH" for level, *_ in findings)
+        highs = [level for level, *_ in findings if level == "HIGH"]
+        assert len(highs) == 1
 
     def test_audit_file_regex_direct(self, tmp_path):
         f = tmp_path / "b.py"
