@@ -34,6 +34,7 @@
 │   └── adr/                      # ADR 决策记录（0001-xxx.md，编号递增）
 │
 ├── skills/                       # AI 编码技能文件
+│   ├── README.md                 # 技能目录说明（自带 vs 第三方 Superpowers、更新/裁剪指引）
 │   ├── csharp-SKILL.md           # C# 编码陷阱与规范
 │   ├── python-SKILL.md           # Python 编码陷阱与规范
 │   ├── vba-SKILL.md              # VBA 编码陷阱与规范
@@ -42,7 +43,13 @@
 │   ├── rust-SKILL.md             # Rust 编码陷阱与规范
 │   ├── architecture-reviewer-SKILL.md  # 架构审查专家（重构生命周期）
 │   ├── refactoring-guardian-SKILL.md   # 重构守卫（每 Phase 前后）
-│   └── project-plan-review-SKILL.md    # 规划评审专家
+│   ├── project-plan-review-SKILL.md    # 规划评审专家
+│   ├── brainstorming/            # Superpowers：头脑风暴→规格（第三方，英文）
+│   ├── writing-plans/            # Superpowers：多步任务计划（第三方，英文）
+│   ├── test-driven-development/  # Superpowers：TDD（第三方，英文）
+│   ├── subagent-driven-development/  # Superpowers：子代理驱动开发（第三方，英文）
+│   ├── systematic-debugging/     # Superpowers：系统化调试（第三方，英文）
+│   └── verification-before-completion/ # Superpowers：完成前验证/闭环验证（第三方，英文）
 │
 ├── scripts/                      # 构建/验证脚本
 │   ├── README.md                 # 目录导航索引（脚本职责速查，详见本文件）
