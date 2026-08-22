@@ -41,6 +41,7 @@
 │   ├── typescript-SKILL.md       # TypeScript 编码陷阱与规范
 │   ├── go-SKILL.md               # Go 编码陷阱与规范
 │   ├── rust-SKILL.md             # Rust 编码陷阱与规范
+│   ├── ci-pipeline-SKILL.md      # CI 管道与脚本技能（GitHub Actions/PowerShell/PR 发版陷阱）
 │   ├── architecture-reviewer-SKILL.md  # 架构审查专家（重构生命周期）
 │   ├── refactoring-guardian-SKILL.md   # 重构守卫（每 Phase 前后）
 │   ├── project-plan-review-SKILL.md    # 规划评审专家

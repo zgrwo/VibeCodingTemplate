@@ -65,6 +65,7 @@
 | `{{SCOPE_2}}` | `skills/{{SKILL_2}}` | `{{DESCRIPTION_2}}` |
 | 语言陷阱（按需） | `skills/csharp-SKILL.md` / `skills/python-SKILL.md` / `skills/vba-SKILL.md` / `skills/typescript-SKILL.md` / `skills/go-SKILL.md` / `skills/rust-SKILL.md` | 对应语言的易错点与最佳实践 |
 | 工具陷阱（按需） | `rules/tooling-pitfalls.md` | Windows/PowerShell/git 脚本坑位 |
+| CI/脚本/PR 陷阱（按需） | `skills/ci-pipeline-SKILL.md` | GitHub Actions / PowerShell 脚本 / PR 与发版流程陷阱（5 项目实证） |
 | 过程技能（按需，Superpowers） | `skills/brainstorming/` / `skills/writing-plans/` / `skills/test-driven-development/` / `skills/subagent-driven-development/` / `skills/systematic-debugging/` / `skills/verification-before-completion/` | 头脑风暴→规格 / 多步任务计划 / TDD / 子代理驱动开发 / 系统化调试 / 完成前验证（第三方，英文，来源 obra/superpowers） |
 
 > **执行方式**：直接 Read skill 文件。

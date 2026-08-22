@@ -6,6 +6,7 @@
 ## 模板自带技能
 
 - `csharp-SKILL.md` / `python-SKILL.md` / `vba-SKILL.md` / `typescript-SKILL.md` / `go-SKILL.md` / `rust-SKILL.md` — 语言陷阱与规范
+- `ci-pipeline-SKILL.md` — CI 管道与脚本技能（GitHub Actions / PowerShell / PR 与发版流程陷阱，5 项目实证）
 - `architecture-reviewer-SKILL.md` / `refactoring-guardian-SKILL.md` / `project-plan-review-SKILL.md` — 重构生命周期专家
 - 语言技能按项目语言裁剪（删除后同步 `rules/tooling-pitfalls.md` 语言索引表，否则 verify-docs 报断链）
 
