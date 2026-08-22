@@ -10,7 +10,7 @@
 
 [project]
 name = "vibe-coding-template"
-version = "0.2.1"
+version = "0.2.2"
 description = "AI coding governance template — project constitution, skills, verification scripts, CI scaffolding"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
