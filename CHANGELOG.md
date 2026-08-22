@@ -4,6 +4,18 @@ All notable changes to VibeCodingTemplate.
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.2.1](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.2.0...v0.2.1) (2026-08-22)
+
+
+### ✨ 新功能
+
+* **skills:** 新增 ci-pipeline-SKILL.md — 从 5 子项目蒸馏 Script/CI/PR 陷阱 ([f85c354](https://github.com/zgrwo/VibeCodingTemplate/commit/f85c354afaeac813f3164b57272bb22e8286b331))
+
+
+### 🐛 Bug 修复
+
+* **docs:** 修正「Core 零依赖」来源 commit 归属（1d06e3f 为本模板自身提交） ([ee9f7be](https://github.com/zgrwo/VibeCodingTemplate/commit/ee9f7be41f2cfcfe66dd039764c2517e5b68e3e0))
+
 ## [0.2.0](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.1.2...v0.2.0) (2026-08-15)
 
 
