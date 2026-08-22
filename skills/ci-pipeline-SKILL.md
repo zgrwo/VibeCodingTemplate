@@ -35,10 +35,10 @@ argument-hint: "[修改的 .github/workflows/*.yml 或 CI 脚本] [--context 新
 | C2 | **覆盖率门禁无阈值 = 门禁不会红**：`pytest --cov` 不配 `--cov-fail-under`，覆盖率下降 CI 照绿 | 必须 `--cov-fail-under=N`；"覆盖率数据缺失时显式失败而非静默通过" | EngSmartSuite 2026-08-15 审查（P1-⑤） |
 | C3 | **多层 job 相互掩盖失败**：Build 失败 → Test/后续步骤全部不跑，每修一层暴露下一层（模板 release PR 曾连爆 3 层：detect → 提交前自检 → 示例测试） | 修完一层**必须重跑全链路**，直到全部 job 绿；不要只看当前失败点 | 模板 2026-08-15（release PR 全红三层实证） |
 | C4 | **checkout 默认浅克隆**：`git describe`/tag 比对/历史审计在默认配置下不可用 | 需要 tag/历史/基线时显式 `fetch-depth: 0` | costsuite Package job 2026-08-16（S1 同源） |
-| C5 | **actions 用 `@vN` tag 引用**（供应链：tag 可变） | 固定 commit SHA + 注释版本号（如 `@11d5960a... # v4`）；dependabot 会发 SHA 更新 PR | 两仓库 2026-08-16 加固实证 |
+| C5 | **actions 用 `@vN` tag 引用**（供应链：tag 可变）；**dependabot 对同一 action 的多个 action 文件（如 codeql-action 的 init/autobuild/analyze）分别发 PR，部分合并即版本混用**（init@4.37.7 + autobuild@4.37.6 → autobuild 步骤 30-49s 快速失败） | 固定 commit SHA + 注释版本号；**同一 action 多处引用一次性统一升级 SHA 并关闭 dependabot 分 PR**（security.yml 注释既有约定，两次实证） | 两仓库 2026-08-16 加固；模板 codeql-action 2026-08-22（3 个 dependabot PR 全部 autobuild fail，统一升级 v4.37.7 后关闭） |
 | C6 | **Node 20 弃用**：setup-python@v5 等旧 action 被强制跑 Node 24（warning 非失败） | 升级到支持 Node 24 的大版本（setup-python v6+）；warning 是升级信号 | 模板/两仓库 2026-08-16（CI 日志 warning） |
 | C7 | **`workflow_dispatch` 是诊断利器**：CI 只在 PR 上跑，main 直推无法触发 → 无法复现 | 临时分支改 workflow + `gh workflow run ci.yml --ref <branch>` 复现/验证，用完删分支（对照实验排除 PR 上下文因素） | 模板 detect 排障 2026-08-15（dispatch 对照实证） |
-| C8 | **release-please force-push 与 pull_request 事件竞争**：可能产生 0s `action_required` 幽灵 run（无 job、无日志） | 以最新一次 run 为准；PR 页面 statusCheckRollup 为准；幽灵 run 忽略 | 模板 release PR #12 2026-08-15（两次 0s 幽灵 run 实证） |
+| C8 | **release-please force-push 与 pull_request 事件竞争**：可能产生 0s `action_required` 幽灵 run（无 job、无日志、PR checks 不附着） | **`gh run rerun <幽灵 run id>` 即可让 checks 正常附着**（CI/Security 双 workflow 各 rerun 一次，已验证成功）；以最新 run 与 PR statusCheckRollup 为准；幽灵 run 忽略 | 模板 release PR #12 2026-08-15（幽灵 run 实证）、#16/#17 2026-08-22（幽灵 run + rerun 处置成功两次） |
 | C9 | **PR 事件 checkout 的是 `refs/pull/N/merge`（合并提交）**，不是 PR head | 涉及 base 比对/merge 语义的步骤按合并提交设计；本地复现用 `git fetch origin refs/pull/N/merge` | 模板 detect 排障 2026-08-15 |
 | C10 | **模板仓库自身 CI 自举**：占位符命令（`{{BUILD_CMD}}` 等）在模板仓库不可执行 | is_template 检测（grep -F 运行时拼装，见 S4）+ 模板模式用**字面命令**门禁（pytest/ruff/链接检查直接写死） | 模板 ci.yml 2026-08（三层门禁实证） |
 | C11 | **CodeQL autobuild 对无构建语言/模板仓库硬失败** | security.yml 只保留 extraction 型语言（python/javascript-typescript）；csharp/go 需可构建源码 | 模板 security.yml 2026-08 |
