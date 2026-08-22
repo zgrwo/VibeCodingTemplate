@@ -66,22 +66,22 @@ cd {{PROJECT_NAME}}
 
 ## 提交规范（Conventional Commits）
 
-提交信息格式：`type(scope): 描述`（scope 可选）。此格式是 **release-please 自动发版** 的输入——`feat`/`fix`/`break` 决定版本号升降，其余类型不进 CHANGELOG。**格式错误会被 commit hook 与 CI 同时拦截**。
+提交信息格式：`type(scope): 描述`（scope 可选）。此格式是 **release-please 自动发版** 的输入——`feat`/`fix` 决定版本号升降；`docs`/`build`/`ci` 等配置了 changelog section 的类型**也会触发发版**（0.x 下 bump patch，2026-08-22 实证：build→0.2.2、docs→0.2.3）。**格式错误会被 commit hook 与 CI 同时拦截**。
 
-| type | 含义 | 发版影响（release-please） |
+| type | 含义 | 发版影响（release-please，0.x 实证口径） |
 |------|------|---------------------------|
-| `feat` | 新功能 | minor（0.x.0） |
-| `fix` | Bug 修复 | patch（0.0.x） |
+| `feat` | 新功能 | minor（0.x 下 bump-patch-for-minor-pre-major → patch） |
+| `fix` | Bug 修复 | patch |
 | `feat!` / `feat(scope)!:` | 破坏性变更（BREAKING CHANGE） | major（pre-1.0 时为 minor） |
-| `docs` | 文档 | 无 |
-| `style` | 代码风格（无逻辑变化） | 无 |
-| `refactor` | 重构（无行为变化） | 无 |
-| `test` | 测试 | 无 |
-| `build` | 构建 | 无 |
-| `ci` | CI 配置 | 无 |
-| `perf` | 性能优化 | 无 |
-| `revert` | 回滚 | 无 |
-| `chore` | 维护（依赖/杂务） | 无 |
+| `docs` | 文档 | **patch（实证会触发发版）** |
+| `style` | 代码风格（无逻辑变化） | 无（未实证，以 release-please 实测为准） |
+| `refactor` | 重构（无行为变化） | 无（未实证） |
+| `test` | 测试 | 无（未实证） |
+| `build` | 构建 | **patch（实证会触发发版）** |
+| `ci` | CI 配置 | **patch（实证会触发发版）** |
+| `perf` | 性能优化 | 无（未实证） |
+| `revert` | 回滚 | 无（未实证） |
+| `chore` | 维护（依赖/杂务） | 无（release-please 自身提交类型，不触发） |
 | `release` | 发版（release-please 自动提交） | 无 |
 
 示例：`fix(engine): 修复 anova 效应量计算`、`feat!(api): 移除已废弃的导出参数`、`docs(用户手册): 补充阈值参数说明`。
