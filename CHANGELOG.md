@@ -4,6 +4,13 @@ All notable changes to VibeCodingTemplate.
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.2.3](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.2.2...v0.2.3) (2026-08-22)
+
+
+### 📄 文档
+
+* **skills:** ci-pipeline-SKILL 补充两条 2026-08-22 实证 ([43a5912](https://github.com/zgrwo/VibeCodingTemplate/commit/43a5912874d4288469d803f4e0311d0e42ae1cc4))
+
 ## [0.2.2](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.2.1...v0.2.2) (2026-08-22)
 
 
