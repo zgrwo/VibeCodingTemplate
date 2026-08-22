@@ -4,6 +4,13 @@ All notable changes to VibeCodingTemplate.
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.2.2](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.2.1...v0.2.2) (2026-08-22)
+
+
+### 🏗 构建
+
+* **ci:** codeql-action 三处统一升级 v4.37.6 → v4.37.7（消除 dependabot 部分升级混用） ([d8b83bd](https://github.com/zgrwo/VibeCodingTemplate/commit/d8b83bdd569845c2eb6ac5bb1eb42750c36480ed))
+
 ## [0.2.1](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.2.0...v0.2.1) (2026-08-22)
 
 
