@@ -252,7 +252,7 @@
 
 ### 关键设计经验
 
-- **Core 零依赖**（来源：ExcelFormulaLabs commit `1d06e3f`）：核心计算不引用 Excel-DNA/UI 框架，可独立单元测试。已固化为模板分层规则（UDF → Core → Foundation）。
+- **Core 零依赖**（来源：ExcelFormulaLabs 实践——UDF→Core→Foundation 分层；固化提交：本模板 `1d06e3f`）：核心计算不引用 Excel-DNA/UI 框架，可独立单元测试。已固化为模板分层规则（UDF → Core → Foundation）。
 - **哨兵值优于异常**（来源：costsuite 性能回归）：数值计算中用 NaN 表示"无效"而非抛异常，热路径中避免 try-catch 开销。已固化为防错三原则之一。
 - **SSOT 收敛是持续战役**（来源：DocAudit 文档数字漂移 4 次复发）：仅设计 SSOT 不够，需 `verify-docs.py --strict` + CI 硬门禁持续守护。已固化为闭环验证强制 + quality-gate。
 
