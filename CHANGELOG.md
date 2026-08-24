@@ -4,6 +4,18 @@ All notable changes to VibeCodingTemplate.
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.2.5](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.2.4...v0.2.5) (2026-08-24)
+
+
+### 🐛 Bug 修复
+
+* **scripts:** test-quality-guard.py 修复正则 ReDoS（CodeQL py/redos 4 条告警） ([f65b906](https://github.com/zgrwo/VibeCodingTemplate/commit/f65b9065786d212a99292609f5dbae7417c41a9a))
+
+
+### 📄 文档
+
+* architecture.md skills 描述补 CI 管道技能 ([5606f10](https://github.com/zgrwo/VibeCodingTemplate/commit/5606f10aba3506bc88a4edd77516c63bbdaf5b37))
+
 ## [0.2.4](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.2.3...v0.2.4) (2026-08-22)
 
 
