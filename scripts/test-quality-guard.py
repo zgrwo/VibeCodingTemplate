@@ -37,10 +37,13 @@ _WEAK_ASSERT_RE = re.compile(
 )
 # 真实断言（验证具体值）
 # expr 支持下标/属性/方法调用（df["col"].sum() == 5）、len(...)==N/!=N 形式
+# ReDoS 修复（CodeQL py/redos）：原 `\[.*?\]` / `\(.*?\)` 内嵌点星量词，
+# 与分组外层 `*` 叠加形成嵌套量词 → 灾难性回溯。改用排除定界符的字符类
+# `[^\]]*` / `[^)]*`（单层量词，无回溯），语义等价（单层下标/方法调用）。
 _STRONG_ASSERT_RE = re.compile(
-    r"assert\s+\w+(?:\[.*?\]|\.\w+(?:\(.*?\))?)*\s*[=!]=\s*\w+(?:\(.*?\))?"
+    r"assert\s+\w+(?:\[[^\]]*\]|\.\w+(?:\([^)]*\))?)*\s*[=!]=\s*\w+(?:\([^)]*\))?"
     r"|assert\s+\w+\s*in\s+"  # assert x in ...
-    r"|assert\s+\w+(?:\[.*?\]|\.\w+(?:\(.*?\))?)*\s*[<>]=?\s*\w+(?:\(.*?\))?"
+    r"|assert\s+\w+(?:\[[^\]]*\]|\.\w+(?:\([^)]*\))?)*\s*[<>]=?\s*\w+(?:\([^)]*\))?"
     r"|assert\s+\w+\s*is\s+True"  # assert x is True
     r"|assert\s+\w+\s*is\s+False"
     r"|assert\s+len\([^)]*\)\s*[=!]=\s*\S+"  # assert len(x) == N / != N
