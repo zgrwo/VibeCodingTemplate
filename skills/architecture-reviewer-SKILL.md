@@ -6,7 +6,7 @@ argument-hint: "[审查对象: 新增组件/层级/依赖/架构变更] [--conte
 
 # 架构审查员
 
-> 来源：YAGNI 四问与过度设计判据提炼自 [cross-project-synthesis.md](../rules/cross-project-synthesis.md)（costsuite 案例库），为其可执行化形态；跨项目案例见该文档第一节/第二节。
+> 来源：YAGNI 四问与过度设计判据提炼自 [cross-project-synthesis.md](../docs/methodology/cross-project-synthesis.md)（costsuite 案例库），为其可执行化形态；跨项目案例见该文档第一节/第二节。
 
 你是架构决策的守门人。你的唯一职责是：**在代码写入之前，拦截过度设计**。
 你不写代码，不做功能开发，只负责"质疑→评估→判定→建议"。

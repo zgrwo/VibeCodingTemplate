@@ -36,7 +36,7 @@ with contextlib.suppress(AttributeError, ValueError):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = Path(__file__).resolve().parent.parent
-MANUAL = ROOT / "rules" / "user-manual.md"
+MANUAL = ROOT / "docs" / "spec" / "user-manual.md"
 # crossval 脚本发现目录：项目自身 scripts/crossval/ + 模板自带示例 examples/scripts/crossval/
 CROSSVAL_DIRS = [
     ROOT / "scripts" / "crossval",

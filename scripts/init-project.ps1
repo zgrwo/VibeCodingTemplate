@@ -100,7 +100,7 @@ if (Test-Path -LiteralPath $Target) { Get-ChildItem -LiteralPath $Target -Force 
 [System.IO.Directory]::CreateDirectory($Target) | Out-Null
 # .claude/.codegraph/.qoder 为 AI 工具本地目录（.gitignore 已忽略，不应进入新项目，
 # 否则开发者本地 AI 设置随初始化泄漏，且 verify-docs.py --strict 会将其视为未声明目录）
-Get-ChildItem -LiteralPath $template -Force | Where-Object { $_.Name -notin @(".git", "logs", ".claude", ".codegraph", ".qoder", ".coverage") } | ForEach-Object {
+Get-ChildItem -LiteralPath $template -Force | Where-Object { $_.Name -notin @(".git", "logs", ".claude", ".codegraph", ".qoder", ".zcode", ".coverage") } | ForEach-Object {
     Copy-Item -LiteralPath $_.FullName -Destination $Target -Recurse -Force
 }
 # 清理被复制进来的垃圾/构建目录（__pycache__/bin/obj 等不入库，也不应进入新项目；
@@ -113,7 +113,7 @@ Write-Host "    完成（已跳过 .git / logs / .claude / __pycache__ 等）" -
 if (Test-Path (Join-Path $Target "examples")) {
     # P6 审查修复：examples/ 为参考示例，明确告知去向（不需要可删除，
     # 删除后需同步 project-structure.md/AGENTS.md 目录树，否则 verify-docs --strict 报未声明/缺失）
-    Write-Host "    [提示] examples/ 示例项目已复制（参考用途：演示多语言 Core/CrossVal/测试写法，不需要可整体删除；删除后请同步 rules/project-structure.md 与 AGENTS.md 目录树）" -ForegroundColor Yellow
+    Write-Host "    [提示] examples/ 示例项目已复制（参考用途：演示多语言 Core/CrossVal/测试写法，不需要可整体删除；删除后请同步 docs/governance/project-structure.md 与 AGENTS.md 目录树）" -ForegroundColor Yellow
 }
 
 # ----------------------------------------------------------------------------

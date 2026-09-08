@@ -39,16 +39,17 @@ class TestExcludedDirs:
         assert ".claude" in vd.EXCLUDED_DIRS
         assert ".codegraph" in vd.EXCLUDED_DIRS
         assert ".qoder" in vd.EXCLUDED_DIRS
+        assert ".zcode" in vd.EXCLUDED_DIRS
 
 
 class TestLinkRegex:
     """测试 Markdown 链接正则。"""
 
     def test_standard_link_extracted(self):
-        text = "see [docs](rules/context.md)"
+        text = "see [docs](docs/spec/context.md)"
         link_re = re.compile(r"\[[^\]]*\]\(([^)#]+)\)")
         matches = link_re.findall(text)
-        assert "rules/context.md" in matches
+        assert "docs/spec/context.md" in matches
 
     def test_external_link(self):
         text = "see [GitHub](https://github.com)"
@@ -57,10 +58,10 @@ class TestLinkRegex:
         assert "https://github.com" in matches
 
     def test_placeholder_link(self):
-        text = "see [{{MODULE}}](rules/{{MODULE}}.md)"
+        text = "see [{{MODULE}}](docs/spec/{{MODULE}}.md)"
         link_re = re.compile(r"\[[^\]]*\]\(([^)#]+)\)")
         matches = link_re.findall(text)
-        assert "rules/{{MODULE}}.md" in matches
+        assert "docs/spec/{{MODULE}}.md" in matches
 
 
 class TestTreeParsing:
@@ -92,6 +93,65 @@ class TestTreeParsing:
             )
 
 
+class TestParseNestedFilesTwoLevel:
+    """两层目录树解析（2026-09 rules/ 并入 docs/ 后支持二级分类目录逐文件守卫）。"""
+
+    TREE = """\
+{{PROJECT_NAME}}/
+│
+├── docs/                         # 文档中心
+│   ├── README.md                 # 导航
+│   ├── governance/               # 治理与结构
+│   │   ├── documentation.md      # 文档职责
+│   │   └── project-structure.md  # 结构树
+│   └── methodology/              # 末子节点（单竖线前缀）
+│       ├── cross-project-synthesis.md
+│       └── refactoring-plan.md
+│
+├── .github/                      # GitHub 协作
+│   ├── workflows/ci.yml          # 目录/文件合并条目
+│   └── CODEOWNERS                # 直属文件
+│
+├── scripts/                      # 含省略号的目录
+│   ├── verify-docs.py            # 直属文件
+│   └── ...
+│
+├── Makefile                      # 根级文件（非目录，应忽略）
+"""
+
+    def _parse(self, tmp_path, monkeypatch):
+        doc = tmp_path / "project-structure.md"
+        doc.write_text(f"```\n{self.TREE}```\n", encoding="utf-8")
+        monkeypatch.setattr(vd, "STRUCTURE_DOC", doc)
+        return vd._parse_nested_files()
+
+    def test_top_level_direct_files(self, tmp_path, monkeypatch):
+        result = self._parse(tmp_path, monkeypatch)
+        assert result["docs"] == {"README.md"}
+        assert result[".github"] == {"CODEOWNERS"}
+        assert result["scripts"] == {"verify-docs.py"}
+
+    def test_second_level_dirs_parsed(self, tmp_path, monkeypatch):
+        result = self._parse(tmp_path, monkeypatch)
+        assert result["docs/governance"] == {"documentation.md", "project-structure.md"}
+
+    def test_last_child_prefix_parsed(self, tmp_path, monkeypatch):
+        """末子节点前缀（`│       ├──`，仅一个竖线）也须按二级深度解析。"""
+        result = self._parse(tmp_path, monkeypatch)
+        assert result["docs/methodology"] == {"cross-project-synthesis.md", "refactoring-plan.md"}
+
+    def test_merged_dir_file_entry_ignored(self, tmp_path, monkeypatch):
+        """`workflows/ci.yml` 式合并条目不作为 .github 直属文件（守卫按既有行为跳过）。"""
+        result = self._parse(tmp_path, monkeypatch)
+        assert "workflows/ci.yml" not in result[".github"]
+        assert "workflows" not in result[".github"]
+
+    def test_root_file_line_ignored(self, tmp_path, monkeypatch):
+        result = self._parse(tmp_path, monkeypatch)
+        assert "Makefile" not in result
+        assert all("Makefile" not in v for v in result.values())
+
+
 class TestCheckFunctions:
     """测试检查函数的返回类型。"""
 
@@ -119,7 +179,7 @@ class TestPatternLike:
         assert vd._is_pattern_like("{{MODULE}}")
 
     def test_normal_path_not_pattern(self):
-        assert not vd._is_pattern_like("rules/context.md")
+        assert not vd._is_pattern_like("docs/spec/context.md")
 
     def test_name_pattern_is_pattern(self):
         assert vd._is_pattern_like("0001-xxx.md")
@@ -351,13 +411,40 @@ class TestHardGateDetection:
         assert vd.check_undeclared(strict=False) == []
 
     def test_check_subdir_undeclared_detects_child(self, tmp_path, monkeypatch):
-        rules = tmp_path / "rules"
-        rules.mkdir()
-        (rules / "orphan.md").write_text("", encoding="utf-8")
+        docs = tmp_path / "docs"
+        docs.mkdir()
+        (docs / "orphan.md").write_text("", encoding="utf-8")
         monkeypatch.setattr(vd, "ROOT", tmp_path)
-        monkeypatch.setattr(vd, "_parse_nested_files", lambda: {"rules": {"known.md"}})
+        monkeypatch.setattr(vd, "_parse_nested_files", lambda: {"docs": {"README.md"}})
         problems = vd.check_subdir_undeclared(strict=True)
         assert any("未声明文件" in p and "orphan.md" in p for p in problems)
+
+    def test_check_subdir_undeclared_detects_second_level(self, tmp_path, monkeypatch):
+        """二级分类目录（docs/governance）内未登记文件必须被检出（2026-09 两层守卫）。"""
+        gov = tmp_path / "docs" / "governance"
+        gov.mkdir(parents=True)
+        (gov / "orphan.md").write_text("", encoding="utf-8")
+        (gov / "documentation.md").write_text("", encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        monkeypatch.setattr(
+            vd,
+            "_parse_nested_files",
+            lambda: {"docs": {"README.md"}, "docs/governance": {"documentation.md"}},
+        )
+        problems = vd.check_subdir_undeclared(strict=True)
+        assert any("未声明文件" in p and "docs/governance/orphan.md" in p for p in problems)
+
+    def test_check_subdir_undeclared_ignores_undeclared_second_level_dir(
+        self, tmp_path, monkeypatch
+    ):
+        """opt-in 语义：未列入 _SUBDIR_CHECK 的二级目录（运行时产物如 docs/superpowers/）不检查。"""
+        sp = tmp_path / "docs" / "superpowers"
+        sp.mkdir(parents=True)
+        (sp / "plan.md").write_text("", encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        monkeypatch.setattr(vd, "_parse_nested_files", lambda: {"docs": {"README.md"}})
+        problems = vd.check_subdir_undeclared(strict=True)
+        assert not any("plan.md" in p for p in problems)
 
     def test_check_dirs_detects_missing_declared(self, tmp_path, monkeypatch):
         monkeypatch.setattr(vd, "ROOT", tmp_path)

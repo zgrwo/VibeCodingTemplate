@@ -1,6 +1,6 @@
 # scripts/ — 构建/验证脚本
 
-> 本模板自举治理门禁与初始化脚本。**职责唯一定义**见 [project-structure.md](../rules/project-structure.md)（结构地图）与 [templates/README.md](../templates/README.md)「治理脚本速查」；本文件仅作导航索引，不重复定义。
+> 本模板自举治理门禁与初始化脚本。**职责唯一定义**见 [project-structure.md](../docs/governance/project-structure.md)（结构地图）与 [templates/README.md](../templates/README.md)「治理脚本速查」；本文件仅作导航索引，不重复定义。
 
 ## 导航
 

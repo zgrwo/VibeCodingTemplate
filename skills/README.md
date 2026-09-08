@@ -8,7 +8,7 @@
 - `csharp-SKILL.md` / `python-SKILL.md` / `vba-SKILL.md` / `typescript-SKILL.md` / `go-SKILL.md` / `rust-SKILL.md` — 语言陷阱与规范
 - `ci-pipeline-SKILL.md` — CI 管道与脚本技能（GitHub Actions / PowerShell / PR 与发版流程陷阱，5 项目实证）
 - `architecture-reviewer-SKILL.md` / `refactoring-guardian-SKILL.md` / `project-plan-review-SKILL.md` — 重构生命周期专家
-- 语言技能按项目语言裁剪（删除后同步 `rules/tooling-pitfalls.md` 语言索引表，否则 verify-docs 报断链）
+- 语言技能按项目语言裁剪（删除后同步 `docs/pitfalls/tooling-pitfalls.md` 语言索引表，否则 verify-docs 报断链）
 
 ## 第三方过程技能（Superpowers，英文原版）
 
@@ -33,5 +33,5 @@ git clone --depth 1 https://github.com/obra/superpowers.git /tmp/superpowers
 
 ### 裁剪建议（下游项目）
 
-- 不需要的过程技能可直接删除对应目录（同时裁剪 `rules/project-structure.md` 与 `AGENTS.md` 技能表的对应行，否则 `verify-docs.py --strict` 报未声明/缺失）
+- 不需要的过程技能可直接删除对应目录（同时裁剪 `docs/governance/project-structure.md` 与 `AGENTS.md` 技能表的对应行，否则 `verify-docs.py --strict` 报未声明/缺失）
 - 保留 `verification-before-completion/` 与 `test-driven-development/` 通常收益最高（与模板闭环验证/测试完备性要求互补）

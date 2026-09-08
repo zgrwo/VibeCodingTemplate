@@ -33,10 +33,10 @@
 
 | # | 陷阱 | 权威定义处 |
 |---|------|-----------|
-| 11 | **.NET Framework 4.8 使用 `record` 需 `IsExternalInit` polyfill** | [csharp-SKILL.md](../skills/csharp-SKILL.md)（双 TFM / IsExternalInit 章节） |
-| 12 | **Pydantic v2 不兼容位置参数**（模型构造必须关键字参数） | [python-SKILL.md](../skills/python-SKILL.md) §8.5 |
-| 13 | **VBA 不支持 `Optional ByRef` 数组参数** | [vba-SKILL.md](../skills/vba-SKILL.md) §4.0 |
-| 14 | **移除 NuGet 包后 .dna 中对应 DLL 引用残留** | [csharp-SKILL.md](../skills/csharp-SKILL.md)（Excel-DNA 章节） |
+| 11 | **.NET Framework 4.8 使用 `record` 需 `IsExternalInit` polyfill** | [csharp-SKILL.md](../../skills/csharp-SKILL.md)（双 TFM / IsExternalInit 章节） |
+| 12 | **Pydantic v2 不兼容位置参数**（模型构造必须关键字参数） | [python-SKILL.md](../../skills/python-SKILL.md) §8.5 |
+| 13 | **VBA 不支持 `Optional ByRef` 数组参数** | [vba-SKILL.md](../../skills/vba-SKILL.md) §4.0 |
+| 14 | **移除 NuGet 包后 .dna 中对应 DLL 引用残留** | [csharp-SKILL.md](../../skills/csharp-SKILL.md)（Excel-DNA 章节） |
 
 ## 验证脚本陷阱（SSOT 守卫盲区）
 
@@ -45,7 +45,7 @@
 | # | 陷阱 | 正确做法 |
 |---|------|----------|
 | 15 | **`Path.rglob` 在文件上不迭代** → `falsy-audit --path <文件>` 静默输出"无发现"（门禁说谎） | 扫描入口先校验 `scope.is_dir()`，文件路径显式报错 |
-| 16 | **`check_undeclared` 只查根级**（`ROOT.iterdir()`）→ 子目录新增 `rules/*.md` 等静默通过 SSOT 守卫 | 对 SSOT 关键子目录（rules/skills/scripts/docs/.github/templates/examples）逐文件比对目录树声明 |
+| 16 | **`check_undeclared` 只查根级**（`ROOT.iterdir()`）→ 子目录新增 `rules/*.md` 等静默通过 SSOT 守卫 | 对 SSOT 关键子目录（docs 及其分类子目录/skills/scripts/.github/templates/examples）逐文件比对目录树声明（2026-09 合并 rules/ 后守卫目录含二级 opt-in） |
 | 17 | **类型注解安全判定用子串匹配**（`"list" in hint.lower()`）→ `Optional[list[float]]`（None/空列表混淆）、自定义 `MyList` 被误判安全 | 解析注解 AST 取顶层类型构造器（`_top_type_name`），`X \| None` 联合视为 Optional |
 | 18 | **init 把未登记 `{{X}}` 元文档引用替换为小写**（`get_placeholder_value` 落到 `name.lower()`）→ 教学文档（如 pre-release-review.md 的占位符约定表）被污染成 `upper`/`x`，且 CI 自测无法发现 | 未登记 token 返回 None 保留原样；文档内教学引用统一 `{{...}}` 转义（三点号不匹配 `[A-Z0-9_]+`）；tests/ 目录跳过占位符扫描（内含 scanner 测试夹具） |
 | 19 | **spec 加载 crossval 脚本时 `if __name__ == "__main__"` 守卫被绕过** → 脚本 0 PASS/0 FAIL 仍 exit 0（门禁说谎） | 用 `spec_from_file_location` 加载时 `__name__` 恒为模块 stem，任何包裹 main-guard 的校验都不会执行；要求 `_PASS + _FAIL > 0` 否则显式 FAIL |

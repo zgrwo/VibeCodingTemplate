@@ -24,7 +24,7 @@
 - **先阅读** [README.md](README.md)（项目是什么）+ [AGENTS.md](AGENTS.md)（架构、红线、流程）——架构分层、防错三原则、闭环验证是协作基础。
 - **找入口**：在 Issues 中搜索 `good first issue` 或 `help wanted` 标签——它们经过筛选，适合新贡献者。若选择未打标签的 Issue，先留言确认避免与他人重复。
 - **报告前先确认**：Bug 请在**最新版本**复现后再提交（Issue 模板有此必填项）。
-- **文档地图**：各文档职责分工见 [rules/documentation.md](rules/documentation.md)（唯一权威）——改动前确认该内容属于哪个文档，避免重复定义（SSOT）。
+- **文档地图**：各文档职责分工见 [docs/governance/documentation.md](docs/governance/documentation.md)（唯一权威）——改动前确认该内容属于哪个文档，避免重复定义（SSOT）。
 
 ## 开发环境
 
@@ -42,7 +42,7 @@ cd {{PROJECT_NAME}}
 - **跨平台验证**：
   - Windows：`.\scripts\verify-all.ps1`
   - Linux/macOS/WSL：`python scripts/verify-all.py` 或 `make verify`
-- **IDE 提示**：`.editorconfig` 已统一缩进/换行/编码，主流 IDE 自动生效；PowerShell 脚本须保持 UTF-8 with BOM（见 [rules/tooling-pitfalls.md](rules/tooling-pitfalls.md)）。
+- **IDE 提示**：`.editorconfig` 已统一缩进/换行/编码，主流 IDE 自动生效；PowerShell 脚本须保持 UTF-8 with BOM（见 [docs/pitfalls/tooling-pitfalls.md](docs/pitfalls/tooling-pitfalls.md)）。
 
 ## 修改流程（强制）
 
@@ -61,7 +61,7 @@ cd {{PROJECT_NAME}}
 - **架构分层**：{{LAYER_DIAGRAM}}（严格单向依赖，底层不感知上层）
 - **防错三原则**：静默传播阻断 / 防御完整性 / 异常过滤器（无裸 catch / bare except）
 - **闭环验证**：数值类必须与独立参考实现交叉比对，禁止自校验 `check(X, X)`
-- **文档同步**：Public 接口变更必须同步 `rules/api-reference.md`
+- **文档同步**：Public 接口变更必须同步 `docs/spec/api-reference.md`
 - **语言陷阱**：见 `skills/`（Falsy / 封送 / 数组边界等高频错误）
 
 ## 提交规范（Conventional Commits）

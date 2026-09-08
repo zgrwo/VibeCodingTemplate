@@ -7,11 +7,11 @@ argument-hint: "[修改的 .py 文件/模块] [--context 新增分析函数 | �
 # Python 编码技能
 
 > 从 EngSmartSuite + DocAudit 历史 diff 中提炼的 Python 易错点与最佳实践。修改 .py 前必读。
-> **SSOT 防御契约**：无效输入返回什么（NaN 哨兵 vs 异常）见 [rules/sentinel-contract.md](../rules/sentinel-contract.md)。
+> **SSOT 防御契约**：无效输入返回什么（NaN 哨兵 vs 异常）见 [docs/pitfalls/sentinel-contract.md](../docs/pitfalls/sentinel-contract.md)。
 
 ## 1. Falsy 陷阱（最高频错误）
 
-> **SSOT**：完整检查清单（核心规则/正反例/高风险变量名/历史案例）见 [falsy-pitfalls.md](../rules/falsy-pitfalls.md)，此处只列最小示例。
+> **SSOT**：完整检查清单（核心规则/正反例/高风险变量名/历史案例）见 [falsy-pitfalls.md](../docs/pitfalls/falsy-pitfalls.md)，此处只列最小示例。
 
 ```python
 # ❌ 0、空字符串、空列表都是 falsy

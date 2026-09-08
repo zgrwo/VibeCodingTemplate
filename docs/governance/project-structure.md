@@ -18,20 +18,27 @@
 │   ├── scripts/                  # 验证脚本自身测试套件
 │   └── fixtures/                 # 测试数据/黄金文件
 │
-├── rules/                        # 规范文档（本目录）
-│   ├── documentation.md          # 文档职责规范
-│   ├── project-structure.md      # 项目结构（本文件）
-│   ├── context.md                # 领域术语表
-│   ├── specification.md          # 业务规则与功能范围唯一信源
-│   ├── api-reference.md          # API 签名唯一信源
-│   ├── user-manual.md            # 用户手册
-│   ├── cross-project-synthesis.md# 跨项目共性经验与重构方法论
-│   ├── refactoring-plan.md       # 重构计划模板（现状→目标路线图）
-│   ├── adr-template.md           # ADR 模板（编号与格式）
-│   ├── falsy-pitfalls.md         # Python falsy 陷阱清单
-│   ├── tooling-pitfalls.md       # 工具/脚本坑位清单
-│   ├── sentinel-contract.md      # 哨兵契约 L1-L5 与 NaN/Inf 守卫清单
-│   └── adr/                      # ADR 决策记录（0001-xxx.md，编号递增）
+├── docs/                         # 文档中心（规范信源 / 治理 / 设计 / 陷阱 / 方法论，导航见 docs/README.md）
+│   ├── README.md                 # 文档中心导航（五分类速查表）
+│   ├── governance/               # 治理与结构（元文档）
+│   │   ├── documentation.md      # 文档职责规范（唯一权威）
+│   │   └── project-structure.md  # 项目结构（本文件）
+│   ├── spec/                     # 业务与技术规格（唯一信源）
+│   │   ├── context.md            # 领域术语表
+│   │   ├── specification.md      # 业务规则与功能范围唯一信源
+│   │   ├── api-reference.md      # API 签名唯一信源
+│   │   └── user-manual.md        # 用户手册
+│   ├── design/                   # 架构设计与决策记录
+│   │   ├── architecture.md       # 模板仓库自身架构设计（含内联 ADR-0001~0004）
+│   │   ├── adr-template.md       # ADR 模板（编号与格式）
+│   │   └── adr/                  # ADR 决策记录（0001-xxx.md，编号递增）
+│   ├── pitfalls/                 # 陷阱与防御契约
+│   │   ├── falsy-pitfalls.md     # Python falsy 陷阱清单
+│   │   ├── tooling-pitfalls.md   # 工具/脚本坑位清单
+│   │   └── sentinel-contract.md  # 哨兵契约 L1-L5 与 NaN/Inf 守卫清单
+│   └── methodology/              # 跨项目经验与重构方法论
+│       ├── cross-project-synthesis.md  # 跨项目共性经验与反模式案例库
+│       └── refactoring-plan.md   # 重构计划模板（现状→目标路线图）
 │
 ├── skills/                       # AI 编码技能文件
 │   ├── README.md                 # 技能目录说明（自带 vs 第三方 Superpowers、更新/裁剪指引）
@@ -97,10 +104,6 @@
 │   ├── PULL_REQUEST_TEMPLATE.md  # PR 模板
 │   └── CODEOWNERS                # 代码所有者分配（PR 审查路由）
 │
-├── docs/                         # 用户文档（补充材料）
-│   ├── README.md                 # 文档目录说明（与 rules/ 的分工）
-│   └── architecture.md           # 架构设计（ADR 决策记录）
-│
 ├── build/                        # 构建配置（按需裁剪）
 │   └── README.md                 # 构建目录用途说明
 │
@@ -156,7 +159,7 @@
 | 规模 | 建议 |
 |------|------|
 | 单文件脚本 | 仅 `src/` + `tests/` + 必要规则文档 |
-| 小型项目（<5 模块） | `src/` + `tests/` + `scripts/` + `rules/`，可跳过 `templates/`/`docs/`/`build/` |
+| 小型项目（<5 模块） | `src/` + `tests/` + `scripts/` + `docs/spec/`，可跳过 `templates/`/`build/` 及其余 docs/ 分类子目录 |
 | 中型项目（5-15 模块） | 本目录树全量 |
 | 大型/多仓 | 全量 + 子目录级 `AGENTS.md`（Monorepo） |
 

@@ -139,7 +139,7 @@
 1. 复制 monorepo/AGENTS.md.template 到 src/{子项目名}/AGENTS.md
 2. 替换 {子项目名}/{子项目语言}/{子项目入口文件}
 3. 填写子项目特有红线（在根 AGENTS.md 基础上追加，不可覆盖根红线）
-4. 同步根目录 rules/project-structure.md 与 AGENTS.md 目录树
+4. 同步根目录 docs/governance/project-structure.md 与 AGENTS.md 目录树
 5. 子项目间通信必须通过 foundation/ 共享层或显式接口
 ```
 
@@ -171,7 +171,7 @@
 
 - **决策树格式**（来源：工程分析 analysis-decision-tree / 成本分析线程策略）：领域知识
   编码为 if-then 路由（"用户想 X？→ 用方法 Y"），AI 可据此路由请求到正确实现。
-- **术语治理**（来源：文档审查 glossary/vocab）：`rules/context.md` 定义术语后，如需机器执行，
+- **术语治理**（来源：文档审查 glossary/vocab）：`docs/spec/context.md` 定义术语后，如需机器执行，
   建 `vocab/accept.txt`/`reject.txt` 词表 + 校验脚本（模板提供模式，不强制部署）。
 - **双 AI 工具格式**（来源：成本分析 skills/+.qoder/skills/）：同一技能维护
   `skills/*.md`（人类/Claude 可读）与 `.qoder/skills/*/SKILL.md`（机器解析格式）

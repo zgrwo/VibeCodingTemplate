@@ -647,7 +647,8 @@ def main() -> int:
         # verify-docs --strict 报未声明/缺失）
         print(
             "    [提示] examples/ 示例项目已复制（参考用途：演示多语言 Core/CrossVal/测试写法，"
-            "不需要可整体删除；删除后请同步 rules/project-structure.md 与 AGENTS.md 目录树）"
+            "不需要可整体删除；删除后请同步 docs/governance/project-structure.md"
+            " 与 AGENTS.md 目录树）"
         )
 
     # 删除模板专属段落（README 的「从本模板初始化新项目」等不进入新项目；

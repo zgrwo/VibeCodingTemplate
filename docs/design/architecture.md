@@ -13,12 +13,12 @@
 ```
 .github/workflows/     CI/CD 分层门禁（quick/full/quality/template-self-test）
 AGENTS.md              项目宪法（四条核心准则、红线规则、防幻觉铁律）
-├── rules/             规范文档（documentation.md 为 SSOT 权威）
+├── docs/              文档中心（governance/spec/design/pitfalls/methodology 五分类，documentation.md 为 SSOT 权威）
 ├── skills/            编码技能（6 语言 + 3 位重构专家 + CI 管道技能）
 ├── templates/         模块脚手架（NewModule + language + monorepo）
 ├── scripts/           验证脚本（AST 审计 + 初始化 + commit 校验）
 ├── examples/          示例项目（Python/TypeScript/Go/Rust）
-└── tests/             验证脚本自测（<!-- AUTO_COUNTS:TESTS_START -->227<!-- AUTO_COUNTS:TESTS_END --> tests，见 tests/scripts/）
+└── tests/             验证脚本自测（<!-- AUTO_COUNTS:TESTS_START -->234<!-- AUTO_COUNTS:TESTS_END --> tests，见 tests/scripts/）
 ```
 
 ## 关键设计决策
@@ -45,7 +45,7 @@ CI 检测 `AGENTS.md` 中是否残留未替换的核心占位符 `PROJECT_NAME`�
 **不可用 BRE 转义 `\{\{PROJECT_NAME\}\}`**：`\{` 是区间表达式起始符，旧版 GNU grep 对"`\{` 后非数字"宽容
 处理为字面量，新版（3.11，runner 镜像 20260810.271.1 实证）直接报 `Invalid content of \{\}`（exit 2），
 且原实现 `2>/dev/null` 吞掉错误 → `is_template` 恒 false、模板模式跳过逻辑静默失效（2026-08-15 发行阻塞，
-见 rules/tooling-pitfalls.md #25）；`grep -F` 固定串匹配无正则解析，版本无关。
+见 docs/pitfalls/tooling-pitfalls.md #25）；`grep -F` 固定串匹配无正则解析，版本无关。
 
 实现：`.github/workflows/ci.yml`（quick-check / full-check / quality-gate / template-self-test 四处 detect 步骤）
 与 `.github/workflows/detect-template.yml`（reusable workflow）统一使用上述运行时拼装 + `grep -F` 模式。

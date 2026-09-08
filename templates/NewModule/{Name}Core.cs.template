@@ -20,7 +20,7 @@ namespace {{ROOT_NAMESPACE}}.{Module}
     internal static class {Name}Core
     {
         // ====================================================================
-        // 哨兵契约 (L1-L5，唯一定义见 rules/sentinel-contract.md)：
+        // 哨兵契约 (L1-L5，唯一定义见 docs/pitfalls/sentinel-contract.md)：
         //   L1 守卫：显式检查 NaN/Inf/null（double.IsNaN / IsInfinity）
         //   L2 哨兵：不可转换/无效数值 → 类型零值哨兵（double→NaN，不抛异常）
         //   L3 外部信号：null/空集合 → NaN（无有效值，跳过该元素）

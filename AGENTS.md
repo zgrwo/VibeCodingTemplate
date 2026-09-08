@@ -1,6 +1,6 @@
 # AGENTS.md — 项目宪法
 
-> 全局架构、绝对红线与核心流程。编码细节按需加载 Skill。术语见 [context.md](rules/context.md)。
+> 全局架构、绝对红线与核心流程。编码细节按需加载 Skill。术语见 [context.md](docs/spec/context.md)。
 > 本文件面向 AI 编程助手（QoderCN / Claude Code / Codex / Copilot），是项目唯一宪法文件。
 > 兼容性：本文件即 `AGENTS.md`（大写）——2026 年跨工具事实标准，多数 AI 工具可直接读取；Claude Code 按需创建 `CLAUDE.md` 副本（见下方「AGENTS.md 生态兼容」）。
 
@@ -8,8 +8,8 @@
 
 - **项目名**：`{{PROJECT_NAME}}`
 - **语言**：文档与注释默认中文
-- **术语**：[context.md](rules/context.md) — 所有领域词汇唯一定义
-- **数字唯一基准**：[api-reference.md](rules/api-reference.md) — 函数签名与错误行为以此为准
+- **术语**：[context.md](docs/spec/context.md) — 所有领域词汇唯一定义
+- **数字唯一基准**：[api-reference.md](docs/spec/api-reference.md) — 函数签名与错误行为以此为准
 - **信息单一事实来源 (SSOT)**：每个事实只在一处定义，其余仅链接引用
 
 ## 四条核心准则
@@ -64,7 +64,7 @@
 | `{{SCOPE_1}}` | `skills/{{SKILL_1}}` | `{{DESCRIPTION_1}}` |
 | `{{SCOPE_2}}` | `skills/{{SKILL_2}}` | `{{DESCRIPTION_2}}` |
 | 语言陷阱（按需） | `skills/csharp-SKILL.md` / `skills/python-SKILL.md` / `skills/vba-SKILL.md` / `skills/typescript-SKILL.md` / `skills/go-SKILL.md` / `skills/rust-SKILL.md` | 对应语言的易错点与最佳实践 |
-| 工具陷阱（按需） | `rules/tooling-pitfalls.md` | Windows/PowerShell/git 脚本坑位 |
+| 工具陷阱（按需） | `docs/pitfalls/tooling-pitfalls.md` | Windows/PowerShell/git 脚本坑位 |
 | CI/脚本/PR 陷阱（按需） | `skills/ci-pipeline-SKILL.md` | GitHub Actions / PowerShell 脚本 / PR 与发版流程陷阱（5 项目实证） |
 | 过程技能（按需，Superpowers） | `skills/brainstorming/` / `skills/writing-plans/` / `skills/test-driven-development/` / `skills/subagent-driven-development/` / `skills/systematic-debugging/` / `skills/verification-before-completion/` | 头脑风暴→规格 / 多步任务计划 / TDD / 子代理驱动开发 / 系统化调试 / 完成前验证（第三方，英文，来源 obra/superpowers） |
 
@@ -93,18 +93,17 @@
 
 ## 仓库目录树
 
-> 路由地图：所有文件路径均以此为基准。详细结构见 [project-structure.md](rules/project-structure.md)。推送规则见 [Git](#git)。
+> 路由地图：所有文件路径均以此为基准。详细结构见 [project-structure.md](docs/governance/project-structure.md)。推送规则见 [Git](#git)。
 
 ```
 {{PROJECT_NAME}}/
 ├── src/                          # ✅ 源码
 ├── tests/                        # ✅ 测试
-├── docs/                         # ✅ 文档（设计文档，见 docs/README.md）
+├── docs/                         # ✅ 文档中心（governance 治理 / spec 信源 / design 设计与 ADR / pitfalls 陷阱 / methodology 方法论，见 docs/README.md）
 ├── scripts/                      # ✅ 构建/验证脚本（占位符 manifest / commit 校验 / init / verify 等）
 ├── templates/                    # ✅ 模块脚手架（NewModule 多语言模板 + language 构建配置）
 ├── examples/                     # ✅ 示例项目（最小可运行的完整实践）
 ├── skills/                       # ✅ Skill 定义
-├── rules/                        # ✅ 规范文档（含 ADR 决策记录）
 ├── tools/                        # ✅ 辅助工具
 ├── build/                        # ✅ 构建配置
 ├── .github/                      # ✅ CI 工作流 + Issue/PR 模板
@@ -174,9 +173,9 @@
 
 ### 4. 文档同步
 
-- 新增 Public 接口 → 同步更新 `rules/api-reference.md`
-- 新增用户可见功能 → 同步更新 `rules/user-manual.md`
-- 目录结构变更 → 同步更新 `rules/project-structure.md`
+- 新增 Public 接口 → 同步更新 `docs/spec/api-reference.md`
+- 新增用户可见功能 → 同步更新 `docs/spec/user-manual.md`
+- 目录结构变更 → 同步更新 `docs/governance/project-structure.md`
 
 ## 开发流程
 
@@ -233,7 +232,7 @@
 
 ### 高频修复模式
 
-> 从 5 个项目（ExcelFormulaLabs / Excel-VBA-Libraries / EngSmartSuite / costsuite / DocAudit）的全量 commit 历史提炼。详细案例见 [cross-project-synthesis.md](rules/cross-project-synthesis.md)。
+> 从 5 个项目（ExcelFormulaLabs / Excel-VBA-Libraries / EngSmartSuite / costsuite / DocAudit）的全量 commit 历史提炼。详细案例见 [cross-project-synthesis.md](docs/methodology/cross-project-synthesis.md)。
 
 | 模式 | 出现次数 | 根因 |
 |------|----------|------|
@@ -248,7 +247,7 @@
 | 配置流断裂 | 4+ | 规则/参数在配置中声明但链路某节点断裂导致功能静默失效（PATTERN_1/2、ROOT_CAUSE_1/2 死条目：内容已固化文档但 manifest 未清理；2026-08 新增 CrossVal sys.path 层级错误致 `from src.stats` 无法解析） |
 | 初始实现防御不足 | 5×15轮 | 初始实现只考虑正常路径，未系统性考虑退化输入（每个项目平均经历 5-15 轮审查修复） |
 | 工具链声明与代码漂移 | 1 | 仓库声明了 ruff-format hook（.pre-commit-config.yaml）与 Makefile format target，但 27 个 Python 文件从未按 ruff format 排版——`pre-commit run --all-files` 会产生大 diff（2026-08-15 发行前审查实证；修复：ruff format 全仓对齐，后续在 CI 或 pre-commit 中兜底 `ruff format --check`） |
-| 工具版本行为变化致门禁静默失效 | 1 | CI detect 步骤用 BRE 转义 `grep -rq '\{\{PROJECT_NAME\}\}'` 检测模板模式：`\{` 是区间表达式起始符，旧版 GNU grep 宽容处理为字面量，新版（3.11，runner 镜像 20260810.271.1 升级后）直接报 `Invalid content of \{\}`（exit 2），且步骤内 `2>/dev/null` 吞掉错误 → `is_template` 恒 false → Build 执行字面 `{{BUILD_CMD}}`（exit 127），release PR CI 全红；本地 Git grep（3.1）与旧镜像均正常，故此前从未暴露（2026-08-15 实证；修复：`grep -F` 固定串匹配 + 模式运行时拼装防 init 替换，见 rules/tooling-pitfalls.md #25/#25b） |
+| 工具版本行为变化致门禁静默失效 | 1 | CI detect 步骤用 BRE 转义 `grep -rq '\{\{PROJECT_NAME\}\}'` 检测模板模式：`\{` 是区间表达式起始符，旧版 GNU grep 宽容处理为字面量，新版（3.11，runner 镜像 20260810.271.1 升级后）直接报 `Invalid content of \{\}`（exit 2），且步骤内 `2>/dev/null` 吞掉错误 → `is_template` 恒 false → Build 执行字面 `{{BUILD_CMD}}`（exit 127），release PR CI 全红；本地 Git grep（3.1）与旧镜像均正常，故此前从未暴露（2026-08-15 实证；修复：`grep -F` 固定串匹配 + 模式运行时拼装防 init 替换，见 docs/pitfalls/tooling-pitfalls.md #25/#25b） |
 
 ### 关键设计经验
 
@@ -258,16 +257,16 @@
 
 ### 历史教训索引
 
-- 反模式案例库（10 类，含出现次数 + 真实项目案例）→ `rules/cross-project-synthesis.md`
+- 反模式案例库（10 类，含出现次数 + 真实项目案例）→ `docs/methodology/cross-project-synthesis.md`
 - 语言陷阱（Falsy / 封送 / 数组边界）→ `skills/`
-- 工具/脚本坑位（PowerShell / git / robocopy）→ `rules/tooling-pitfalls.md`
-- 架构决策与回退记录 → `rules/adr/`（ADR 编号递增）
+- 工具/脚本坑位（PowerShell / git / robocopy）→ `docs/pitfalls/tooling-pitfalls.md`
+- 架构决策与回退记录 → `docs/design/adr/`（ADR 编号递增）
 
 ## 防幻觉铁律
 
 | 铁律 | 说明 |
 |------|------|
-| **不靠记忆引用文档** | 每次引用 `rules/` 或 `skills/` 中的内容时，先 Read/Grep 确认，不凭印象 |
+| **不靠记忆引用文档** | 每次引用 `docs/` 或 `skills/` 中的内容时，先 Read/Grep 确认，不凭印象 |
 | **不确定 = 承认不确定** | 不要编造业务规则；说"我需要在 spec 中确认"然后去查 |
 | **写过的代码 = 读过的代码** | 不要假设自己知道某个文件内容——Read 它或 Grep 确认后再改 |
 | **版本号是事实锚点** | 每个结论标注来源文档版本，防止误用过时信息 |
@@ -324,29 +323,29 @@
 - [ ] 生成文件目录（长得像源码、实际由工具生成的目录，禁止直接修改）
 - [ ] 聚焦测试命令（完整测试耗时长的模块，写明改单模块先跑哪条）
 - [ ] 安全边界（凭据、数据库迁移、发布操作需人工确认）
-- [ ] 修改模块边界前必须阅读的文档（如 `rules/api-reference.md`）
+- [ ] 修改模块边界前必须阅读的文档（如 `docs/spec/api-reference.md`）
 
 > 长任务可选：对多步骤任务可用 `PLANS.md`（OpenAI Codex 实践），本模板已内置目标驱动格式，二选一即可。
 
 ## 参考
 
-> 各文档职责矩阵与维护规则（唯一权威）：[documentation.md](rules/documentation.md)。本表仅作快速索引。
+> 各文档职责矩阵与维护规则（唯一权威）：[documentation.md](docs/governance/documentation.md)。本表仅作快速索引。
 
 | 文档 | 角色 | 内容 |
 | :--- | :--- | :--- |
 | [README.md](README.md) | 用户入口 | 安装、模块速览、使用模式 |
-| [context.md](rules/context.md) | 术语表 | 所有术语唯一定义 |
-| [specification.md](rules/specification.md) | 业务信源 | 项目概述、模块清单、功能规格 |
-| [api-reference.md](rules/api-reference.md) | 数字唯一信源 | 函数签名、参数、错误行为 |
-| [user-manual.md](rules/user-manual.md) | 学习教程 | 每函数详细示例 + 结果解读 |
-| [project-structure.md](rules/project-structure.md) | 结构地图 | 文件职责与层级关系 |
-| [documentation.md](rules/documentation.md) | 文档职责 | 各文档分工与维护规则 |
-| [cross-project-synthesis.md](rules/cross-project-synthesis.md) | 方法论 | 跨项目共性经验与重构方法论 |
-| [refactoring-plan.md](rules/refactoring-plan.md) | 重构计划 | 从"能用"到"卓越"的路线图模板 |
-| [adr-template.md](rules/adr-template.md) | ADR 模板 | 架构决策记录格式与编号规则 |
-| [falsy-pitfalls.md](rules/falsy-pitfalls.md) | 陷阱清单 | Python falsy 值误判检查清单 |
-| [tooling-pitfalls.md](rules/tooling-pitfalls.md) | 陷阱清单 | Windows/PowerShell/git 脚本坑位 |
-| [sentinel-contract.md](rules/sentinel-contract.md) | 防御契约 | 哨兵契约 L1-L5 与 NaN/Inf 守卫清单 |
+| [context.md](docs/spec/context.md) | 术语表 | 所有术语唯一定义 |
+| [specification.md](docs/spec/specification.md) | 业务信源 | 项目概述、模块清单、功能规格 |
+| [api-reference.md](docs/spec/api-reference.md) | 数字唯一信源 | 函数签名、参数、错误行为 |
+| [user-manual.md](docs/spec/user-manual.md) | 学习教程 | 每函数详细示例 + 结果解读 |
+| [project-structure.md](docs/governance/project-structure.md) | 结构地图 | 文件职责与层级关系 |
+| [documentation.md](docs/governance/documentation.md) | 文档职责 | 各文档分工与维护规则 |
+| [cross-project-synthesis.md](docs/methodology/cross-project-synthesis.md) | 方法论 | 跨项目共性经验与重构方法论 |
+| [refactoring-plan.md](docs/methodology/refactoring-plan.md) | 重构计划 | 从"能用"到"卓越"的路线图模板 |
+| [adr-template.md](docs/design/adr-template.md) | ADR 模板 | 架构决策记录格式与编号规则 |
+| [falsy-pitfalls.md](docs/pitfalls/falsy-pitfalls.md) | 陷阱清单 | Python falsy 值误判检查清单 |
+| [tooling-pitfalls.md](docs/pitfalls/tooling-pitfalls.md) | 陷阱清单 | Windows/PowerShell/git 脚本坑位 |
+| [sentinel-contract.md](docs/pitfalls/sentinel-contract.md) | 防御契约 | 哨兵契约 L1-L5 与 NaN/Inf 守卫清单 |
 | [templates/README.md](templates/README.md) | 脚手架说明 | 新增模块/构建配置的使用方式 |
 | [examples/README.md](examples/README.md) | 示例项目 | 最小可运行的完整实践演示 |
 | [README.en.md](README.en.md) | 英文入口 | 国际用户入口 |

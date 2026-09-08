@@ -106,7 +106,7 @@ pub fn div(a: f64, b: f64) -> f64 {
 
 ## 4. 哨兵契约（NaN 表示无效）
 
-> 术语统一：SSOT 定义为「哨兵契约」（见 [rules/sentinel-contract.md](../rules/sentinel-contract.md)，L1-L5 各语言落地映射）。与 Go/Python 对齐：**0 是有效值，NaN 表示无效**。
+> 术语统一：SSOT 定义为「哨兵契约」（见 [docs/pitfalls/sentinel-contract.md](../docs/pitfalls/sentinel-contract.md)，L1-L5 各语言落地映射）。与 Go/Python 对齐：**0 是有效值，NaN 表示无效**。
 
 ```rust
 /// Mean 计算算术均值。空切片/全无效返回 NaN。

@@ -87,4 +87,4 @@ python scripts/verify-manual.py
 ## 维护规则
 
 - 本契约变更必须同步 `skills/` 语言文件的落地映射与 NewModule 模板注释
-- 新踩哨兵/守卫坑 → 追加到 `AGENTS.md`「历史经验」并登记 `rules/cross-project-synthesis.md`
+- 新踩哨兵/守卫坑 → 追加到 `AGENTS.md`「历史经验」并登记 `docs/methodology/cross-project-synthesis.md`

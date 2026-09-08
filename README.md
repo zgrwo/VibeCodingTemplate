@@ -5,7 +5,7 @@
 [English](README.en.md) | **中文**
 
 > **本文档是「下游项目模板」**,含 `{{...}}` 占位符段落,由 `scripts/init-project.py` / `scripts/init-project.ps1` 在初始化新项目时自动替换
-> (完整清单见 `scripts/placeholders.json`)。模板仓库自身的架构与治理说明,见 [`docs/architecture.md`](docs/architecture.md)、
+> (完整清单见 `scripts/placeholders.json`)。模板仓库自身的架构与治理说明,见 [`docs/design/architecture.md`](docs/design/architecture.md)、
 > `README.en.md` 与本文件底部「治理体系说明」。
 
 <!-- 徽章区（初始化后按需启用：取消注释，并将 OWNER/REPO_NAME 替换为实际值）：
@@ -27,7 +27,7 @@
 
 ## 模块速览
 
-> 完整签名、参数说明见 **[API 参考](rules/api-reference.md)**；每个函数的详细示例见 **[用户手册](rules/user-manual.md)**。
+> 完整签名、参数说明见 **[API 参考](docs/spec/api-reference.md)**；每个函数的详细示例见 **[用户手册](docs/spec/user-manual.md)**。
 
 | 模块 | 做什么 | 试一试 |
 |------|------|-------|
@@ -56,7 +56,7 @@
 
 {{ERROR_HANDLING_DESCRIPTION}}
 
-> 完整错误清单见 **[API 参考 → 错误参考](rules/api-reference.md#错误参考)**。
+> 完整错误清单见 **[API 参考 → 错误参考](docs/spec/api-reference.md#错误参考)**。
 
 ---
 
@@ -102,19 +102,19 @@
 
 | 文档 | 角色 | 内容 |
 |------|------|------|
-| [specification.md](rules/specification.md) | 业务信源 | 项目概述、模块清单、功能规格（做什么） |
-| [API 参考](rules/api-reference.md) | 数字唯一信源 | 函数完整签名、参数说明、错误表（怎么调用） |
-| [用户手册](rules/user-manual.md) | 学习教程 | 每个函数详细示例 + 结果解读指南 |
-| [context.md](rules/context.md) | 术语表 | 所有术语唯一定义 |
-| [documentation.md](rules/documentation.md) | 文档职责 | 各文档分工与维护规则 |
-| [project-structure.md](rules/project-structure.md) | 结构地图 | 文件职责与层级关系 |
+| [specification.md](docs/spec/specification.md) | 业务信源 | 项目概述、模块清单、功能规格（做什么） |
+| [API 参考](docs/spec/api-reference.md) | 数字唯一信源 | 函数完整签名、参数说明、错误表（怎么调用） |
+| [用户手册](docs/spec/user-manual.md) | 学习教程 | 每个函数详细示例 + 结果解读指南 |
+| [context.md](docs/spec/context.md) | 术语表 | 所有术语唯一定义 |
+| [documentation.md](docs/governance/documentation.md) | 文档职责 | 各文档分工与维护规则 |
+| [project-structure.md](docs/governance/project-structure.md) | 结构地图 | 文件职责与层级关系 |
 | [AGENTS.md](AGENTS.md) | 项目宪法 | 架构分层、红线规则、开发流程 |
-| [ADR 记录](rules/adr-template.md) | 决策历史 | 架构决策记录（编号递增） |
-| [跨项目经验](rules/cross-project-synthesis.md) | 方法论 | 反模式案例库、重构方法论、对标清单 |
-| [重构计划](rules/refactoring-plan.md) | 路线图 | 从"能用"到"卓越"的重构模板 |
-| [陷阱清单](rules/falsy-pitfalls.md) | 避坑手册 | Falsy 值误判等高频陷阱 |
-| [哨兵契约](rules/sentinel-contract.md) | 防御契约 | L1-L5 哨兵契约与 NaN/Inf 守卫清单 |
-| [工具坑位](rules/tooling-pitfalls.md) | 避坑手册 | PowerShell/git 脚本坑位 |
+| [ADR 记录](docs/design/adr-template.md) | 决策历史 | 架构决策记录（编号递增） |
+| [跨项目经验](docs/methodology/cross-project-synthesis.md) | 方法论 | 反模式案例库、重构方法论、对标清单 |
+| [重构计划](docs/methodology/refactoring-plan.md) | 路线图 | 从"能用"到"卓越"的重构模板 |
+| [陷阱清单](docs/pitfalls/falsy-pitfalls.md) | 避坑手册 | Falsy 值误判等高频陷阱 |
+| [哨兵契约](docs/pitfalls/sentinel-contract.md) | 防御契约 | L1-L5 哨兵契约与 NaN/Inf 守卫清单 |
+| [工具坑位](docs/pitfalls/tooling-pitfalls.md) | 避坑手册 | PowerShell/git 脚本坑位 |
 | [贡献指南](CONTRIBUTING.md) | 贡献入口 | 开发/PR/发版流程 |
 | [变更记录](CHANGELOG.md) | 版本历史 | keepachangelog 格式 |
 
@@ -124,13 +124,13 @@
 
 本项目遵循 AI 编码治理模板体系（项目宪法 + SSOT + 闭环验证）：
 
-> 文档职责分工与维护规则（唯一权威）：[rules/documentation.md](rules/documentation.md)。下表仅为导航速览。
+> 文档职责分工与维护规则（唯一权威）：[docs/governance/documentation.md](docs/governance/documentation.md)。下表仅为导航速览。
 
 | 文件 | 面向 | 职责 |
 |------|------|------|
 | `AGENTS.md` | AI 编程助手 | 项目宪法——架构、红线、编码准则、防幻觉铁律（AGENTS.md 生态兼容） |
 | `README.md` | 人类用户 | 功能指南——安装、模块速览、使用模式（本文件） |
-| `rules/` | AI + 人类 | 规范文档——API 参考、用户手册、术语表、ADR、陷阱清单 |
+| `docs/` | AI + 人类 | 文档中心——规范信源（spec/）、治理（governance/）、设计决策（design/）、陷阱（pitfalls/）、方法论（methodology/） |
 | `skills/` | AI 编码 | 技能定义——语言陷阱、编码模式、重构守则 |
 | `.github/` | CI + 协作 | 质量门禁、CodeQL 安全扫描、依赖更新、Issue/PR 模板 |
 | `CONTRIBUTING.md` / `CHANGELOG.md` / `LICENSE` | 协作与合规 | 贡献流程、版本历史、开源许可 |
@@ -144,7 +144,7 @@
 
 > 本模板沉淀了 5 个子项目（Excel 函数库 / VBA 库 / 工程分析 / 成本分析 / 文档审查）的共性治理经验。初始化新项目时按以下顺序执行：
 
-> **本节为模板专属内容**，由 TEMPLATE_ONLY 标记（HTML 注释）圈定（约定与语法见 `rules/documentation.md`）；
+> **本节为模板专属内容**，由 TEMPLATE_ONLY 标记（HTML 注释）圈定（约定与语法见 `docs/governance/documentation.md`）；
 > `init-project` 初始化时会整体删除本节，**不进入新项目**。后续新增模板专属内容请沿用同一标记。
 
 ### 1. 复制与重命名
@@ -186,18 +186,18 @@ cp -r VibeCodingTemplate <PROJECT_NAME>  # robocopy /E /XD .git (Windows)
 
 - **src/ 目录树**：按实际模块创建 `src/<Module>/` 结构
 - **skills/**：仅保留本项目语言对应的 SKILL.md，删除其余语言文件
-  （**必做**：删除语言技能后，同步清理 `rules/tooling-pitfalls.md` 语言索引表中
+  （**必做**：删除语言技能后，同步清理 `docs/pitfalls/tooling-pitfalls.md` 语言索引表中
    指向已删 SKILL 的链接，否则 `verify-docs.py --strict` 会报断链）
 - **CI**：在 `.github/workflows/ci.yml` 中替换语言 setup 与命令占位符；启用多版本矩阵/覆盖率门禁（按需）
 - **安全与协作**：`security.yml`（CodeQL）按项目语言调整 `language` 矩阵；`dependabot.yml` 按项目语言保留 pip/nuget 条目；首次推送后检查 Actions 权限
 - **AGENTS.md 生态兼容**：主文件即为 `AGENTS.md`（大写），Codex/Copilot/Windsurf 等直接读取；如使用 Claude Code，创建 `CLAUDE.md` 副本（见 AGENTS.md「AGENTS.md 生态兼容」）
-- **rules/api-reference.md / user-manual.md / context.md**：按项目领域填写
+- **docs/spec/api-reference.md / user-manual.md / context.md**：按项目领域填写
 
 ### 4. 初始化收尾（质量门禁）
 
 - [ ] 全量验证脚本可运行（{{FULL_VERIFY_CMD}}）
 - [ ] 徽章区启用：README.md 顶部取消注释，替换 `{{OWNER}}` / `{{REPO_NAME}}`
-- [ ] 首个 ADR（`rules/adr/0001-xxx.md`）记录初始架构决策
+- [ ] 首个 ADR（`docs/design/adr/0001-xxx.md`）记录初始架构决策
 - [ ] AGENTS.md「历史经验」填充项目已知高频模式
 - [ ] CHANGELOG.md 标记 v0.1.0 初始化版本
 - [ ] 目录树与 project-structure.md 一致

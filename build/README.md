@@ -1,6 +1,6 @@
 # build/ — 构建配置
 
-> 存放项目实际构建配置与产物（按需裁剪）。结构唯一定义见 [project-structure.md](../rules/project-structure.md)。
+> 存放项目实际构建配置与产物（按需裁剪）。结构唯一定义见 [project-structure.md](../docs/governance/project-structure.md)。
 
 ## 用途
 

@@ -16,7 +16,6 @@ on:
       - "scripts/**"
       - "tests/**"
       - "templates/**"
-      - "rules/**"
       - "skills/**"
       - "docs/**"
       - "examples/**"
@@ -75,7 +74,7 @@ jobs:
           # 故模式运行时拼装（open/close 分离），文件内不出现可被 init 匹配的字面量。
           # grep -F 固定串匹配：避免 BRE 转义 \{ 依赖 grep 版本宽容行为——新版 GNU grep（3.11）报
           # "Invalid content of \{\}"（exit 2）且被 2>/dev/null 掩盖 → is_template 恒 false、模板模式
-          # 跳过逻辑失效（2026-08-15 runner 镜像 20260810.271.1 实证，见 rules/tooling-pitfalls.md #25）。
+          # 跳过逻辑失效（2026-08-15 runner 镜像 20260810.271.1 实证，见 docs/pitfalls/tooling-pitfalls.md #25）。
           open='{{'
           close='}}'
           if grep -Fq "${open}PROJECT_NAME${close}" AGENTS.md; then
@@ -116,7 +115,7 @@ jobs:
       - name: 提交前自检（无裸 catch / bare except）
         # 与 verify-docs 语义检查向量 1 同源（注释/docstring 感知）：裸 grep 会命中
         # scripts/verify-docs.py docstring 内的 `except:` 教学文字（2026-08-15 实证，
-        # rules/tooling-pitfalls.md #20），故统一由单一信源执行。
+        # docs/pitfalls/tooling-pitfalls.md #20），故统一由单一信源执行。
         run: python3 scripts/verify-docs.py --check-bare-handlers
 
   # ============ full：手动全量验证 ============
@@ -136,7 +135,7 @@ jobs:
           # 故模式运行时拼装（open/close 分离），文件内不出现可被 init 匹配的字面量。
           # grep -F 固定串匹配：避免 BRE 转义 \{ 依赖 grep 版本宽容行为——新版 GNU grep（3.11）报
           # "Invalid content of \{\}"（exit 2）且被 2>/dev/null 掩盖 → is_template 恒 false、模板模式
-          # 跳过逻辑失效（2026-08-15 runner 镜像 20260810.271.1 实证，见 rules/tooling-pitfalls.md #25）。
+          # 跳过逻辑失效（2026-08-15 runner 镜像 20260810.271.1 实证，见 docs/pitfalls/tooling-pitfalls.md #25）。
           open='{{'
           close='}}'
           if grep -Fq "${open}PROJECT_NAME${close}" AGENTS.md; then
@@ -169,7 +168,7 @@ jobs:
           # 故模式运行时拼装（open/close 分离），文件内不出现可被 init 匹配的字面量。
           # grep -F 固定串匹配：避免 BRE 转义 \{ 依赖 grep 版本宽容行为——新版 GNU grep（3.11）报
           # "Invalid content of \{\}"（exit 2）且被 2>/dev/null 掩盖 → is_template 恒 false、模板模式
-          # 跳过逻辑失效（2026-08-15 runner 镜像 20260810.271.1 实证，见 rules/tooling-pitfalls.md #25）。
+          # 跳过逻辑失效（2026-08-15 runner 镜像 20260810.271.1 实证，见 docs/pitfalls/tooling-pitfalls.md #25）。
           open='{{'
           close='}}'
           if grep -Fq "${open}PROJECT_NAME${close}" AGENTS.md; then
@@ -269,7 +268,7 @@ jobs:
           # 故模式运行时拼装（open/close 分离），文件内不出现可被 init 匹配的字面量。
           # grep -F 固定串匹配：避免 BRE 转义 \{ 依赖 grep 版本宽容行为——新版 GNU grep（3.11）报
           # "Invalid content of \{\}"（exit 2）且被 2>/dev/null 掩盖 → is_template 恒 false、模板模式
-          # 跳过逻辑失效（2026-08-15 runner 镜像 20260810.271.1 实证，见 rules/tooling-pitfalls.md #25）。
+          # 跳过逻辑失效（2026-08-15 runner 镜像 20260810.271.1 实证，见 docs/pitfalls/tooling-pitfalls.md #25）。
           open='{{'
           close='}}'
           if grep -Fq "${open}PROJECT_NAME${close}" AGENTS.md; then

@@ -9,14 +9,18 @@
 | `AGENTS.md` | AI 助手 | "项目怎么组织？红线在哪？" | 架构/红线/流程变更 |
 | `README.md` | 人类用户 | "这是什么？怎么用？" | 功能新增/安装方式变更 |
 | `README.en.md` | 国际用户 | "What is this? How to use?"（英文入口） | 功能新增/安装方式变更 |
-| `rules/context.md` | AI + 新人 | "术语什么意思？为什么这样设计？" | 新概念引入 |
-| `rules/api-reference.md` | 开发者/AI | "函数签名是什么？"（**签名唯一信源**） | 任何 Public 接口变更 |
-| `rules/user-manual.md` | 最终用户 | "我要做 X，怎么操作？" | 用户可见功能变更 |
-| `rules/project-structure.md` | 开发者/AI | "代码在哪？文件干什么？"（**结构唯一信源**） | 文件新增/删除/移动 |
-| `rules/adr-template.md` + `rules/adr/` | AI + 人类 | "这个架构决策为什么这么做？"（决策历史） | 新增/推翻架构决策 |
-| `rules/falsy-pitfalls.md` | AI 编码 | "Python 中 0 被当作 False？" | 发现新 falsy 误判案例 |
-| `rules/tooling-pitfalls.md` | AI + 人类 | "PowerShell/git 有什么坑？" | 新踩坑并验证修复后 |
-| `rules/sentinel-contract.md` | AI 编码 | "无效输入返回什么？哨兵还是异常？" | 哨兵契约或守卫清单变更 |
+| `docs/spec/context.md` | AI + 新人 | "术语什么意思？为什么这样设计？" | 新概念引入 |
+| `docs/spec/specification.md` | 开发者/AI/利益相关方 | "项目做什么？功能范围在哪？"（**业务唯一信源**） | 功能范围/模块清单变更 |
+| `docs/spec/api-reference.md` | 开发者/AI | "函数签名是什么？"（**签名唯一信源**） | 任何 Public 接口变更 |
+| `docs/spec/user-manual.md` | 最终用户 | "我要做 X，怎么操作？" | 用户可见功能变更 |
+| `docs/governance/project-structure.md` | 开发者/AI | "代码在哪？文件干什么？"（**结构唯一信源**） | 文件新增/删除/移动 |
+| `docs/design/adr-template.md` + `docs/design/adr/` | AI + 人类 | "这个架构决策为什么这么做？"（决策历史） | 新增/推翻架构决策 |
+| `docs/pitfalls/falsy-pitfalls.md` | AI 编码 | "Python 中 0 被当作 False？" | 发现新 falsy 误判案例 |
+| `docs/pitfalls/tooling-pitfalls.md` | AI + 人类 | "PowerShell/git 有什么坑？" | 新踩坑并验证修复后 |
+| `docs/pitfalls/sentinel-contract.md` | AI 编码 | "无效输入返回什么？哨兵还是异常？" | 哨兵契约或守卫清单变更 |
+| `docs/design/architecture.md` | 人类（模板使用者） | "模板自身为什么这样设计？"（初始化后替换为项目架构文档） | 模板架构变更 |
+| `docs/methodology/cross-project-synthesis.md` | AI + 人类 | "别人踩过什么坑？"（反模式案例库） | 新增真实案例 |
+| `docs/methodology/refactoring-plan.md` | 重构执行者 | "从能用到卓越怎么走？"（路线图模板） | 重构方法论变更 |
 | `CONTRIBUTING.md` | 贡献者 | "怎么开发/提 PR/发版？" | 流程变更 |
 | `CHANGELOG.md` | 用户/维护者 | "这个版本改了什么？" | 每次发版 |
 | `SECURITY.md` | 安全报告者 | "怎么报告漏洞？" | 安全政策变更 |
@@ -29,12 +33,14 @@
 | 角色 | 阅读顺序 | 预计耗时 |
 |------|----------|----------|
 | **新贡献者** | README.md → AGENTS.md → context.md → CONTRIBUTING.md | 20 min |
-| **AI 编码助手** | AGENTS.md → 对应 skills/*.md → rules/falsy-pitfalls.md（Python） | 10 min |
+| **AI 编码助手** | AGENTS.md → 对应 skills/*.md → docs/pitfalls/falsy-pitfalls.md（Python） | 10 min |
 | **代码审查者** | AGENTS.md → 对应 skills/*.md | 15 min |
-| **架构决策者** | AGENTS.md → rules/project-structure.md → skills/architecture-reviewer-SKILL.md → rules/adr-template.md | 20 min |
-| **重构执行者** | rules/refactoring-plan.md → skills/refactoring-guardian-SKILL.md → AGENTS.md「防错三原则」 | 15 min |
+| **架构决策者** | AGENTS.md → docs/governance/project-structure.md → skills/architecture-reviewer-SKILL.md → docs/design/adr-template.md | 20 min |
+| **重构执行者** | docs/methodology/refactoring-plan.md → skills/refactoring-guardian-SKILL.md → AGENTS.md「防错三原则」 | 15 min |
 
-> 跳过项：`rules/cross-project-synthesis.md`（方法论库，按需查阅，不必线性阅读）
+> 跳过项：`docs/methodology/cross-project-synthesis.md`（方法论库，按需查阅，不必线性阅读）
+>
+> 文档中心导航（五分类速查表）见 `docs/README.md`。
 
 ## 禁止事项
 
@@ -52,25 +58,25 @@
 
 ```
 新增 Public 函数
-  → rules/api-reference.md（签名 + 参数 + 错误行为）
-  → rules/user-manual.md（示例 + 结果解读）
+  → docs/spec/api-reference.md（签名 + 参数 + 错误行为）
+  → docs/spec/user-manual.md（示例 + 结果解读）
   → README.md 模块速览（如为新模块）
 
 新增/删除/移动文件
-  → rules/project-structure.md（结构树）
+  → docs/governance/project-structure.md（结构树）
   → AGENTS.md 目录树（如为顶层变更）
 
 引入新领域术语
-  → rules/context.md（唯一定义）
+  → docs/spec/context.md（唯一定义）
 
 新增/推翻架构决策
-  → rules/adr/NNNN-xxx.md（新 ADR 记录，原 ADR 标记已废弃）
+  → docs/design/adr/NNNN-xxx.md（新 ADR 记录，原 ADR 标记已废弃）
 
 新踩工具/脚本坑位
-  → rules/tooling-pitfalls.md（附真实案例）
+  → docs/pitfalls/tooling-pitfalls.md（附真实案例）
 
 新增治理脚本（本模板自举门禁）
-  → rules/project-structure.md 目录树登记（verify-docs --strict 强制）
+  → docs/governance/project-structure.md 目录树登记（verify-docs --strict 强制）
   → scripts/verify-all.py/.ps1 + Makefile docs target + ci.yml quality-gate 接入
   → templates/README.md「治理脚本速查」表 + cross-project-synthesis 索引表登记
 

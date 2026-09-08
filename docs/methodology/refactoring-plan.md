@@ -3,7 +3,7 @@
 > 基于 {{COMMIT_COUNT}} commits 全量历史分析 | 目标：从"能用"到"卓越"
 > 状态：{计划中 | Phase N 执行中 | 已完成}
 > 方法论见 [cross-project-synthesis.md](cross-project-synthesis.md) 第三节「重构方法论」（Phase 0 审计 / 小步快跑 / 决策点）；
-> 每 Phase 守卫见 [refactoring-guardian-SKILL.md](../skills/refactoring-guardian-SKILL.md)；YAGNI 四问权威定义见 [architecture-reviewer-SKILL.md](../skills/architecture-reviewer-SKILL.md)。
+> 每 Phase 守卫见 [refactoring-guardian-SKILL.md](../../skills/refactoring-guardian-SKILL.md)；YAGNI 四问权威定义见 [architecture-reviewer-SKILL.md](../../skills/architecture-reviewer-SKILL.md)。
 
 ## 1. 现状评估
 
@@ -56,7 +56,7 @@ Phase 0 审计结果 → 决策：
 
 ## 5. 反模式自检（YAGNI 四问）
 
-> 完整判定规则与退出路径评估见 [architecture-reviewer-SKILL.md](../skills/architecture-reviewer-SKILL.md)，此处为执行前快速自检。
+> 完整判定规则与退出路径评估见 [architecture-reviewer-SKILL.md](../../skills/architecture-reviewer-SKILL.md)，此处为执行前快速自检。
 
 - [ ] 这个组件现在有实际调用者吗？→ 没有 = 删除
 - [ ] 这个功能有用户验证过吗？→ 没有 = 不写入规格

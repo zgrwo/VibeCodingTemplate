@@ -3,7 +3,8 @@
 verify-docs.py — 文档一致性验证
 
 功能（新项目初始化后按需扩展）：
-  1. 检查全部文档（根治理文件 / rules/ / skills/ / templates/ / docs/）中相对链接指向的文件是否存在
+  1. 检查全部文档（根治理文件 / docs/ 分类子目录 / skills/ / templates/）
+     中相对链接指向的文件是否存在
   2. 检查 project-structure.md 目录树中声明的顶层目录是否真实存在
   3. 校验 AGENTS.md 与 project-structure.md 的顶层目录集合一致（双目录树防漂移）
   4. 检查目录树中未声明的文件/目录（可选，--strict）
@@ -48,19 +49,21 @@ DOC_FILES = [
     "CHANGELOG.md",
     "SECURITY.md",
     "CODE_OF_CONDUCT.md",
-    # rules/ 规范文档
-    "rules/context.md",
-    "rules/documentation.md",
-    "rules/project-structure.md",
-    "rules/specification.md",
-    "rules/api-reference.md",
-    "rules/user-manual.md",
-    "rules/cross-project-synthesis.md",
-    "rules/refactoring-plan.md",
-    "rules/adr-template.md",
-    "rules/falsy-pitfalls.md",
-    "rules/tooling-pitfalls.md",
-    "rules/sentinel-contract.md",
+    # docs/ 文档中心（五分类子目录，2026-09 由 rules/ + docs/ 合并而来）
+    "docs/README.md",
+    "docs/governance/documentation.md",
+    "docs/governance/project-structure.md",
+    "docs/spec/context.md",
+    "docs/spec/specification.md",
+    "docs/spec/api-reference.md",
+    "docs/spec/user-manual.md",
+    "docs/design/architecture.md",
+    "docs/design/adr-template.md",
+    "docs/pitfalls/falsy-pitfalls.md",
+    "docs/pitfalls/tooling-pitfalls.md",
+    "docs/pitfalls/sentinel-contract.md",
+    "docs/methodology/cross-project-synthesis.md",
+    "docs/methodology/refactoring-plan.md",
     # skills/ AI 技能文件
     "skills/csharp-SKILL.md",
     "skills/python-SKILL.md",
@@ -73,24 +76,27 @@ DOC_FILES = [
     "skills/project-plan-review-SKILL.md",
     # scripts/ 目录导航
     "scripts/README.md",
-    # templates/ 与 docs/ 与 examples/
+    # templates/ 与 examples/
     "templates/README.md",
     "templates/monorepo/README.md",
-    "docs/README.md",
-    "docs/architecture.md",
     "examples/README.md",
 ]
 
 # 顶层目录检查：从 project-structure.md 目录树解析（唯一定义处，随规模裁剪自动适配）
 # 注：logs/ 为运行时目录（.gitignore 排除、init-project 复制时跳过），不检查；
 #     .git/ 为 git 内部目录，无需声明；
-#     .claude/.codegraph/.qoder/ 为 AI 工具本地目录（.gitignore 已忽略、init-project 复制时跳过）
+#     .claude/.codegraph/.qoder/.zcode/ 为 AI 工具本地目录
+#     （.gitignore 已忽略、init-project 复制时跳过）
 EXCLUDED_DIRS = set(BASE_EXCLUDED_DIRS)
+
+
+# 目录树 SSOT 唯一路径（目录树即契约；2026-09 随 rules/ 并入 docs/ 迁移至 docs/governance/）
+STRUCTURE_DOC = ROOT / "docs" / "governance" / "project-structure.md"
 
 
 def _parse_top_dirs() -> list[str]:
     """从 project-structure.md 目录树解析顶层目录（目录树即契约）。"""
-    path = ROOT / "rules" / "project-structure.md"
+    path = STRUCTURE_DOC
     if not path.exists():
         return []
     dirs: list[str] = []
@@ -110,7 +116,7 @@ def _parse_top_dirs() -> list[str]:
 
 def _parse_top_entries() -> list[str]:
     """从 project-structure.md 目录树解析顶层条目（目录 + 根级文件）。"""
-    path = ROOT / "rules" / "project-structure.md"
+    path = STRUCTURE_DOC
     if not path.exists():
         return []
     entries: list[str] = []
@@ -169,17 +175,40 @@ def _parse_agents_top_entries() -> list[str]:
 
 
 # 需核对"目录内文件已登记"的 SSOT 关键子目录（目录树即契约，逐文件枚举）
-# 补充 check_undeclared 只查根级的盲区：子目录新增文件（如新 rules/*.md）
+# 补充 check_undeclared 只查根级的盲区：子目录新增文件（如新 docs/spec/*.md）
 # 之前可静默通过 --strict，现在必须登记目录树。
-_SUBDIR_CHECK = ("rules", "skills", "scripts", "docs", ".github", "templates", "examples")
+# 二级目录（docs/governance 等）为 opt-in：仅显式列出的才逐文件核对，
+# tests/unit、scripts/git-hooks 等未列出的既有子目录不受影响
+# （docs/ 分类子目录于 2026-09 随 rules/ 并入 docs/ 而新增）。
+_SUBDIR_CHECK = (
+    "docs",
+    "docs/governance",
+    "docs/spec",
+    "docs/design",
+    "docs/pitfalls",
+    "docs/methodology",
+    "skills",
+    "scripts",
+    ".github",
+    "templates",
+    "examples",
+)
 
 
 def _parse_nested_files() -> dict[str, set[str]]:
-    """解析 project-structure.md 目录树中顶层目录下的直接文件条目。"""
-    path = ROOT / "rules" / "project-structure.md"
+    """解析 project-structure.md 目录树中的直属文件条目（两层深度）。
+
+    返回键为相对仓库根的目录路径：顶层目录（如 "docs"）与其下声明的二级目录
+    （如 "docs/governance"），值为该目录直属文件名集合。
+    树形前缀按 4 字符单元格（"│   " / "    "）计深，兼容末子节点前缀（"│       "）。
+    """
+    path = STRUCTURE_DOC
     result: dict[str, set[str]] = {}
     current: str | None = None
+    current_sub: str | None = None
     in_block = False
+    # 单元格捕获组：n 个完整 4 字符前缀 → 深度 n
+    depth_re = re.compile(r"^((?:│   |    )*)[├└]──\s+(\S+)")
     for line in path.read_text(encoding="utf-8").splitlines():
         s = line.rstrip()
         if s.strip().startswith("```"):
@@ -187,17 +216,35 @@ def _parse_nested_files() -> dict[str, set[str]]:
             continue
         if not in_block:
             continue
-        m = re.match(r"^[├└]──\s+([^/#\s]+)/", s)
-        if m:
-            current = m.group(1)
-            result.setdefault(current, set())
+        m = depth_re.match(s)
+        if not m:
             continue
-        if current is not None and "│" in s:
-            m2 = re.match(r"^│\s*[├└]──\s+([^#\s]+)", s)
-            if m2:
-                entry = m2.group(1).rstrip("/")
-                if "/" not in entry and entry not in ("...",):
-                    result[current].add(entry)
+        depth = len(m.group(1)) // 4
+        raw = m.group(2)
+        if depth == 0:
+            if raw.endswith("/") and "/" not in raw.rstrip("/"):
+                current = raw.rstrip("/")
+                current_sub = None
+                result.setdefault(current, set())
+            else:
+                current = None
+                current_sub = None
+            continue
+        if current is None:
+            continue
+        if depth == 1:
+            if raw.endswith("/") and "/" not in raw.rstrip("/"):
+                # 顶层下的二级目录（如 docs/ 下的 governance/）
+                current_sub = raw.rstrip("/")
+                result.setdefault(f"{current}/{current_sub}", set())
+            elif raw == "..." or "/" in raw:
+                # 省略号或 workflows/ci.yml 式"目录/文件"合并条目：非直属文件
+                current_sub = None
+            else:
+                result[current].add(raw)
+        elif depth == 2 and current_sub is not None and "/" not in raw and raw != "...":
+            key = f"{current}/{current_sub}"
+            result[key].add(raw.rstrip("/"))
     return result
 
 
@@ -383,7 +430,7 @@ def check_undeclared(strict: bool) -> list[str]:
 def check_subdir_undeclared(strict: bool) -> list[str]:
     """（可选 --strict）检查 SSOT 关键子目录内文件是否在目录树中登记。
 
-    补充 check_undeclared 只查根级的盲区：rules/、scripts/ 等子目录新增文件
+    补充 check_undeclared 只查根级的盲区：docs/、scripts/ 等子目录新增文件
     之前可静默通过 --strict，导致新规则文档孤儿化（无注册、无链接校验）。
     """
     if not strict:

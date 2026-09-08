@@ -30,7 +30,7 @@ AST 增强（相比纯正则）：
   python scripts/falsy-audit.py --no-ast        # 禁用 AST（回退纯正则模式）
 
 验收标准：零 HIGH 风险警告（CI quality-gate 硬门禁）。
-详见 rules/falsy-pitfalls.md（检查清单唯一定义处）。
+详见 docs/pitfalls/falsy-pitfalls.md（检查清单唯一定义处）。
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ with contextlib.suppress(AttributeError, ValueError):
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_SCOPE = "src"
 
-# 高风险变量名模式：统计量/参数/阈值，0 是有效值（rules/falsy-pitfalls.md 唯一定义）
+# 高风险变量名模式：统计量/参数/阈值，0 是有效值（docs/pitfalls/falsy-pitfalls.md 唯一定义）
 HIGH_RISK_PATTERNS = [
     r"\b(?:effect_size|statistic|threshold|tolerance|alpha|sigma|mean|std|var)\b",
     r"\b(?:cp|cpk|ppm|correlation|coefficient|offset|shift|count)\b",

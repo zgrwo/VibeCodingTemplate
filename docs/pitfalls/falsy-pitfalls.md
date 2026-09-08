@@ -1,7 +1,7 @@
 # Falsy 陷阱检查清单
 
 > **SSOT 声明**：本文件是 falsy 值误判检查的**唯一权威信源**（检查清单 + 高风险变量名 + 历史案例）。
-> [python-SKILL.md](../skills/python-SKILL.md) 中的 falsy 内容只链接引用本文件，不重复维护；审计工具 [falsy-audit.py](../scripts/falsy-audit.py) 以本文件高风险名单为基准。
+> [python-SKILL.md](../../skills/python-SKILL.md) 中的 falsy 内容只链接引用本文件，不重复维护；审计工具 [falsy-audit.py](../../scripts/falsy-audit.py) 以本文件高风险名单为基准。
 >
 > 提炼自工程分析套件 Phase 0 审计（14 项历史 falsy 修复）。**Python 中 0 是有效值**：效应量=0、均值=0、计数=0，不能用 `if x:` 检查。
 

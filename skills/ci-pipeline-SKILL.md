@@ -9,8 +9,8 @@ argument-hint: "[修改的 .github/workflows/*.yml 或 CI 脚本] [--context 新
 > 从 5 个子项目 + 模板自身的 2026-08 审查/排障/发版实证中提炼。**每条均有真实案例**（来源标注），
 > 不是理论清单。修改 `.github/workflows/`、CI 脚本（PowerShell/Python/bash）或走发版流程前必读。
 >
-> **SSOT 链接**：通用工具坑位（PowerShell 编码/git 行为）见 [tooling-pitfalls.md](../rules/tooling-pitfalls.md)；
-> 高频反模式（门禁静默失效/配置流断裂）见 [cross-project-synthesis.md](../rules/cross-project-synthesis.md) 与 AGENTS.md「历史经验」。
+> **SSOT 链接**：通用工具坑位（PowerShell 编码/git 行为）见 [tooling-pitfalls.md](../docs/pitfalls/tooling-pitfalls.md)；
+> 高频反模式（门禁静默失效/配置流断裂）见 [cross-project-synthesis.md](../docs/methodology/cross-project-synthesis.md) 与 AGENTS.md「历史经验」。
 
 ## 1. PowerShell / 脚本执行陷阱（Script）
 

@@ -6,7 +6,7 @@ argument-hint: "[审查对象: specification.md / refactoring-plan.md / 架构�
 
 # 项目规划效果审查
 
-> 来源：8 维度框架提炼自 [cross-project-synthesis.md](../rules/cross-project-synthesis.md)（反模式案例库 + 重构方法论），为其可执行化形态；
+> 来源：8 维度框架提炼自 [cross-project-synthesis.md](../docs/methodology/cross-project-synthesis.md)（反模式案例库 + 重构方法论），为其可执行化形态；
 > 维度 1/2（Phase 0 审计、重构守卫）方法论见该文档第三节，YAGNI 四问权威定义见 [architecture-reviewer-SKILL.md](architecture-reviewer-SKILL.md)。
 
 你是资深工程治理审查专家，专门评估项目规划文档（规格说明、重构计划、架构决策）的质量与可执行性。

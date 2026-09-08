@@ -13,7 +13,7 @@ doctor.py — 环境就绪性诊断（Environment Doctor）
   - Python 版本（>=3.10）
   - git 仓库状态
   - 必需工具（ruff / pytest）
-  - 关键目录（src / tests / rules / skills / scripts / templates / docs）
+  - 关键目录（src / tests / skills / scripts / templates / docs）
   - 关键文件（AGENTS.md / pyproject.toml / placeholders.json）
   - placeholders.json 可解析（SSOT 完整）
 
@@ -34,7 +34,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MIN_PYTHON = (3, 10)
 
 # 必需目录/文件（相对 ROOT）——模板宪法基线
-REQUIRED_DIRS = ["src", "tests", "rules", "skills", "scripts", "templates", "docs"]
+REQUIRED_DIRS = ["src", "tests", "skills", "scripts", "templates", "docs"]
 REQUIRED_FILES = ["AGENTS.md", "pyproject.toml", "scripts/placeholders.json"]
 # 必需 Python 工具（import 名 + 包名）
 REQUIRED_TOOLS = [

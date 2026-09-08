@@ -1,6 +1,6 @@
 # tools/ — 辅助工具
 
-> 存放项目自用的辅助工具/脚本（非 CI 门禁、非模块脚手架）。结构唯一定义见 [project-structure.md](../rules/project-structure.md)。
+> 存放项目自用的辅助工具/脚本（非 CI 门禁、非模块脚手架）。结构唯一定义见 [project-structure.md](../docs/governance/project-structure.md)。
 
 ## 用途
 

@@ -24,7 +24,7 @@ cp templates/monorepo/AGENTS.md.template src/{子项目名}/AGENTS.md
 # {子项目入口文件} → cmd/main.go / src/index.ts / __main__.py
 
 # 3. 同步根目录文档
-#    - rules/project-structure.md 目录树中新增子项目
+#    - docs/governance/project-structure.md 目录树中新增子项目
 #    - AGENTS.md 目录树中新增子项目
 ```
 
@@ -55,5 +55,5 @@ cp templates/monorepo/AGENTS.md.template src/{子项目名}/AGENTS.md
 |------|------|
 | 子项目 → foundation | ✅ 允许（foundation 是共享层） |
 | 子项目 A → 子项目 B 内部 | ❌ 禁止（通过接口或 foundation 通信） |
-| 子项目 → 根 rules/ | ✅ 允许（只读引用） |
+| 子项目 → 根 docs/ | ✅ 允许（只读引用） |
 | foundation → 任何子项目 | ❌ 禁止（共享层不感知子项目） |

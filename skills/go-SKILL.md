@@ -31,7 +31,7 @@ return fmt.Errorf("compute mean: %w", err)
 
 ### 哨兵契约（L2 哨兵：NaN 表示无效）
 
-> 术语统一：SSOT 定义为「哨兵契约」（见 [rules/sentinel-contract.md](../rules/sentinel-contract.md)，
+> 术语统一：SSOT 定义为「哨兵契约」（见 [docs/pitfalls/sentinel-contract.md](../docs/pitfalls/sentinel-contract.md)，
 > L1-L5 各语言落地映射）。
 
 ```go

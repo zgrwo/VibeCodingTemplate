@@ -12,7 +12,7 @@
     }
   },
   "docs": [
-    "docs/architecture.md",
+    "docs/design/architecture.md",
     "README.md"
   ]
 }

@@ -24,7 +24,7 @@ gen-doc-counts.py — 文档计数自动注入（AUTO_COUNTS 标记）
       "placeholders": {"type": "json_keys",
                        "path": "scripts/placeholders.json", "key_path": "placeholders"}
     },
-    "docs": ["docs/architecture.md", "README.md"]
+    "docs": ["docs/design/architecture.md", "README.md"]
   }
 
 counts 类型：

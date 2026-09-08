@@ -19,6 +19,7 @@ BASE_EXCLUDED_DIRS = frozenset(
         ".claude",
         ".codegraph",
         ".qoder",
+        ".zcode",
         "logs",
         "__pycache__",
         ".pytest_cache",
