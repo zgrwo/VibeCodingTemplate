@@ -59,6 +59,7 @@
 | 26 | **py/ps1 双实现行为分叉且 CI 只测单侧**（init-project.py 对未登记 token 返回 None 保留原样，init-project.ps1 仍替换为占位符名小写 → Windows 初始化把 AGENTS.md 教学 token 污染成小写；test-template.ps1 以 -Values 预置小写值全覆盖，ps1 未登记分支在 CI 自测中永不触发，2026-08 Max 审查 4 维度独立确认） | 双实现共享行为规范并各配回归守卫：ps1 未登记分支保留原样 + remaining 扫描跳过 undeclared + test-template.ps1 教学 token 存活断言（`{{X}}`/`{{UPPER}}`/`{{UPPER_CASE}}` 必须原样存在于生成项目） |
 | 27 | **模板模式 CI 门禁盲区**（模板仓库自身 is_template=true 时 quick-check 的 Build/Test 与 quality-gate 的 LINT/COVERAGE 全部被 `!= 'true'` 门控跳过——占位符命令在模板不可执行；template-self-test 只跑 verify 四件套 → 模板自身的 pytest/ruff 无 CI 守卫，2026-08 实证 ruff 对 examples/ 报 I001 而 CI 全绿） | quality-gate 模板模式分支加**字面命令**硬门禁（非占位符）：`python -m pytest tests/ -q`、`python -m ruff check scripts/ tests/ examples/`；依赖安装步骤（numpy）必须先于使用它的 verify-manual 步骤 |
 | 28 | **PS 5.1 的 `Split-Path -LiteralPath <x> -Parent` 参数集歧义**（LiteralPathSet 与 PathSet 均含 -Parent，`-LiteralPath` + `-Parent` 组合报 AmbiguousParameterSet——2026-08 Max 审查在 init-project.ps1 junction 防护中实证） | 改用 .NET API `[System.IO.Path]::GetDirectoryName($path)`（返回 null 即到根，循环自然终止）；或先用 `-Path`（无通配符场景等价） |
+| 29 | **工具链声明与代码漂移**（仓库声明了 ruff-format hook（.pre-commit-config.yaml）与 Makefile format target，但 27 个 Python 文件从未按 ruff format 排版——`pre-commit run --all-files` 会产生大 diff，2026-08-15 发行前审查实证） | 工具链接入时先全仓对齐一次（`ruff format .`），再在 CI 或 pre-commit 兜底 `ruff format --check`；声明新格式化工具前先跑一次 `--check` 评估存量漂移，禁止"只声明不执行" |
 
 ## 提交前自查
 
