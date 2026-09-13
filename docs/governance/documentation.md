@@ -14,6 +14,9 @@
 | `docs/spec/api-reference.md` | 开发者/AI | "函数签名是什么？"（**签名唯一信源**） | 任何 Public 接口变更 |
 | `docs/spec/user-manual.md` | 最终用户 | "我要做 X，怎么操作？" | 用户可见功能变更 |
 | `docs/governance/project-structure.md` | 开发者/AI | "代码在哪？文件干什么？"（**结构唯一信源**） | 文件新增/删除/移动 |
+| `docs/governance/code-review-prompt.md` | AI + 审查者 | "怎么分级审查代码？"（Min/Standard/Max） | 审查维度/豁免规则变更 |
+| `docs/governance/pre-release-review-prompt.md` | AI + 审查者 | "发行前查什么？"（Max 18 维度穷尽审计） | 审查方法论/门禁变更 |
+| `docs/governance/review-exemptions.md` | AI + 维护者 | "哪些风险已接受？"（到期必查清单） | 审查豁免登记/到期复查 |
 | `docs/design/adr-template.md` + `docs/design/adr/` | AI + 人类 | "这个架构决策为什么这么做？"（决策历史） | 新增/推翻架构决策 |
 | `docs/pitfalls/falsy-pitfalls.md` | AI 编码 | "Python 中 0 被当作 False？" | 发现新 falsy 误判案例 |
 | `docs/pitfalls/tooling-pitfalls.md` | AI + 人类 | "PowerShell/git 有什么坑？" | 新踩坑并验证修复后 |

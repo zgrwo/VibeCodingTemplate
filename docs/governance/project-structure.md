@@ -22,7 +22,10 @@
 │   ├── README.md                 # 文档中心导航（五分类速查表）
 │   ├── governance/               # 治理与结构（元文档）
 │   │   ├── documentation.md      # 文档职责规范（唯一权威）
-│   │   └── project-structure.md  # 项目结构（本文件）
+│   │   ├── project-structure.md  # 项目结构（本文件）
+│   │   ├── code-review-prompt.md # 代码审查 prompt（Min/Standard/Max 三级）
+│   │   ├── pre-release-review-prompt.md  # 发行前审查 prompt（Min/Med/Max 三级，Max 18 维度）
+│   │   └── review-exemptions.md  # 审查豁免登记表（P0 不可豁免 / P1 登记制）
 │   ├── spec/                     # 业务与技术规格（唯一信源）
 │   │   ├── context.md            # 领域术语表
 │   │   ├── specification.md      # 业务规则与功能范围唯一信源

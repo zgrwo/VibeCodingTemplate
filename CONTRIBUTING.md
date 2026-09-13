@@ -136,7 +136,7 @@ cd {{PROJECT_NAME}}
 4. 手动覆盖版本：在 release PR 的 commit body 中加 `Release-As: x.y.z`
 5. 验证：Release 产物可用；若有构建产物，可配 tag 触发的构建 workflow
 
-**发行前检查清单**（合并 release PR 前逐项确认；完整 18 维度穷尽审计见 `.claude/prompts/pre-release-review.md`）：
+**发行前检查清单**（合并 release PR 前逐项确认；完整 18 维度穷尽审计见 `docs/governance/pre-release-review-prompt.md`）：
 
 - [ ] `python scripts/verify-all.py` 全绿（构建/测试/文档一致性/手册一致性/注册表/计数/质量守卫）
 - [ ] `python -m ruff check scripts/ tests/ examples/` 零违规
