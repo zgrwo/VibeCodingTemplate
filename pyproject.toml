@@ -20,7 +20,9 @@ readme = "README.md"
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
-    "ruff>=0.4",
+    # 锁定版本：与 .pre-commit-config.yaml 的 rev 及 templates/language/pyproject.toml.template
+    # 三处对齐，防规则/格式化版本漂移（tooling-pitfalls #29：声明格式化工具必须执行并钉版）
+    "ruff==0.15.20",
     "numpy>=1.24",  # 示例 CrossVal（examples/scripts/crossval/StatsCrossVal.py）numpy 独立参考实现
 ]
 
@@ -35,7 +37,26 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = ["-v", "--tb=short", "--strict-markers"]
+# 白名单制：告警默认失败（防第三方库告警被静默吞噬，来源：工程分析套件）。
+# 确需豁免时在下方追加带理由的 ignore 条目，例如：
+# "ignore::DeprecationWarning:第三方包名.*",
+filterwarnings = ["error"]
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+# ============================================================================
+# 覆盖率配置（scripts/coverage.py 读取；CI 模板模式硬门禁使用）
+# SSOT：范围与阈值只在此定义，脚本/CI/Makefile 均从本文件取值
+# ============================================================================
+[tool.coverage.run]
+source = ["scripts"]  # 模板仓库覆盖自身治理脚本；下游项目通常改为 ["src"]
+
+[tool.coverage.report]
+fail_under = 80  # 实测基线 85%（2026-09-25，268 tests），留 5 点余量
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]

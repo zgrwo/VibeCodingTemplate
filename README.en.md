@@ -84,6 +84,8 @@ Template-only sections in this repo's own docs (e.g. the "从本模板初始化�
 | Domain terms | `docs/spec/context.md` | Single source for terminology |
 | Project structure | `docs/governance/project-structure.md` | Single source for file layout |
 | Sentinel contract | `docs/pitfalls/sentinel-contract.md` | L1-L5 sentinel contract & NaN/Inf guard checklist |
+| Roadmap & decision gates | `ROADMAP.md` | When to build (and when not to) |
+| Review checklist | `docs/governance/review-checklist.md` | Human PR checklist with executable commands |
 | Cross-project lessons | `docs/methodology/cross-project-synthesis.md` | Anti-pattern library from real projects |
 
 ## Supported Languages

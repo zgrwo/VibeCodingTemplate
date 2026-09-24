@@ -69,6 +69,8 @@ try {
                 if ($LASTEXITCODE) { throw "falsy-audit.py 失败 (退出码 $LASTEXITCODE)" }
                 python "$root\scripts\verify-registries.py"
                 if ($LASTEXITCODE) { throw "verify-registries.py 失败 (退出码 $LASTEXITCODE)" }
+                python "$root\scripts\verify-arch.py"
+                if ($LASTEXITCODE) { throw "verify-arch.py 失败 (退出码 $LASTEXITCODE)" }
                 python "$root\scripts\gen-doc-counts.py" --check
                 if ($LASTEXITCODE) { throw "gen-doc-counts.py 失败 (退出码 $LASTEXITCODE)" }
                 python "$root\scripts\test-quality-guard.py"

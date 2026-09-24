@@ -43,9 +43,9 @@ REQUIRED_TOOLS = [
 ]
 
 
-def _run(cmd: list[str]) -> subprocess.CompletedProcess:
+def _run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess:
     try:
-        return subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=10, cwd=cwd or ROOT)
     except (FileNotFoundError, subprocess.TimeoutExpired) as e:
         return subprocess.CompletedProcess(cmd, 127, "", str(e))
 

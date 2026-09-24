@@ -160,10 +160,12 @@
 | 脚本 | 作用 | 何时运行 |
 |------|------|---------|
 | `scripts/verify-registries.py` | 多注册表键集一致性（防注册遗漏） | `make verify` / CI |
+| `scripts/verify-arch.py` | 架构边界门禁（`architecture.json` 规则驱动） | `make verify` / CI |
+| `scripts/coverage.py` | 覆盖率门禁（清旧产物 + 阈值；pyproject `[tool.coverage]` 为 SSOT） | `make coverage` / CI |
 | `scripts/gen-doc-counts.py --check` | 文档计数自动注入（防数字漂移） | `make verify` / CI |
 | `scripts/verify-docs.py --strict` | 链接/目录树/语义一致性 | `make verify` / CI |
 | `scripts/verify-manual.py` | 手册一致性 + CrossVal 执行器 | `make verify` / CI |
-| `scripts/test-quality-guard.py` | 测试质量守卫（弱断言/缺测/命名） | `make verify` / CI |
+| `scripts/test-quality-guard.py` | 测试质量守卫（弱断言/恒真断言/自校验/缺测/命名） | `make verify` / CI |
 | `scripts/run-affected-tests.py` | 影响范围测试路由（git diff → 受影响测试，增量 CI） | `make test` / 开发增量 |
 | `scripts/doctor.py` | 环境就绪诊断（新开发者第一步） | `make doctor` |
 

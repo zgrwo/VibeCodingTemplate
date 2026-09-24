@@ -98,9 +98,11 @@ if ($equalOrInside -or $isAncestor) {
 Write-Host "==> 复制 template → $Target" -ForegroundColor Cyan
 if (Test-Path -LiteralPath $Target) { Get-ChildItem -LiteralPath $Target -Force | Remove-Item -Recurse -Force }
 [System.IO.Directory]::CreateDirectory($Target) | Out-Null
-# .claude/.codegraph/.qoder 为 AI 工具本地目录（.gitignore 已忽略，不应进入新项目，
-# 否则开发者本地 AI 设置随初始化泄漏，且 verify-docs.py --strict 会将其视为未声明目录）
-Get-ChildItem -LiteralPath $template -Force | Where-Object { $_.Name -notin @(".git", "logs", ".claude", ".codegraph", ".qoder", ".zcode", ".coverage") } | ForEach-Object {
+# .claude/.codegraph/.opencode-goal/.qoder/.superpowers/.zcode 为 AI 工具本地目录/会话态
+# （.gitignore 已忽略，不应进入新项目，否则开发者本地 AI 设置与 goal/SDD 台账随初始化泄漏，
+# 且 verify-docs.py --strict 会将其视为未声明目录）；
+# 清单与 scripts/_excluded_dirs.py 的 BASE_EXCLUDED_DIRS 对齐（Python 版自动派生）
+Get-ChildItem -LiteralPath $template -Force | Where-Object { $_.Name -notin @(".git", "logs", "site", ".claude", ".codegraph", ".opencode-goal", ".qoder", ".superpowers", ".zcode", ".coverage") } | ForEach-Object {
     Copy-Item -LiteralPath $_.FullName -Destination $Target -Recurse -Force
 }
 # 清理被复制进来的垃圾/构建目录（__pycache__/bin/obj 等不入库，也不应进入新项目；
@@ -411,6 +413,24 @@ if (Test-Path $phPath) {
             [System.IO.File]::WriteAllText($phPath, ($pruned | ConvertTo-Json -Depth 5), (New-Object System.Text.UTF8Encoding $true))
             Write-Host "==> scripts/placeholders.json 已裁剪（仅保留替换后仍被引用的条目）" -ForegroundColor Green
         }
+    }
+}
+
+# 5.6.3 刷新 AUTO_COUNTS：manifest 裁剪后占位符计数已变，不刷新会让生成项目
+# 首次 gen-doc-counts --check / verify-all 必红（与 init-project.py 的对等步骤行为一致；
+# 2026-09 模板自测实证）
+$docCounts = Join-Path $Target (Join-Path "scripts" "gen-doc-counts.py")
+if ((Test-Path $docCounts) -and (Get-Command python -ErrorAction SilentlyContinue)) {
+    Push-Location $Target
+    try {
+        python $docCounts | Out-Null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "==> 文档计数标记已同步（AUTO_COUNTS）" -ForegroundColor Green
+        } else {
+            Write-Host "[WARN] 文档计数同步失败（退出码 $LASTEXITCODE），请手动运行 scripts/gen-doc-counts.py" -ForegroundColor Yellow
+        }
+    } finally {
+        Pop-Location
     }
 }
 

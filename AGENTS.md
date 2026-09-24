@@ -90,10 +90,13 @@
 ├── skills/                       # ✅ Skill 定义
 ├── tools/                        # ✅ 辅助工具
 ├── build/                        # ✅ 构建配置
+├── benchmarks/                   # ✅ 性能基准（非门禁，趋势观测）
 ├── .github/                      # ✅ CI 工作流 + Issue/PR 模板
 ├── logs/                         # ✅ 日志（.gitignore 排除）
 ├── Makefile                      # ✅ 跨平台验证入口
+├── mkdocs.yml                    # ✅ 文档站点配置（mkdocs-material）
 ├── pyproject.toml                # ✅ Python 项目配置
+├── ROADMAP.md                    # ✅ 路线图与决策门
 ├── AGENTS.md                     # ✅ 项目宪法（本文件）
 ├── README.md                     # ✅ 用户向功能指南
 ├── README.en.md                  # ✅ 英文入口
@@ -172,7 +175,7 @@
 | 运行测试 | `{{TEST_CMD}}` |
 | 全量验证 | `{{FULL_VERIFY_CMD}}`（Windows: `verify-all.ps1` / 跨平台: `python scripts/verify-all.py` 或 `make verify`） |
 | CI（PR 级） | `.github/workflows/ci.yml` quick-check（构建+测试+裸 catch 自检） |
-| CI（质量门禁） | quality-gate：手册一致性 / 陷阱审计 / 架构约束 / 代码风格 |
+| CI（质量门禁） | quality-gate：手册一致性 / 陷阱审计 / 架构边界（`verify-arch.py`）/ 测试质量 / 文档一致性 / 代码风格（check + format）/ 覆盖率（`coverage.py`，阈值见 pyproject） |
 
 ### Git
 
@@ -247,6 +250,8 @@
 | [api-reference.md](docs/spec/api-reference.md) | 数字唯一信源（签名/参数/错误行为） |
 | [user-manual.md](docs/spec/user-manual.md) | 学习教程（每函数示例） |
 | [project-structure.md](docs/governance/project-structure.md) | 结构地图（逐文件职责） |
+| [review-checklist.md](docs/governance/review-checklist.md) | 人工审查清单（PR 逐项可执行命令） |
+| [ROADMAP.md](ROADMAP.md) | 路线图与决策门（排期规则） |
 | [cross-project-synthesis.md](docs/methodology/cross-project-synthesis.md) | 方法论与反模式案例库 |
 | [tooling-pitfalls.md](docs/pitfalls/tooling-pitfalls.md) | 工具/脚本坑位清单 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献/PR/发版流程 |

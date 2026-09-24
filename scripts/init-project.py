@@ -32,6 +32,7 @@ import datetime as _dt
 import json
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -347,7 +348,7 @@ def _reset_changelog(target: Path) -> None:
         "## [Unreleased]\n\n"
         "> 新项目初始状态：首个功能落地后在此登记变更。\n"
     )
-    changelog.write_text(init_text, encoding="utf-8")
+    changelog.write_text(init_text, encoding="utf-8", newline="\n")
     print("==> CHANGELOG.md 已重置为新项目初始态")
 
 
@@ -362,7 +363,9 @@ def _reset_release_manifest(target: Path, replacements: dict[str, str]) -> None:
     if not manifest_path.exists():
         return
     version = replacements.get("VERSION") or "0.1.0"
-    manifest_path.write_text(json.dumps({".": version}, indent=2) + "\n", encoding="utf-8")
+    manifest_path.write_text(
+        json.dumps({".": version}, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     print(f"==> .release-please-manifest.json 已重置为版本 {version}")
 
 
@@ -386,8 +389,35 @@ def _reset_pyproject_version(target: Path, replacements: dict[str, str]) -> None
         flags=re.MULTILINE,
     )
     if new_text != text:
-        path.write_text(new_text, encoding="utf-8")
+        path.write_text(new_text, encoding="utf-8", newline="\n")
         print(f"==> pyproject.toml 版本号已重置为 {version}")
+
+
+def _refresh_doc_counts(target: Path) -> None:
+    """运行生成项目的 gen-doc-counts.py 刷新 AUTO_COUNTS（manifest 裁剪后计数已变）。
+
+    不刷新会让生成项目首次运行 `gen-doc-counts.py --check` / verify-all 必红
+    （README 仍标注模板的占位符数，而 manifest 已裁剪——2026-09 模板自测实证）。
+    与 init-project.ps1 的对等步骤保持行为一致（同源脚本，双实现各跑一次）。
+    """
+    script = target / "scripts" / "gen-doc-counts.py"
+    if not script.exists():
+        return
+    proc = subprocess.run(
+        [sys.executable, str(script)],
+        cwd=str(target),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if proc.returncode != 0:
+        print(
+            f"[WARN] 文档计数同步失败（退出码 {proc.returncode}）："
+            f"{proc.stdout.strip() or proc.stderr.strip()[:200]}"
+        )
+    else:
+        print("==> 文档计数标记已同步（AUTO_COUNTS）")
 
 
 def _prune_placeholder_manifest(target: Path) -> None:
@@ -424,7 +454,9 @@ def _prune_placeholder_manifest(target: Path) -> None:
     if len(kept) == len(manifest):
         return
     data["placeholders"] = kept
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     print(
         f"==> scripts/placeholders.json 已裁剪：{len(manifest)} → {len(kept)} 个占位符"
         "（仅保留替换后仍被引用的条目）"
@@ -694,6 +726,7 @@ def main() -> int:
     _reset_release_manifest(target, replacements)
     _reset_pyproject_version(target, replacements)
     _prune_placeholder_manifest(target)
+    _refresh_doc_counts(target)
 
     # git init
     if args.git_init and not _setup_git(target):

@@ -4,8 +4,11 @@ test_test_quality_guard.py — test-quality-guard.py 自身测试套件
 
 验证测试质量守卫脚本的正确性：
   - 弱断言检测（is not None / len>0 唯一断言）
+  - 恒真断言检测（assert True / assert x == x）
+  - 自校验检测（check(name, X, X)）
   - 命名规范检测
   - 缺测检测
+  - WARN 预算（--max-warn）
   - main CLI 退出码（弱断言→0，FAIL→1）
 """
 
@@ -75,6 +78,52 @@ class TestWeakAsserts:
         assert problems == []
 
 
+class TestTautologicalAsserts:
+    """测试恒真断言检测。"""
+
+    def test_assert_true_flagged(self, tmp_path):
+        _make_test(tmp_path, "test_a", "assert True")
+        problems = tq.check_tautological_asserts(tmp_path / "tests")
+        assert len(problems) == 1
+        assert "[FAIL]" in problems[0]
+
+    def test_assert_same_operand_flagged(self, tmp_path):
+        _make_test(tmp_path, "test_b", "x = foo()\n    assert x == x")
+        problems = tq.check_tautological_asserts(tmp_path / "tests")
+        assert len(problems) == 1
+
+    def test_assert_not_false_flagged(self, tmp_path):
+        _make_test(tmp_path, "test_c", "assert not False")
+        problems = tq.check_tautological_asserts(tmp_path / "tests")
+        assert len(problems) == 1
+
+    def test_real_assert_not_flagged(self, tmp_path):
+        _make_test(tmp_path, "test_d", "x = foo()\n    assert x == 42")
+        problems = tq.check_tautological_asserts(tmp_path / "tests")
+        assert problems == []
+
+    def test_fixture_string_not_flagged(self, tmp_path):
+        # 字符串中的 "assert True" 是夹具文本而非真实断言，不得误判
+        _make_test(tmp_path, "test_e", 'body = "assert True"')
+        problems = tq.check_tautological_asserts(tmp_path / "tests")
+        assert problems == []
+
+
+class TestSelfValidation:
+    """测试自校验检测（check(name, X, X)）。"""
+
+    def test_self_check_flagged(self, tmp_path):
+        _make_test(tmp_path, "test_a", "check('mean', result, result)")
+        problems = tq.check_self_validation(tmp_path / "tests")
+        assert len(problems) == 1
+        assert "[FAIL]" in problems[0]
+
+    def test_independent_check_not_flagged(self, tmp_path):
+        _make_test(tmp_path, "test_b", "check('mean', result, expected)")
+        problems = tq.check_self_validation(tmp_path / "tests")
+        assert problems == []
+
+
 class TestNaming:
     """测试命名规范检测。"""
 
@@ -115,6 +164,20 @@ class TestMissingTests:
         (tests / "test_core.py").write_text(core, encoding="utf-8")
         problems = tq.check_missing_tests(src, tests)
         assert problems == []
+
+
+class TestWarnBudget:
+    """测试 WARN 数量预算（--max-warn）。"""
+
+    def test_max_warn_zero_fails_on_weak_assert(self, tmp_path, monkeypatch):
+        _make_test(tmp_path, "test_result_is_not_none", "x = foo()\n    assert x is not None")
+        monkeypatch.setattr(tq, "ROOT", tmp_path)
+        assert tq.main(["--src", "src", "--tests", "tests", "--max-warn", "0"]) == 1
+
+    def test_max_warn_zero_passes_when_clean(self, tmp_path, monkeypatch):
+        _make_test(tmp_path, "test_value_is_42", "x = foo()\n    assert x == 42")
+        monkeypatch.setattr(tq, "ROOT", tmp_path)
+        assert tq.main(["--src", "src", "--tests", "tests", "--max-warn", "0"]) == 0
 
 
 class TestMainCLI:

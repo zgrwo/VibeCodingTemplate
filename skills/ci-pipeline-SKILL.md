@@ -26,6 +26,7 @@ argument-hint: "[修改的 .github/workflows/*.yml 或 CI 脚本] [--context 新
 | S8 | **Windows 控制台 GBK 乱码**：Python 脚本打印中文 → UnicodeEncodeError；`python -c "多行中文"` 引号地狱 | 脚本内 `sys.stdout.reconfigure(encoding='utf-8', errors='replace')`；多行代码写脚本文件执行，不用 `-c` | 模板/审查工具 2026-08（多次实证） |
 | S9 | **Windows 无 bash**：POSIX 脚本（validate-commit-msg.sh 等）本地无法直接验证 | 本地跳过、由 CI（ubuntu）验证；或装 Git Bash 后以 `& 'D:\Program Files\Git\usr\bin\grep.exe'` 方式调用 | 模板 2026-08（commit 校验本地空转实证） |
 | S10 | **`git mv` 前先确认目标不存在**；重命名后**全仓引用同步**（`grep -rn "旧名"` 复查，含大小写变体——Linux CI 上 404） | 重命名后跑链接/引用门禁（见 R5） | VBA `README_EN.md → README.en.md`、costsuite `agents.md → AGENTS.md` 2026-08 |
+| S11 | **双宿主分叉**：治理脚本在 pwsh 7 通过、PS 5.1 失败（或反之）——`Get-ChildItem -Recurse` 对隐藏目录行为不同、`Split-Path -LiteralPath` 参数集歧义、编码/换行差异 | 治理脚本自测**双宿主各跑一次**（ExcelAddin 的 PowerShell 自测以双宿主扫描全部 `test_*.ps1` 并设 Skip 上限）；CI windows-latest 可显式 `powershell.exe` 调用 PS 5.1；脚本统一 `-Force` 递归与 UTF-8 输出 | ExcelAddin 函数库 2026-09（pwsh 7 漏扫 `.github`、PS 5.1 参数集歧义两次实证，见 tooling-pitfalls #28） |
 
 ## 2. GitHub Actions CI 陷阱
 
@@ -43,6 +44,9 @@ argument-hint: "[修改的 .github/workflows/*.yml 或 CI 脚本] [--context 新
 | C10 | **模板仓库自身 CI 自举**：占位符命令（`{{BUILD_CMD}}` 等）在模板仓库不可执行 | is_template 检测（grep -F 运行时拼装，见 S4）+ 模板模式用**字面命令**门禁（pytest/ruff/链接检查直接写死） | 模板 ci.yml 2026-08（三层门禁实证） |
 | C11 | **CodeQL autobuild 对无构建语言/模板仓库硬失败** | security.yml 只保留 extraction 型语言（python/javascript-typescript）；csharp/go 需可构建源码 | 模板 security.yml 2026-08 |
 | C12 | **CI 步骤中文名 + GBK 控制台**：日志乱码不影响执行，但排查困难 | workflow 步骤名可用中文（Actions 日志 UTF-8），脚本输出统一 ASCII 标记 `[OK]/[FAIL]/[SKIP]` | 模板 2026-08（verify 脚本统一标记实证） |
+| C13 | **release-please 反递归**：用默认 `GITHUB_TOKEN` 创建的 tag/Release **不会触发**其他 workflow（GitHub 防递归），"合并 release PR 后自动构建发布资产"静默不发生 | release-please workflow 内显式触发下游：`gh workflow run release.yml --ref <tag>`（需 `actions: write` 权限，加退避重试）；发版 workflow 设 `cancel-in-progress: false` 防中断 | ExcelAddin 函数库 2026-09（release-please.yml 反递归 dispatch 实证）；模板当前 release.yml 仅维护版本，构建 workflow 若新增需按此接线 |
+| C14 | **覆盖率门禁三要素缺一即假绿**：① 阈值（`--cov-fail-under` / coverlet Threshold）② 数据缺失时显式失败（产物没生成不得静默通过）③ 运行前清理旧报告（残留旧报告让失败 run 读旧数据） | 三要素同时落地；模块化阈值用 Include 过滤 + `ThresholdStat=total` 口径统一；本地脚本与 CI 同口径 | ExcelAddin `coverage.ps1`（92/86/86 三模块）；EngSmartSuite `--cov-fail-under=85` 2026-09 |
+| C15 | **路径过滤器遗漏配置型文件**：`paths:` 只列 `src/**` 时，`*.props` / `version.txt` / `.editorconfig` / lock 文件变更被判 docs-only 跳过全部重 job（曾真实发生：只改 props 被跳） | paths 显式纳入：构建配置（props/csproj/nuget.config）、版本锚点（version.txt）、编辑器/格式配置（.editorconfig/.gitattributes）、锁文件；docs-only 也保底跑文档门禁 | ExcelAddin ci.yml classify（包含 `**/*.props`、`version.txt`、`.editorconfig`、lock）；模板 ci.yml paths 已含 pyproject/Makefile/.pre-commit/manifest |
 
 ## 3. PR 与发版流程陷阱
 
@@ -55,6 +59,8 @@ argument-hint: "[修改的 .github/workflows/*.yml 或 CI 脚本] [--context 新
 | R5 | **文档链接门禁**：Markdown 链接（相对文档目录）与反引号路径（**根相对**，仅校验已知根前缀：scripts/rules/skills/docs/tests/src/tools/.github 等；AI 本地目录 .claude/.codegraph/.qoder 豁免；占位符/模式串跳过）语义不同，混用导致漏检/误报 | 移植 `check-doc-links.py`（verify-docs 轻量版）入 CI；CI 首次接入必现一批历史漂移（两仓库 65 处实证），修完即全绿 | costsuite/VBA 2026-08-16（65 处漂移实证） |
 | R6 | **PR 模板应要求验证记录**：构建/测试/全量验证三选一勾选，数值变更附交叉验证输出 | 模板 checklist 字段与仓库实际门禁一一对应（VBA「All parameters As Variant」「6 处同步」等仓库红线进模板） | VBA PR 模板（仓库红线 checklist 实证） |
 | R7 | **release 构件**：发布前核对构件与版本代码一致（xlsm/zip 构建时间 vs CHANGELOG 固化时间）；**二进制重建需本机环境（Excel 等），CI 无法替代**——提前规划构建机器 | 发版 checklist 加「构件重建 + 上传」步骤；Release 资产列表发布后立即核对 | VBA v2.1.1 2026-08-16（xlsm 过期待重建实证） |
+| R8 | **门禁声称计数漂移**：hook 名/文档写着「19 项」而校验脚本已扩到 20 项——声称与实现无对账，门禁"看起来在查" | 门禁中出现的条数/计数**自动推导或 AUTO_COUNTS 注入**；改名同步检查；见 cross-project-synthesis #13（门禁腐化） | ExcelAddin `.pre-commit-config.yaml` 2026-09（hook 名 19 项 vs 实际 20 项） |
+| R9 | **审查豁免无到期 = 永久遗忘**：问题以"已知/暂缓"口头跳过后不再复查 | 豁免登记表必须带**到期条件**（版本/日期/触发事件），P0 不可豁免、P1 登记制；见 `docs/governance/review-exemptions.md` | ExcelAddin / EngSmartSuite 2026-09（豁免到期清单机制） |
 
 ## 4. 诊断决策树（CI 失败时）
 

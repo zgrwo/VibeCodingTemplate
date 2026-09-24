@@ -9,6 +9,7 @@ test_gen_doc_counts.py — gen-doc-counts.py 自身测试套件
 """
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -35,11 +36,15 @@ class TestCompute:
         assert v >= 60
 
     def test_json_keys(self):
+        # 与 manifest 实际键数对齐而非硬编码：init 会把生成项目 manifest 裁剪到
+        # 仅剩被引用条目（可能为 0），硬编码阈值会让生成项目测试必红（2026-09 实证）
+        manifest = gdc.ROOT / "scripts" / "placeholders.json"
+        expected = len(json.loads(manifest.read_text(encoding="utf-8")).get("placeholders", {}))
         v = gdc._compute(
             "placeholders",
             {"type": "json_keys", "path": "scripts/placeholders.json", "key_path": "placeholders"},
         )
-        assert v >= 100
+        assert v == expected
 
     def test_unknown_type_returns_neg(self):
         assert gdc._compute("x", {"type": "bogus"}) == -1

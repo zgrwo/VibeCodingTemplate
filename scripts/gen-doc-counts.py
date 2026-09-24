@@ -198,7 +198,9 @@ def update_doc(path: Path, values: dict[str, int], check_only: bool) -> list[str
     else:
         new_text = "".join(out)
         if new_text != text:
-            path.write_text(new_text, encoding="utf-8")
+            # newline="\n"：Windows 下 Path.write_text 默认把 \n 转成 \r\n，
+            # 与 .gitattributes 的 eol=lf 契约冲突（本地 CRLF / CI LF 漂移）
+            path.write_text(new_text, encoding="utf-8", newline="\n")
             print(f"  [更新] {path} 计数已同步")
     return problems
 

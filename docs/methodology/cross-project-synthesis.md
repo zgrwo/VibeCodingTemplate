@@ -101,6 +101,46 @@
 - VibeCodingTemplate（2026-08 审查 P0）：ci.yml/detect-template.yml 的 detect 步骤 `grep '{{PROJECT_NAME}}'` 被 init-project 替换成项目名，而生成项目 AGENTS.md 必含项目名 → `is_template` 恒 true，下游 CI 构建/测试/质量门禁被永久跳过（模板自身 CI 不执行生成项目 CI，长期未暴露）
 **对策**：→ 检测器引用占位符字面量时反斜杠转义（grep BRE `\{` 匹配字面 `{`，init 正则不再匹配）；见 [tooling-pitfalls.md](../pitfalls/tooling-pitfalls.md) #25。
 
+### 13. 门禁腐化 / 门禁说谎（治理工具自身失守）
+
+**现象**：门禁脚本"看起来在检查"但实际失明——跳过路径静默计 PASS、校验项 0 命中仍 exit 0、声称计数与实现漂移。比"没有门禁"更危险：给出虚假安全感。
+**案例**（2026-09 从两成熟项目提炼）：
+- EngSmartSuite：`verify_manual_claims.py` 曾"永远 exit 0"；模板 task 键长期无门禁；`verify_consistency` 未执行项计 SKIP 而非合成 PASS；未声明文件检查只查一层
+- ExcelAddin 函数库：`.pre-commit-config.yaml` 中 hook 名称写「文档一致性（19 项）」而 verify-docs 已扩到 20 项——**声称数字未随实现更新**（门禁自身无对账）
+- VibeCodingTemplate 自身：`falsy-audit --path <文件>` 因 `rglob` 不迭代而静默输出"无发现"（见 #15）；run-affected-tests 对 4 个有测试的脚本误报缺测（见 #10）
+**对策**：
+- 每个门禁脚本配**负向注入自测**（`tests/scripts/test_*.py`：注入违规必须 FAIL 且点名，恢复必须绿）；SKIP 单独计数、不计 PASS
+- 门禁中出现的数字/条数**必须自动推导或对账**（如 AUTO_COUNTS 标记注入），禁止手写后遗忘；`--strict` 检查默认全量递归
+- 修改门禁后必须用**反例**验证一次（构造违规样本确认被拦截），而非只跑正例全绿
+
+### 14. 产物新鲜度缺失（陈旧二进制交叉验证假绿）
+
+**现象**：交叉验证/黄金测试调用的被测产物（编译二进制、生成的数据文件）是旧版本，源码已改而验证仍对照旧行为，一致通过但毫无意义。
+**案例**：
+- ExcelAddin 函数库（2026-09）：CrossValRunner 交叉验证依赖构建产物；审查发现需在跑 cross_check 前校验产物构建时间/哈希，否则"验证通过"对应当前源码不成立
+- VBA 库 v2.1.1（2026-08）：Release 附带的 xlsm 构建时间早于 CHANGELOG 固化时间，构件与版本代码不一致
+**对策**：
+- 验证流程做**产物新鲜度阶梯**：源码 mtime/hash 变化 → 强制重建 → 断言产物时间戳晚于源码；或验证前无条件重建（慢但可靠）
+- 发布检查清单加「构件重建 + 版本代码一致性核对」（见 [ci-pipeline-SKILL.md](../../skills/ci-pipeline-SKILL.md) R7）
+
+### 15. 双宿主脚本分叉（pwsh 7 vs Windows PowerShell 5.1）
+
+**现象**：治理脚本在 CI 的 pwsh 7（Linux/Windows runner）通过，却在本机 PS 5.1 失败（或反之）——编码、`Get-ChildItem -Recurse -Force` 隐藏目录递归、`Split-Path -LiteralPath` 参数集、路径分隔符等行为差异。
+**案例**：
+- ExcelAddin 函数库（2026-09）：其治理自测脚本以双宿主（pwsh7 + PS5.1）扫描运行全部 PowerShell 自测，并设 Skip 上限；期间实证 pwsh 7 不递归隐藏目录导致漏扫 `.github`（见 tooling-pitfalls #28 同类）
+- EngSmartSuite（2026-09）：pre-commit 排除 `.ps1` 的 end-of-file-fixer 以保留 CRLF+BOM，与 .ps1 双宿主约束配套
+**对策**：
+- 治理脚本改动后在**两个宿主各跑一次**；CI 矩阵覆盖 windows-latest（PS 5.1 可显式 `powershell.exe` 调用）
+- 脚本内统一 UTF-8 输出 + `-Force` 递归 + 避免参数集歧义 API（详见 [tooling-pitfalls.md](../pitfalls/tooling-pitfalls.md) #3/#28）
+
+### 16. 审查豁免无到期 = 永久遗忘
+
+**现象**：审查发现的问题以"已知/暂缓"豁免后不再被跟踪，随着代码演进风险放大却无人复查。
+**案例**：
+- ExcelAddin 函数库（2026-09）：`review-exemptions.md` 建立 P0 不可豁免 / P1 登记制 + **到期必查清单**；EngSmartSuite 的 `progress.md` 对 deferred/out-of-scope 显式登记（而非口头跳过）
+**对策**：
+- 豁免必须**登记 + 设到期条件**（版本/日期/触发事件），到期未复查视为新问题；见 [review-exemptions.md](../governance/review-exemptions.md)（本模板已内置登记表）
+
 ---
 
 ## 二、过度设计反模式案例（costsuite）
@@ -203,6 +243,8 @@ Phase 0 审计结果 → 决策：
 | 防御编程（哨兵契约/异常过滤器/NaN 守卫） | [AGENTS.md 防错三原则](../../AGENTS.md) + [sentinel-contract.md](../pitfalls/sentinel-contract.md) + [skills/csharp-SKILL.md](../../skills/csharp-SKILL.md) |
 | 环境就绪诊断（新开发者第一步） | [doctor.py](../../scripts/doctor.py) |
 | 多注册表一致性（防注册遗漏） | [verify-registries.py](../../scripts/verify-registries.py) |
+| 架构边界门禁（配置驱动分层依赖） | [verify-arch.py](../../scripts/verify-arch.py) + `scripts/architecture.json` |
+| 覆盖率门禁（清旧产物 + 阈值 + 显式失败） | [coverage.py](../../scripts/coverage.py) + `pyproject.toml [tool.coverage]` |
 | 文档计数自动注入（防数字漂移） | [gen-doc-counts.py](../../scripts/gen-doc-counts.py) |
 | YAGNI 移除文档（为什么移除 X + git 引用） | [specification.md](../spec/specification.md) + [adr-template.md](../design/adr-template.md) |
 | 文档职责体系 | [documentation.md](../governance/documentation.md)（唯一权威） |

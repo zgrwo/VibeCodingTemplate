@@ -20,11 +20,13 @@
 │
 ├── docs/                         # 文档中心（规范信源 / 治理 / 设计 / 陷阱 / 方法论，导航见 docs/README.md）
 │   ├── README.md                 # 文档中心导航（五分类速查表）
+│   ├── index.md                  # mkdocs 站点首页（快速入口 + 本地预览）
 │   ├── governance/               # 治理与结构（元文档）
 │   │   ├── documentation.md      # 文档职责规范（唯一权威）
 │   │   ├── project-structure.md  # 项目结构（本文件）
 │   │   ├── code-review-prompt.md # 代码审查 prompt（Min/Standard/Max 三级）
 │   │   ├── pre-release-review-prompt.md  # 发行前审查 prompt（Min/Med/Max 三级，Max 18 维度）
+│   │   ├── review-checklist.md   # 人工审查清单（PR 作者/审查者逐项可执行命令）
 │   │   └── review-exemptions.md  # 审查豁免登记表（P0 不可豁免 / P1 登记制）
 │   ├── spec/                     # 业务与技术规格（唯一信源）
 │   │   ├── context.md            # 领域术语表
@@ -66,8 +68,11 @@
 │   ├── README.md                 # 目录导航索引（脚本职责速查，详见本文件）
 │   ├── placeholders.json         # 占位符清单（唯一真相源：分类/默认值/测试值）
 │   ├── registries.json           # 注册表一致性门禁配置（registry 键集对声明）
+│   ├── architecture.json         # 架构边界规则配置（verify-arch.py 读取；空规则示例+说明）
 │   ├── _excluded_dirs.py         # 排除目录集合 SSOT（verify-docs/verify-registries/init 共用）
 │   ├── verify-registries.py      # 多注册表键集一致性门禁（防注册遗漏）
+│   ├── verify-arch.py            # 架构边界门禁（配置驱动 AST 分层依赖检查）
+│   ├── coverage.py               # 覆盖率门禁入口（pyproject [tool.coverage] 为 SSOT）
 │   ├── doc-counts.json           # 文档计数源配置（AUTO_COUNTS 标记注入）
 │   ├── gen-doc-counts.py         # 文档计数自动注入（防文档数字漂移）
 │   ├── doctor.py                 # 环境就绪性诊断（新开发者第一步）
@@ -96,11 +101,13 @@
 │
 ├── .github/                      # GitHub 协作
 │   ├── workflows/ci.yml          # CI 质量门禁（quick/full/quality + commit 规范检查）
-│   ├── workflows/security.yml    # CodeQL 安全扫描
+│   ├── workflows/security.yml    # CodeQL 安全扫描 + pip-audit 依赖漏洞审计
 │   ├── workflows/release.yml     # release-please 自动发版（Conventional Commits 驱动）
+│   ├── workflows/docs.yml        # mkdocs 文档站构建（--strict）与 GitHub Pages 发布
 │   ├── workflows/stale.yml       # 僵尸 Issue/PR 关闭
 │   ├── workflows/detect-template.yml  # 模板自举检测（reusable workflow）
 │   ├── workflows/docker.yml.template  # Docker 构建推送 CI 模板
+│   ├── workflows/benchmarks.yml.template  # 性能基准 CI 模板（非门禁，按语言启用）
 │   ├── dependabot.yml            # 依赖自动更新
 │   ├── release-please/           # release-please 配置（config.json）
 │   ├── ISSUE_TEMPLATE/           # Bug/功能/文档/重构模板
@@ -126,8 +133,13 @@
 ├── tools/                        # 辅助工具/脚本
 │   └── README.md                 # 辅助工具目录用途说明
 │
+├── benchmarks/                   # 性能基准（非门禁：趋势观测 + 回归告警）
+│   └── README.md                 # 基准编写约定与各语言工具（唯一定义处）
+│
 ├── Makefile                      # 跨平台验证入口（Linux/macOS: make verify）
+├── mkdocs.yml                    # 文档站点配置（mkdocs-material，CI docs.yml 构建）
 ├── pyproject.toml                # Python 项目配置（依赖、lint、格式化）
+├── ROADMAP.md                    # 路线图与决策门（排期规则）
 ├── AGENTS.md                     # 项目宪法（AI 约束）
 ├── README.md                     # 用户入口（中文）
 ├── README.en.md                  # 用户入口（英文，国际化）

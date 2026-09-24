@@ -16,6 +16,7 @@
 | `docs/governance/project-structure.md` | 开发者/AI | "代码在哪？文件干什么？"（**结构唯一信源**） | 文件新增/删除/移动 |
 | `docs/governance/code-review-prompt.md` | AI + 审查者 | "怎么分级审查代码？"（Min/Standard/Max） | 审查维度/豁免规则变更 |
 | `docs/governance/pre-release-review-prompt.md` | AI + 审查者 | "发行前查什么？"（Max 18 维度穷尽审计） | 审查方法论/门禁变更 |
+| `docs/governance/review-checklist.md` | 人类审查者/PR 作者 | "PR 逐项怎么验？"（可执行命令清单） | 门禁命令/流程变更 |
 | `docs/governance/review-exemptions.md` | AI + 维护者 | "哪些风险已接受？"（到期必查清单） | 审查豁免登记/到期复查 |
 | `docs/design/adr-template.md` + `docs/design/adr/` | AI + 人类 | "这个架构决策为什么这么做？"（决策历史） | 新增/推翻架构决策 |
 | `docs/pitfalls/falsy-pitfalls.md` | AI 编码 | "Python 中 0 被当作 False？" | 发现新 falsy 误判案例 |
@@ -24,6 +25,8 @@
 | `docs/design/architecture.md` | 人类（模板使用者） | "模板自身为什么这样设计？"（初始化后替换为项目架构文档） | 模板架构变更 |
 | `docs/methodology/cross-project-synthesis.md` | AI + 人类 | "别人踩过什么坑？"（反模式案例库） | 新增真实案例 |
 | `docs/methodology/refactoring-plan.md` | 重构执行者 | "从能用到卓越怎么走？"（路线图模板） | 重构方法论变更 |
+| `ROADMAP.md`（根目录） | 维护者/贡献者 | "下一步做什么？触发条件是什么？"（决策门） | 里程碑/决策门/版本方向变更 |
+| `benchmarks/README.md` | 性能优化者 | "基准怎么建？何时必须做？"（非门禁约定） | 基准工具/约定变更 |
 | `CONTRIBUTING.md` | 贡献者 | "怎么开发/提 PR/发版？" | 流程变更 |
 | `CHANGELOG.md` | 用户/维护者 | "这个版本改了什么？" | 每次发版 |
 | `SECURITY.md` | 安全报告者 | "怎么报告漏洞？" | 安全政策变更 |
@@ -68,6 +71,10 @@
 新增/删除/移动文件
   → docs/governance/project-structure.md（结构树）
   → AGENTS.md 目录树（如为顶层变更）
+
+新增/移动用户向文档（docs/spec、pitfalls 等）
+  → mkdocs.yml nav（站点导航；治理/ADR/方法论有意不入 nav）
+  → docs/index.md 快速入口表（如为高入口文档）
 
 引入新领域术语
   → docs/spec/context.md（唯一定义）

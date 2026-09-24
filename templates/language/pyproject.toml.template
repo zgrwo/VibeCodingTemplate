@@ -36,7 +36,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
-    "pytest-cov>=4.0",       # 覆盖率门禁：pytest --cov=src --cov-fail-under=80
+    "pytest-cov>=4.0",       # 覆盖率门禁：由 scripts/coverage.py 统一驱动
     "ruff==0.15.20",   # 锁定版本，避免规则漂移
     "mypy>=1.10",      # 类型检查：mypy src/
     "setuptools>=83.0",
@@ -61,6 +61,21 @@ namespaces = true
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 pythonpath = ["src"]
+# 白名单制：告警默认失败（防第三方告警被静默吞噬）；确需豁免时追加带理由的 ignore
+filterwarnings = ["error"]
+
+# 覆盖率配置（scripts/coverage.py 读取；CI COVERAGE_CMD 使用）
+# 初始阈值放低（60）随测试补齐逐步提升；建议保持实测基线 -5 点
+[tool.coverage.run]
+source = ["src"]
+
+[tool.coverage.report]
+fail_under = 60
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
 
 [tool.ruff]
 line-length = 100

@@ -3,14 +3,16 @@
 verify-docs.py — 文档一致性验证
 
 功能（新项目初始化后按需扩展）：
-  1. 检查全部文档（根治理文件 / docs/ 分类子目录 / skills/ / templates/）
-     中相对链接指向的文件是否存在
+  1. 检查全部文档（动态发现：根治理文件 / docs/ / skills/ / templates/ / examples/ /
+     scripts/（README）/ .github/）中相对链接指向的文件是否存在
+     —— 动态发现取代硬编码清单：新增文档自动纳入检查，防「加了文档忘登记即漏检」
   2. 检查 project-structure.md 目录树中声明的顶层目录是否真实存在
   3. 校验 AGENTS.md 与 project-structure.md 的顶层目录集合一致（双目录树防漂移）
   4. 检查目录树中未声明的文件/目录（可选，--strict）
   5. 语义交叉检查：裸 catch/except、文档 TODO/FIXME 残留、CI 脚本裸 input 调用（防门禁挂起）
   6. 反引号路径检查：`skills/xxx.md` 等非 markdown 链接的失效引用
   7. 版本一致性门禁：.release-please-manifest.json == pyproject.toml == CHANGELOG 最新发布版本
+     （存在 version.txt / 包 __init__.py 的 __version__ 时一并纳入对账，来源：ExcelAddin 函数库）
 
 规则：
   - 含 {{...}} 占位符的链接目标跳过（初始化替换前无法验证，打印提示）
@@ -39,51 +41,57 @@ with contextlib.suppress(AttributeError, ValueError):
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# 需要检查链接的文档（相对 ROOT）——覆盖全部含相对链接的文档
-DOC_FILES = [
-    # 根目录治理文件
-    "README.md",
-    "README.en.md",
-    "AGENTS.md",
-    "CONTRIBUTING.md",
-    "CHANGELOG.md",
-    "SECURITY.md",
-    "CODE_OF_CONDUCT.md",
-    # docs/ 文档中心（五分类子目录，2026-09 由 rules/ + docs/ 合并而来）
-    "docs/README.md",
-    "docs/governance/documentation.md",
-    "docs/governance/project-structure.md",
-    "docs/governance/code-review-prompt.md",
-    "docs/governance/pre-release-review-prompt.md",
-    "docs/governance/review-exemptions.md",
-    "docs/spec/context.md",
-    "docs/spec/specification.md",
-    "docs/spec/api-reference.md",
-    "docs/spec/user-manual.md",
-    "docs/design/architecture.md",
-    "docs/design/adr-template.md",
-    "docs/pitfalls/falsy-pitfalls.md",
-    "docs/pitfalls/tooling-pitfalls.md",
-    "docs/pitfalls/sentinel-contract.md",
-    "docs/methodology/cross-project-synthesis.md",
-    "docs/methodology/refactoring-plan.md",
-    # skills/ AI 技能文件
-    "skills/csharp-SKILL.md",
-    "skills/python-SKILL.md",
-    "skills/vba-SKILL.md",
-    "skills/typescript-SKILL.md",
-    "skills/go-SKILL.md",
-    "skills/rust-SKILL.md",
-    "skills/architecture-reviewer-SKILL.md",
-    "skills/refactoring-guardian-SKILL.md",
-    "skills/project-plan-review-SKILL.md",
-    # scripts/ 目录导航
-    "scripts/README.md",
-    # templates/ 与 examples/
-    "templates/README.md",
-    "templates/monorepo/README.md",
-    "examples/README.md",
-]
+# 需检查链接的文档目录根（相对 ROOT，动态发现；2026-09 引入，此前为硬编码清单）
+# 根目录 *.md 单独用 glob 展开；含第三方依赖/构建产物的目录由 _DOC_EXCLUDED_DIRS 排除
+_DOC_SCAN_DIRS = ("docs", "skills", "templates", "examples", "scripts", ".github")
+# 链接检查排除的目录名（非项目文档：依赖、构建产物、缓存）
+_DOC_EXCLUDED_DIRS = frozenset(BASE_EXCLUDED_DIRS) | {
+    "node_modules",
+    "site",
+    "dist",
+    ".venv",
+    "venv",
+    "htmlcov",
+}
+# 链接/反引号检查排除的路径前缀：第三方 Superpowers 技能（上游原样分发，不做本地改写）。
+# 其内部链接可能指向上游未 vendored 的兄弟技能（如 requesting-code-review），
+# 反引号相对路径按技能目录而非仓库根解析 → 纳入检查只会产生恒定误报。
+_DOC_EXCLUDED_PREFIXES = (
+    "skills/brainstorming/",
+    "skills/writing-plans/",
+    "skills/test-driven-development/",
+    "skills/subagent-driven-development/",
+    "skills/systematic-debugging/",
+    "skills/verification-before-completion/",
+)
+
+
+def _discover_docs() -> list[str]:
+    """动态发现需检查链接的 markdown 文档（防硬编码清单漂移）。
+
+    覆盖：根目录 *.md + _DOC_SCAN_DIRS 递归 *.md；排除依赖/产物目录与第三方技能子树。
+    返回 ROOT 相对路径（正斜杠），排序稳定。
+    """
+    found: set[str] = set()
+    for p in ROOT.glob("*.md"):
+        found.add(p.name)
+    for sub in _DOC_SCAN_DIRS:
+        base = ROOT / sub
+        if not base.is_dir():
+            continue
+        for p in base.rglob("*.md"):
+            rel = p.relative_to(ROOT)
+            rel_posix = rel.as_posix()
+            if any(part in _DOC_EXCLUDED_DIRS for part in rel.parts):
+                continue
+            if rel_posix.startswith(_DOC_EXCLUDED_PREFIXES):
+                continue
+            found.add(rel_posix)
+    return sorted(found)
+
+
+# 需要检查链接的文档（相对 ROOT）——动态发现，新增文档自动纳入
+DOC_FILES = _discover_docs()
 
 # 顶层目录检查：从 project-structure.md 目录树解析（唯一定义处，随规模裁剪自动适配）
 # 注：logs/ 为运行时目录（.gitignore 排除、init-project 复制时跳过），不检查；
@@ -356,9 +364,8 @@ def check_backtick_paths() -> list[str]:
             if _is_pattern_like(target):
                 continue  # 占位符/模式串，替换前无法验证
             probe = target.rstrip("/")
-            # 目录前缀路径按仓库根解析（如 `scripts/verify-docs.py` 指根下文件）
-            resolved = (ROOT / probe).resolve()
-            if not resolved.exists():
+            # 依次尝试仓库根与文档所在目录（技能/子目录文档常引用同目录相对路径）
+            if not (ROOT / probe).exists() and not (path.parent / probe).exists():
                 problems.append(f"[反引号路径失效] {doc} -> `{raw}`（指向不存在的文件？）")
     return problems
 
@@ -600,6 +607,10 @@ def check_version_consistency() -> list[str]:
     （pyproject.toml）是否被自动管理取决于 release-type——若配置不当，pyproject 版本会与
     已发布版本脱节（曾出现 manifest 0.1.2 vs pyproject 0.1.0），且无门禁拦截。
     非 Python 项目（无 pyproject.toml）或未接入 release-please（无 manifest）时不强制。
+
+    可选锚点（存在才校验，2026-09 对齐 ExcelAddin 函数库四重版本向量）：
+      - version.txt          独立版本锚点（C#/非 Python 项目常用）
+      - src/<pkg>/__init__.py 的 __version__（Python 包内版本）
     """
     problems: list[str] = []
     manifest_path = ROOT / ".release-please-manifest.json"
@@ -638,6 +649,30 @@ def check_version_consistency() -> list[str]:
                 f"[版本漂移] .release-please-manifest.json {manifest_version} != "
                 f"CHANGELOG 最新发布版本 {changelog_version}"
             )
+    # 可选锚点 1：version.txt（单一版本锚点文件）
+    version_txt = ROOT / "version.txt"
+    if manifest_version and version_txt.exists():
+        vt_version = version_txt.read_text(encoding="utf-8", errors="replace").strip()
+        if vt_version and vt_version != manifest_version:
+            problems.append(
+                f"[版本漂移] .release-please-manifest.json {manifest_version} != "
+                f"version.txt {vt_version}（发版后需同步版本锚点）"
+            )
+    # 可选锚点 2：src/<pkg>/__init__.py 的 __version__（Python 包内版本）
+    src_dir = ROOT / "src"
+    if manifest_version and src_dir.is_dir():
+        for init_py in sorted(src_dir.glob("*/__init__.py")):
+            m3 = re.search(
+                r'^__version__\s*=\s*["\']([^"\']+)["\']',
+                init_py.read_text(encoding="utf-8", errors="replace"),
+                re.MULTILINE,
+            )
+            if m3 and m3.group(1).strip() != manifest_version:
+                rel = init_py.relative_to(ROOT).as_posix()
+                problems.append(
+                    f"[版本漂移] .release-please-manifest.json {manifest_version} != "
+                    f"{rel} __version__ {m3.group(1).strip()}"
+                )
     return problems
 
 

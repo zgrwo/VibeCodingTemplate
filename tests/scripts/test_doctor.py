@@ -11,12 +11,18 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 _spec = importlib.util.spec_from_file_location("doctor", SCRIPTS_DIR / "doctor.py")
 doc = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(doc)
+
+# 生成项目在 git init 前（init-project 可选 --git-init）不是 git 仓库：
+# git 相关断言跳过而非硬失败，其余检查仍全量执行
+_GIT_OK, _ = doc.check_git()
 
 
 class TestChecks:
@@ -26,6 +32,7 @@ class TestChecks:
         ok, _ = doc.check_python()
         assert ok is True  # 当前环境必然 >=3.10
 
+    @pytest.mark.skipif(not _GIT_OK, reason="非 git 仓库（未 git init），git 检查跳过")
     def test_git_ok(self):
         ok, _ = doc.check_git()
         # 模板仓库本身是 git 仓库
@@ -89,6 +96,7 @@ class TestChecks:
 class TestMainCLI:
     """测试 CLI 退出码。"""
 
+    @pytest.mark.skipif(not _GIT_OK, reason="非 git 仓库（未 git init），全就绪断言跳过")
     def test_main_returns_zero_on_ready(self):
         # 模板自身环境应全就绪
         assert doc.main([]) == 0

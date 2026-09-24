@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "_comment": "架构边界门禁配置（verify-arch.py 读取）。rules 为空表示项目尚未声明分层约束；初始化后按项目实际分层填写。示例规则（取消注释并改路径后生效）：",
+  "_example_rule": {
+    "name": "核心层零框架依赖（示例）",
+    "source": ["src/core/**/*.py"],
+    "forbid_imports": ["flask", "streamlit", "PyQt5"],
+    "exclude": ["**/vendor/**"],
+    "reason": "核心计算必须可独立单测、可跨平台复用（见 docs/design/architecture.md）"
+  },
+  "rules": []
+}

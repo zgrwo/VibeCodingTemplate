@@ -4,7 +4,7 @@
 # 适用于 Linux/macOS/WSL 环境（Windows 用户可用 verify-all.ps1）
 # ============================================================================
 
-.PHONY: verify docs test init clean help build lint format doctor
+.PHONY: verify docs test coverage init clean help build lint format doctor
 
 PYTHON ?= python
 
@@ -13,6 +13,7 @@ help:
 	@echo "  make verify  — 全量验证（构建+测试+文档一致性）"
 	@echo "  make docs    — 仅文档一致性验证"
 	@echo "  make test    — 仅运行测试"
+	@echo "  make coverage— 覆盖率门禁（pyproject [tool.coverage] 为 SSOT）"
 	@echo "  make build   — 构建项目"
 	@echo "  make lint    — 代码风格检查（ruff + prettier）"
 	@echo "  make format  — 自动格式化（ruff format + prettier）"
@@ -31,6 +32,7 @@ docs:
 	$(PYTHON) scripts/verify-manual.py
 	$(PYTHON) scripts/falsy-audit.py
 	$(PYTHON) scripts/verify-registries.py
+	$(PYTHON) scripts/verify-arch.py
 	$(PYTHON) scripts/gen-doc-counts.py --check
 	$(PYTHON) scripts/test-quality-guard.py
 	$(PYTHON) scripts/test-quality-guard.py --src scripts --tests tests/scripts
@@ -41,6 +43,9 @@ doctor:
 test:
 	$(PYTHON) scripts/verify-all.py --quick
 
+coverage:
+	$(PYTHON) scripts/coverage.py
+
 init:
 	@if [ -z "$(TARGET)" ]; then echo "用法: make init TARGET=/path/to/project"; exit 1; fi
 	$(PYTHON) scripts/init-project.py $(TARGET) --git-init
@@ -50,7 +55,7 @@ build:
 	@if [ -f go.mod ]; then go build ./...; fi
 
 lint:
-	@if command -v ruff >/dev/null 2>&1; then ruff check scripts/ tests/; fi
+	@if command -v ruff >/dev/null 2>&1; then ruff check scripts/ tests/ examples/ && ruff format --check scripts/ tests/ examples/; fi
 	@if command -v prettier >/dev/null 2>&1; then prettier --check "**/*.{md,yaml,yml,json}"; fi
 
 format:

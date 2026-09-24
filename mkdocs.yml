@@ -1,0 +1,74 @@
+# ============================================================================
+# mkdocs.yml — 文档站点配置（mkdocs-material）
+#
+# 本地：pip install mkdocs-material && mkdocs serve
+# CI：  .github/workflows/docs.yml 以 --strict 构建（警告即失败）并发布 GitHub Pages
+#
+# 约定：
+#   - 只发布用户向页面（nav）；治理/ADR/方法论等文件仍可直达 URL，但不占导航
+#   - 新增文档页需登记 project-structure.md 目录树（verify-docs.py --strict 强制）
+# ============================================================================
+
+site_name: "{{PROJECT_NAME}}"
+site_description: "{{ONE_LINE_DESCRIPTION}}"
+docs_dir: docs
+
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.sections      # 分节显示
+    - navigation.top           # 回到顶部
+    - content.code.copy        # 代码块复制按钮
+    - search.suggest           # 搜索建议
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      toggle:
+        icon: material/weather-night
+        name: 切换到暗色
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      toggle:
+        icon: material/weather-sunny
+        name: 切换到亮色
+
+# docs/README.md 是目录自身的导航索引，不属于站点内容
+exclude_docs: |
+  README.md
+
+markdown_extensions:
+  - admonition
+  - tables
+  # CJK 锚点对齐 GitHub：material 默认 slugify 会把中文标题生成 _1/_2 造成锚点断链
+  - toc:
+      permalink: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+
+validation:
+  nav:
+    omitted_files: ignore      # 治理/ADR/方法论有意不入 nav（仍可直达 URL）
+  links:
+    # docs/ 内文档大量引用仓库其他目录（skills/ scripts/ AGENTS.md 等）：
+    # 这类链接由 verify-docs.py 以全仓视角校验（CI 硬门禁），mkdocs 不需要重复告警
+    not_found: ignore
+
+nav:
+  - 首页: index.md
+  - 规格:
+      - 术语表: spec/context.md
+      - 项目规格: spec/specification.md
+      - API 参考: spec/api-reference.md
+      - 用户手册: spec/user-manual.md
+  - 治理与陷阱:
+      - 文档职责: governance/documentation.md
+      - 哨兵契约: pitfalls/sentinel-contract.md
+      - Falsy 陷阱: pitfalls/falsy-pitfalls.md
+      - 工具坑位: pitfalls/tooling-pitfalls.md

@@ -9,6 +9,28 @@ end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
+# PowerShell：CRLF + UTF-8 BOM。PS 5.1 无 BOM 时按 ANSI 解析含中文注释的脚本
+# → 语法解析失败（docs/pitfalls/tooling-pitfalls.md #3），必须由编辑器强制编码
+[*.ps1]
+end_of_line = crlf
+charset = utf-8-bom
+
+# Python
+[*.py]
+indent_style = space
+indent_size = 4
+
+# C#
+[*.cs]
+indent_style = space
+indent_size = 4
+indent_brace_style = allman
+
+# C# / MSBuild 工程文件
+[*.{csproj,props,targets,sln,xml}]
+indent_style = space
+indent_size = 2
+
 [*.{md,txt}]
 indent_style = space
 indent_size = 4

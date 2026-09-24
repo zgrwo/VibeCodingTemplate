@@ -273,6 +273,32 @@ class TestPrunePlaceholderManifest:
         assert not (tmp_path / "scripts" / "placeholders.json").exists()
 
 
+class TestRefreshDocCounts:
+    """AUTO_COUNTS 刷新：manifest 裁剪后计数标记必须同步（2026-09 模板自测实证）。"""
+
+    def test_runs_script_in_target(self, tmp_path):
+        scripts = tmp_path / "scripts"
+        scripts.mkdir()
+        (scripts / "gen-doc-counts.py").write_text(
+            "from pathlib import Path\n"
+            "Path('refreshed.marker').write_text('1', encoding='utf-8')\n",
+            encoding="utf-8",
+        )
+        ip._refresh_doc_counts(tmp_path)
+        assert (tmp_path / "refreshed.marker").exists()
+
+    def test_missing_script_noop(self, tmp_path):
+        ip._refresh_doc_counts(tmp_path)
+        assert not (tmp_path / "refreshed.marker").exists()
+
+    def test_failure_warns_not_raises(self, tmp_path, capsys):
+        scripts = tmp_path / "scripts"
+        scripts.mkdir()
+        (scripts / "gen-doc-counts.py").write_text("raise SystemExit(1)\n", encoding="utf-8")
+        ip._refresh_doc_counts(tmp_path)
+        assert "[WARN]" in capsys.readouterr().out
+
+
 class TestStripTemplateOnly:
     """TEMPLATE_ONLY 标记段落裁剪：模板专属内容不进入新项目。"""
 

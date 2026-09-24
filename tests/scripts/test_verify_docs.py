@@ -365,6 +365,63 @@ class TestVersionConsistency:
         monkeypatch.setattr(vd, "ROOT", tmp_path)
         assert vd.check_version_consistency() == []
 
+    def test_version_txt_mismatch_detected(self, tmp_path, monkeypatch):
+        """version.txt 锚点漂移必须检出（2026-09 对齐 ExcelAddin 四重版本向量）。"""
+        self._setup(tmp_path, monkeypatch, "0.1.2", "0.1.2", "0.1.2")
+        (tmp_path / "version.txt").write_text("0.1.0\n", encoding="utf-8")
+        problems = vd.check_version_consistency()
+        assert any("version.txt" in p for p in problems)
+
+    def test_version_txt_consistent_passes(self, tmp_path, monkeypatch):
+        self._setup(tmp_path, monkeypatch, "0.1.2", "0.1.2", "0.1.2")
+        (tmp_path / "version.txt").write_text("0.1.2\n", encoding="utf-8")
+        assert vd.check_version_consistency() == []
+
+    def test_package_dunder_version_mismatch_detected(self, tmp_path, monkeypatch):
+        """src/<pkg>/__init__.py 的 __version__ 漂移必须检出。"""
+        self._setup(tmp_path, monkeypatch, "0.1.2", "0.1.2", "0.1.2")
+        pkg = tmp_path / "src" / "mylib"
+        pkg.mkdir(parents=True)
+        (pkg / "__init__.py").write_text('__version__ = "0.1.0"\n', encoding="utf-8")
+        problems = vd.check_version_consistency()
+        assert any("__version__" in p for p in problems)
+
+    def test_package_dunder_version_consistent_passes(self, tmp_path, monkeypatch):
+        self._setup(tmp_path, monkeypatch, "0.1.2", "0.1.2", "0.1.2")
+        pkg = tmp_path / "src" / "mylib"
+        pkg.mkdir(parents=True)
+        (pkg / "__init__.py").write_text('__version__ = "0.1.2"\n', encoding="utf-8")
+        assert vd.check_version_consistency() == []
+
+
+class TestDynamicDocDiscovery:
+    """动态文档发现（2026-09）：新增文档自动纳入链接检查，防硬编码清单漏检。"""
+
+    def test_new_root_and_nested_docs_discovered(self, tmp_path, monkeypatch):
+        (tmp_path / "docs" / "spec").mkdir(parents=True)
+        (tmp_path / "ROADMAP.md").write_text("", encoding="utf-8")
+        (tmp_path / "docs" / "spec" / "new.md").write_text("", encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        docs = vd._discover_docs()
+        assert "ROADMAP.md" in docs
+        assert "docs/spec/new.md" in docs
+
+    def test_dependency_dirs_excluded(self, tmp_path, monkeypatch):
+        nm = tmp_path / "examples" / "node_modules" / "pkg"
+        nm.mkdir(parents=True)
+        (nm / "README.md").write_text("", encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        docs = vd._discover_docs()
+        assert not any("node_modules" in d for d in docs)
+
+    def test_discovery_sorted_and_posix(self, tmp_path, monkeypatch):
+        (tmp_path / "README.md").write_text("", encoding="utf-8")
+        (tmp_path / "AGENTS.md").write_text("", encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        docs = vd._discover_docs()
+        assert docs == sorted(docs)
+        assert all("\\" not in d for d in docs)
+
 
 class TestHardGateDetection:
     """CI 硬门禁的检出行为测试（2026-08 Max 审查 P2 补测：

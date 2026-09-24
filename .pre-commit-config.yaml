@@ -12,7 +12,8 @@
 #   - ruff pre-commit: https://github.com/astral-sh/ruff-pre-commit
 #
 # 注意：
-#   - 保持 ruff 版本与 pyproject.toml 中 dev 依赖版本一致（避免规则漂移）
+#   - ruff 版本三处对齐：本文件 rev == pyproject.toml dev 依赖 == templates/language/pyproject.toml.template
+#     （钉版防规则/格式化漂移，tooling-pitfalls #29）
 #   - 若预提交全量检查太慢，可针对单个文件运行
 #   - pre-commit 与 scripts/git-hooks/commit-msg 可共存（pre-commit 管代码质量，
 #     commit-msg 管 Conventional Commits 格式）
@@ -28,8 +29,10 @@ repos:
       - id: end-of-file-fixer          # 文件末尾统一换行
         exclude: '\.ps1$'
       - id: check-yaml                 # YAML 语法（.github/ 与 workflow 配置）
-        # ISSUE_TEMPLATE 的 yml 含 {{ }} 占位符，YAML 解析器可能误报
-        exclude: '\.github/ISSUE_TEMPLATE/.*\.yml$'
+        # ISSUE_TEMPLATE 的 yml 含 {{ }} 占位符，YAML 解析器可能误报；
+        # mkdocs.yml 含 pymdownx CJK slugify 的 !!python/object/apply 标签（标准配方），
+        # 通用 YAML 解析器不认识该标签（mkdocs 自身解析正常，docs.yml CI 已构建校验）
+        exclude: '\.github/ISSUE_TEMPLATE/.*\.yml$|^mkdocs\.yml$'
       - id: check-merge-conflict       # 冲突标记残留
       - id: detect-private-key         # 误提交私钥检测
       - id: mixed-line-ending          # 换行符统一（与 .gitattributes 配套)

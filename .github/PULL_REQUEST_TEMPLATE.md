@@ -24,7 +24,9 @@
 
 ## 检查清单
 
-- [ ] 未跨层/跨线程违规
+- [ ] 未跨层/跨线程违规（架构边界门禁 `scripts/verify-arch.py` 通过）
+- [ ] 无恒真断言/自校验（`test-quality-guard.py --max-warn 0` 通过）
+- [ ] 覆盖率不低于阈值（`scripts/coverage.py` 通过）
 - [ ] 未修改无关文件
 - [ ] 新增 Public 接口已同步 api-reference.md
 - [ ] 新代码有对应测试（含边界/退化输入）

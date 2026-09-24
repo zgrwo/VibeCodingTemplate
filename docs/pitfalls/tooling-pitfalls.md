@@ -60,12 +60,16 @@
 | 27 | **模板模式 CI 门禁盲区**（模板仓库自身 is_template=true 时 quick-check 的 Build/Test 与 quality-gate 的 LINT/COVERAGE 全部被 `!= 'true'` 门控跳过——占位符命令在模板不可执行；template-self-test 只跑 verify 四件套 → 模板自身的 pytest/ruff 无 CI 守卫，2026-08 实证 ruff 对 examples/ 报 I001 而 CI 全绿） | quality-gate 模板模式分支加**字面命令**硬门禁（非占位符）：`python -m pytest tests/ -q`、`python -m ruff check scripts/ tests/ examples/`；依赖安装步骤（numpy）必须先于使用它的 verify-manual 步骤 |
 | 28 | **PS 5.1 的 `Split-Path -LiteralPath <x> -Parent` 参数集歧义**（LiteralPathSet 与 PathSet 均含 -Parent，`-LiteralPath` + `-Parent` 组合报 AmbiguousParameterSet——2026-08 Max 审查在 init-project.ps1 junction 防护中实证） | 改用 .NET API `[System.IO.Path]::GetDirectoryName($path)`（返回 null 即到根，循环自然终止）；或先用 `-Path`（无通配符场景等价） |
 | 29 | **工具链声明与代码漂移**（仓库声明了 ruff-format hook（.pre-commit-config.yaml）与 Makefile format target，但 27 个 Python 文件从未按 ruff format 排版——`pre-commit run --all-files` 会产生大 diff，2026-08-15 发行前审查实证） | 工具链接入时先全仓对齐一次（`ruff format .`），再在 CI 或 pre-commit 兜底 `ruff format --check`；声明新格式化工具前先跑一次 `--check` 评估存量漂移，禁止"只声明不执行" |
+| 30 | **`.gitignore` 行尾 `#` 不是注释**（Git 只支持整行注释）：`site/   # mkdocs 产物` 会把 `# mkdocs 产物` 当作 pattern 的一部分 → 该行**静默失效**，目录照常被跟踪 | 注释独占一行；新增 ignore 后用 `git check-ignore -v <path>` 验证命中（模板自身 2026-09 实证：`.opencode-goal/` 等 3 行因行尾注释未生效） |
+| 31 | **`Path.write_text` 在 Windows 默认把 `\n` 转成 `\r\n`**：生成/改写文档（md/toml/json）后与 `.gitattributes` 的 `eol=lf` 契约冲突，本地 CRLF、CI LF 漂移（`git diff` 警告 "CRLF will be replaced by LF"） | 文本产物写入统一 `path.write_text(text, encoding="utf-8", newline="\n")`（Python 3.10+）；读改写场景避免默认换行翻译（模板 gen-doc-counts / init-project 2026-09 实证） |
 
 ## 提交前自查
 
 ```bash
 # 检查脚本中是否出现高频坑位
 grep -rn "foreach \$\|Join-Path [^)]*$\|&&" scripts/ --include="*.ps1" || echo "OK"
+# 检查 .gitignore 行尾注释（静默失效）
+grep -n "^[^#].*#" .gitignore || echo "OK"
 ```
 
 ## 维护规则

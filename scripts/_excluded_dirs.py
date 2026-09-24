@@ -18,9 +18,12 @@ BASE_EXCLUDED_DIRS = frozenset(
         ".git",
         ".claude",
         ".codegraph",
+        ".opencode-goal",  # opencode goal 插件会话状态（AI 工具运行态，不入库）
         ".qoder",
+        ".superpowers",  # subagent-driven-development 执行台账（AI 会话产物，不入库）
         ".zcode",
         "logs",
+        "site",  # mkdocs 构建产物（site/ 默认输出目录，不入库）
         "__pycache__",
         ".pytest_cache",
         ".ruff_cache",

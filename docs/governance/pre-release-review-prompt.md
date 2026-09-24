@@ -104,9 +104,10 @@ VibeCodingTemplate 是一个 **元项目模板**——不是具体应用，
 
 ## 4. CI 管道正确性
 - 4 级门禁（quick-check / full-check / quality-gate / template-self-test）触发条件正确
-- 模板检测逻辑在 init 后不会反转（grep BRE 转义 `\{\{PROJECT_NAME\}\}`，勿用 `grep '{{'` 或裸 PROJECT_NAME）
-- 模板模式（is_template=true）下 quality-gate 有 pytest/ruff 字面命令步骤（模板自身测试/lint 硬门禁）
-- quality-gate 的「安装示例 CrossVal 依赖（numpy）」步骤必须先于「手册数值一致性」（verify-manual.py 执行示例需 numpy）
+- 模板检测逻辑在 init 后不会反转（运行时拼装占位符 + `grep -F` 固定串，勿用 `grep '{{'` / BRE 转义 / 裸 PROJECT_NAME）
+- 模板模式（is_template=true）下 quality-gate 有 pytest/ruff 字面命令步骤（模板自身测试/lint/format 硬门禁；`ruff format --check` + `--max-warn 0`）
+- quality-gate 的「安装模板自身依赖（模板模式）」步骤（`pip install -e ".[dev]"`，含 numpy/钉版 ruff）必须先于「手册数值一致性」（verify-manual.py 执行示例需 numpy）
+- quality-gate 接入 `verify-arch.py`（架构边界）、`test-quality-guard.py --max-warn 0`（恒真断言/自校验）与 `coverage.py`（覆盖率，阈值 SSOT 在 pyproject `[tool.coverage]`）
 - security.yml 有 `contents: read` 权限
 - Windows runner 上的 bash 步骤有 `shell: bash`
 - 所有 action 引用的 SHA 真实存在

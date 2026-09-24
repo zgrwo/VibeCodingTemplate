@@ -3,7 +3,7 @@
 #
 # 职责：
 #   1. 调用 init-project.ps1 生成新项目（自动提供全部占位符值，无交互）
-#   2. 运行 verify-docs.py --strict / verify-manual.py / falsy-audit.py
+#   2. 运行 verify-docs.py --strict / verify-manual.py / falsy-audit.py / verify-arch.py / test-quality-guard.py
 #   3. 断言全部通过 → 模板"初始化后文档一致性"能力被持续验证
 #
 # 设计：占位符测试值取自 scripts/placeholders.json 的 test 字段（唯一真相源），
@@ -105,7 +105,12 @@ try {
         @{ Name = "verify-docs.py --strict"; Cmd = { python scripts/verify-docs.py --strict } },
         @{ Name = "verify-manual.py";        Cmd = { python scripts/verify-manual.py } },
         @{ Name = "falsy-audit.py";          Cmd = { python scripts/falsy-audit.py } },
-        @{ Name = "test-quality-guard.py";   Cmd = { python scripts/test-quality-guard.py } }
+        @{ Name = "verify-arch.py";          Cmd = { python scripts/verify-arch.py } },
+        # --check AUTO_COUNTS：init 裁剪 manifest 后必须已刷新（5.6.3 步骤的回归守卫）
+        @{ Name = "gen-doc-counts.py --check"; Cmd = { python scripts/gen-doc-counts.py --check } },
+        # 覆盖率配置随 init 复制（source=scripts/fail_under=80）→ 生成项目门禁机制可运行
+        @{ Name = "coverage.py";             Cmd = { python scripts/coverage.py } },
+        @{ Name = "test-quality-guard.py";   Cmd = { python scripts/test-quality-guard.py --max-warn 0 } }
     )
     foreach ($s in $steps) {
         Write-Host "`n=== $($s.Name) ===" -ForegroundColor Cyan
