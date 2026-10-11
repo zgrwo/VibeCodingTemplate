@@ -4,6 +4,46 @@ All notable changes to VibeCodingTemplate.
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [1.0.0](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.2.5...v1.0.0) (2026-10-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* rules/ 目录移除,init 产物布局同步变化(rules/adr/ → docs/design/adr/ 等);verify-docs DOC_FILES/_SUBDIR_CHECK、 verify-manual MANUAL、doctor REQUIRED_DIRS、doc-counts.json、 CODEOWNERS、ci.yml 路径过滤等全部锚点已同步。
+
+### ✨ 新功能
+
+* **ci:** push(main) 纳入门禁、修正 paths 盲区，并为清单一致性加守卫 ([ea95628](https://github.com/zgrwo/VibeCodingTemplate/commit/ea95628fb92795de65c6c0a81164a98977b00492))
+* **init:** examples/ 改为 opt-in（默认不复制参考示例） ([7fba2c5](https://github.com/zgrwo/VibeCodingTemplate/commit/7fba2c57db3f7400be62c38277753ecb61efb2c3))
+* **verify-docs:** 新增宪法副本一致性/悬空引用登记/豁免到期三向量 ([e06bfd2](https://github.com/zgrwo/VibeCodingTemplate/commit/e06bfd29cd3c63f9de4b36ab6e5a073350694feb))
+* 参考两成熟项目加固门禁（覆盖率/架构边界/文档站/ROADMAP） ([89eefea](https://github.com/zgrwo/VibeCodingTemplate/commit/89eefea34344ff341f5d75efd66ecaaa6369b554))
+
+
+### 🐛 Bug 修复
+
+* **docs-ci:** configure-pages 移入发布 job，未启用 Pages 时不再让文档门禁变红 ([bfb4e53](https://github.com/zgrwo/VibeCodingTemplate/commit/bfb4e538a72da927c68372fa1de1f5a692128486))
+* **doctor:** 项目名从 pyproject 读取，不再硬编码模板名 ([98658e8](https://github.com/zgrwo/VibeCodingTemplate/commit/98658e89e80672166fa0212f82f03416e55bb18d))
+* **init:** 修复生成物 BOM 与身份缺陷 ([25dda43](https://github.com/zgrwo/VibeCodingTemplate/commit/25dda4355a19c25fb0d37958198dddcd4ef14f6d))
+* **placeholders:** 纠正 core 分类，初始化必填项 20→9 ([5fd54fe](https://github.com/zgrwo/VibeCodingTemplate/commit/5fd54fe1fcf268fc7354042fd7b2343dda1c71f7))
+* **verify-arch:** 规则为空时输出 [SKIP] 未检查，不再声称"验证通过" ([1ae24f4](https://github.com/zgrwo/VibeCodingTemplate/commit/1ae24f45334bc91b15b62f4e5024129f33e1747d))
+
+
+### 📄 文档
+
+* AGENTS.md 瘦身 356→252 行(≈6.5K→4K tokens,省 38%) ([6e22a05](https://github.com/zgrwo/VibeCodingTemplate/commit/6e22a0551efce53167c4a0e58666ef1802f98176))
+* 审查 prompt 与豁免表迁入 docs/governance,审查报告归档 logs/reviews ([032e81b](https://github.com/zgrwo/VibeCodingTemplate/commit/032e81b269e05e58310612d2e0a5308dbe37629b))
+* 新增 5S 现场整理表、反模式案例 17/18，计数改为自动注入并同步口径 ([352c3d6](https://github.com/zgrwo/VibeCodingTemplate/commit/352c3d607b9c94451ebcd834f5473107106cfda9))
+
+
+### 🔧 重构
+
+* 合并 rules/ 与 docs/ 为统一文档中心,按五分类子目录管理 ([f95f02d](https://github.com/zgrwo/VibeCodingTemplate/commit/f95f02db99757a33a691b0565c193ad951b2c401))
+
+
+### ✅ 测试
+
+* **init:** 补 _prune_examples 单测；登记 --with-examples（README/documentation） ([e220439](https://github.com/zgrwo/VibeCodingTemplate/commit/e220439d1aded4f2bba35a00d0fbdd903887b33a))
+
 ## [0.2.5](https://github.com/zgrwo/VibeCodingTemplate/compare/v0.2.4...v0.2.5) (2026-08-24)
 
 
