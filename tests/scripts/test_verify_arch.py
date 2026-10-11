@@ -141,9 +141,15 @@ class TestCheckRule:
 class TestMainCLI:
     """CLI 退出码。"""
 
-    def test_empty_rules_on_template_passes(self):
-        # 模板仓库 architecture.json rules 为空 → 显式通过
+    def test_empty_rules_reports_skip_not_pass(self, capsys):
+        """rules 为空 → 输出 [SKIP] 且**不得**声称"验证通过"（2026-10-11 去伪：门禁说谎）。
+
+        退出码仍为 0（新项目首日不该红），但语义必须是"未检查"。
+        """
         assert va.main([]) == 0
+        out = capsys.readouterr().out
+        assert "[SKIP]" in out
+        assert "验证通过" not in out
 
     def test_violation_returns_one(self, tmp_path, monkeypatch):
         _write_src(tmp_path, "src/core/h.py", "import flask\n")

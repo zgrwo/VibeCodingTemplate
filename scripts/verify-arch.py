@@ -25,7 +25,9 @@ verify-arch.py — 架构边界门禁（配置驱动，Python AST）
   - 违规判定：`import X` / `import X.Y` / `from X import ...` 的模块名等于
     forbid_imports 中任一项，或以 "项." 为前缀
   - 防门禁说谎：规则 source 未匹配任何文件 → 配置错误（FAIL），不静默通过
-  - rules 为空 → 显式输出"0 条规则"通过（引导填写，不假装已检查）
+  - rules 为空 → **[SKIP] 未检查**（不是通过）：退出码 0 以便新项目首日不红，但输出与
+    verify-all 的其余门禁区分开——"0 条规则"时声称"架构边界验证通过"属于门禁说谎
+    （cross-project-synthesis #13；2026-10-11 由 [OK] 改为 [SKIP]）
 
 用法：
   python scripts/verify-arch.py
@@ -162,7 +164,13 @@ def main(argv: list[str] | None = None) -> int:
 
     rules = config.get("rules", [])
     if not rules:
-        print("[OK] 架构边界验证通过（0 条规则——请按项目分层填写 scripts/architecture.json）")
+        print(
+            "[SKIP] 架构边界：未检查（scripts/architecture.json 的 rules 为空）\n"
+            "       这不是通过——请按项目实际分层填写规则，例如：\n"
+            '       {"name": "核心层零框架依赖", "source": ["src/core/**/*.py"],\n'
+            '        "forbid_imports": ["flask", "streamlit"], "reason": "核心计算须可独立单测"}\n'
+            "       填写后本门禁才真正生效（当前状态：架构红线只有声明，没有断言）"
+        )
         return 0
 
     problems: list[str] = []
