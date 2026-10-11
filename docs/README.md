@@ -10,7 +10,7 @@
 
 | 子目录 | 定位 | 文件 |
 |--------|------|------|
-| `governance/` | 治理与结构（元文档） | [documentation.md](governance/documentation.md)（文档职责）、[project-structure.md](governance/project-structure.md)（结构树）、[code-review-prompt.md](governance/code-review-prompt.md) / [pre-release-review-prompt.md](governance/pre-release-review-prompt.md)（分级审查 prompt）、[review-checklist.md](governance/review-checklist.md)（人工审查清单）、[review-exemptions.md](governance/review-exemptions.md)（豁免登记） |
+| `governance/` | 治理与结构（元文档） | [documentation.md](governance/documentation.md)（文档职责）、[project-structure.md](governance/project-structure.md)（结构树）、[code-review-prompt.md](governance/code-review-prompt.md) / [pre-release-review-prompt.md](governance/pre-release-review-prompt.md)（分级审查 prompt）、[review-checklist.md](governance/review-checklist.md)（人工审查清单）、[review-exemptions.md](governance/review-exemptions.md)（豁免登记，到期由门禁校验）、[repo-hygiene.md](governance/repo-hygiene.md)（仓库现场整理 5S） |
 | `spec/` | 业务与技术规格（唯一信源） | [context.md](spec/context.md)（术语）、[specification.md](spec/specification.md)（业务）、[api-reference.md](spec/api-reference.md)（API 签名）、[user-manual.md](spec/user-manual.md)（手册） |
 | `design/` | 架构设计与决策记录 | [architecture.md](design/architecture.md)、[adr-template.md](design/adr-template.md)、`adr/`（ADR 落地，编号递增） |
 | `pitfalls/` | 陷阱与防御契约 | [falsy-pitfalls.md](pitfalls/falsy-pitfalls.md)、[tooling-pitfalls.md](pitfalls/tooling-pitfalls.md)、[sentinel-contract.md](pitfalls/sentinel-contract.md) |

@@ -47,6 +47,7 @@ argument-hint: "[修改的 .github/workflows/*.yml 或 CI 脚本] [--context 新
 | C13 | **release-please 反递归**：用默认 `GITHUB_TOKEN` 创建的 tag/Release **不会触发**其他 workflow（GitHub 防递归），"合并 release PR 后自动构建发布资产"静默不发生 | release-please workflow 内显式触发下游：`gh workflow run release.yml --ref <tag>`（需 `actions: write` 权限，加退避重试）；发版 workflow 设 `cancel-in-progress: false` 防中断 | ExcelAddin 函数库 2026-09（release-please.yml 反递归 dispatch 实证）；模板当前 release.yml 仅维护版本，构建 workflow 若新增需按此接线 |
 | C14 | **覆盖率门禁三要素缺一即假绿**：① 阈值（`--cov-fail-under` / coverlet Threshold）② 数据缺失时显式失败（产物没生成不得静默通过）③ 运行前清理旧报告（残留旧报告让失败 run 读旧数据） | 三要素同时落地；模块化阈值用 Include 过滤 + `ThresholdStat=total` 口径统一；本地脚本与 CI 同口径 | ExcelAddin `coverage.ps1`（92/86/86 三模块）；EngSmartSuite `--cov-fail-under=85` 2026-09 |
 | C15 | **路径过滤器遗漏配置型文件**：`paths:` 只列 `src/**` 时，`*.props` / `version.txt` / `.editorconfig` / lock 文件变更被判 docs-only 跳过全部重 job（曾真实发生：只改 props 被跳） | paths 显式纳入：构建配置（props/csproj/nuget.config）、版本锚点（version.txt）、编辑器/格式配置（.editorconfig/.gitattributes）、锁文件；docs-only 也保底跑文档门禁 | ExcelAddin ci.yml classify（包含 `**/*.props`、`version.txt`、`.editorconfig`、lock）；模板 ci.yml paths 已含 pyproject/Makefile/.pre-commit/manifest |
+| C16 | **门禁触发面/覆盖面的三类盲区**：① 只被 `pull_request` 触发 → release-please 自动提交与维护者直推 main 完全不过门禁；② `paths` 漏掉**门禁自己守护的文件**（改了却不跑门禁）；③ 有意排除出检查的子范围（第三方技能子树等）无登记表，新盲区出现时无人知晓 | ① 补 `push: branches: [main]`，其 `paths` 与 PR **逐条一致**并由守卫测试强制（两份清单是同一契约的两个副本：只改一处要么制造盲区、要么让无关变更在 main 上白跑；靠人同步必然分叉）；② 被任一 job 校验的文件必须在 `paths` 里，根文档用 `*.md` 通配而非逐个列名；③ 排除范围配**两向门禁的登记表**（新盲区未登记 FAIL / 登记陈旧 FAIL） | EngSmartSuite quality.yml 2026-10-09（G-10：paths 漏 AGENTS.md/manifest/templates/**→ 门禁反复变红而改动者从未看到）；工程分析套件 skills/README「已知差异」表（悬空引用登记）；模板 ci.yml 2026-10（补 push:main + `*.md` 通配 + CLAUDE.md/tools/build），见 cross-project-synthesis #17 |
 
 ## 3. PR 与发版流程陷阱
 
@@ -60,7 +61,7 @@ argument-hint: "[修改的 .github/workflows/*.yml 或 CI 脚本] [--context 新
 | R6 | **PR 模板应要求验证记录**：构建/测试/全量验证三选一勾选，数值变更附交叉验证输出 | 模板 checklist 字段与仓库实际门禁一一对应（VBA「All parameters As Variant」「6 处同步」等仓库红线进模板） | VBA PR 模板（仓库红线 checklist 实证） |
 | R7 | **release 构件**：发布前核对构件与版本代码一致（xlsm/zip 构建时间 vs CHANGELOG 固化时间）；**二进制重建需本机环境（Excel 等），CI 无法替代**——提前规划构建机器 | 发版 checklist 加「构件重建 + 上传」步骤；Release 资产列表发布后立即核对 | VBA v2.1.1 2026-08-16（xlsm 过期待重建实证） |
 | R8 | **门禁声称计数漂移**：hook 名/文档写着「19 项」而校验脚本已扩到 20 项——声称与实现无对账，门禁"看起来在查" | 门禁中出现的条数/计数**自动推导或 AUTO_COUNTS 注入**；改名同步检查；见 cross-project-synthesis #13（门禁腐化） | ExcelAddin `.pre-commit-config.yaml` 2026-09（hook 名 19 项 vs 实际 20 项） |
-| R9 | **审查豁免无到期 = 永久遗忘**：问题以"已知/暂缓"口头跳过后不再复查 | 豁免登记表必须带**到期条件**（版本/日期/触发事件），P0 不可豁免、P1 登记制；见 `docs/governance/review-exemptions.md` | ExcelAddin / EngSmartSuite 2026-09（豁免到期清单机制） |
+| R9 | **审查豁免无到期 = 永久遗忘**，且**到期条件必须可机械校验**（只写在文档里 = 没有门禁读它） | 豁免登记表必须带**到期条件**（版本/日期/触发事件），P0 不可豁免、P1 登记制；写了「到期：vX.Y.Z」的条目由 `verify-docs.py`「豁免到期」向量比对当前版本，过期即 FAIL（划删除线才跳过）；引用清单文件写段落名不写行号；见 `docs/governance/review-exemptions.md` | ExcelAddin / EngSmartSuite 2026-09（豁免到期清单机制）；**模板 2026-10-11 实证：条目到期 v0.2.0 而仓库已 v0.2.4 仍无人复查** → 补门禁 |
 
 ## 4. 诊断决策树（CI 失败时）
 

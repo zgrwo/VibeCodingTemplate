@@ -27,7 +27,8 @@
 │   │   ├── code-review-prompt.md # 代码审查 prompt（Min/Standard/Max 三级）
 │   │   ├── pre-release-review-prompt.md  # 发行前审查 prompt（Min/Med/Max 三级，Max 18 维度）
 │   │   ├── review-checklist.md   # 人工审查清单（PR 作者/审查者逐项可执行命令）
-│   │   └── review-exemptions.md  # 审查豁免登记表（P0 不可豁免 / P1 登记制）
+│   │   ├── review-exemptions.md  # 审查豁免登记表（P0 不可豁免 / P1 登记制；到期由门禁校验）
+│   │   └── repo-hygiene.md       # 仓库现场整理 5S（整理/整顿/清扫/清洁/素养 + 漂移→门禁对照表）
 │   ├── spec/                     # 业务与技术规格（唯一信源）
 │   │   ├── context.md            # 领域术语表
 │   │   ├── specification.md      # 业务规则与功能范围唯一信源

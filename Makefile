@@ -67,3 +67,7 @@ clean:
 	find . -type d -name .pytest_cache -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name .ruff_cache -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name node_modules -exec rm -rf {} + 2>/dev/null || true
+	# 打包/覆盖率产物（5S「整理」：产物不入库也不占现场；见 docs/governance/repo-hygiene.md）
+	find . -type d -name '*.egg-info' -exec rm -rf {} + 2>/dev/null || true
+	rm -f .coverage coverage.xml
+	rm -rf htmlcov build/output

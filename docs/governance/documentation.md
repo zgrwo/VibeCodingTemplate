@@ -31,6 +31,8 @@
 | `CHANGELOG.md` | 用户/维护者 | "这个版本改了什么？" | 每次发版 |
 | `SECURITY.md` | 安全报告者 | "怎么报告漏洞？" | 安全政策变更 |
 | `skills/*.md` | AI 编码 | "这个语言/框架有什么陷阱？" | 发现新陷阱/模式 |
+| `skills/README.md` | AI + 人类 | "技能目录怎么用？第三方技能的已知断链有哪些？"（上游悬空引用登记表） | 引入/更新/裁剪技能目录，或实证新的上游悬空引用 |
+| `docs/governance/repo-hygiene.md` | AI + 维护者 | "仓库现场怎么整理？哪些垃圾不该入库？"（5S 检查清单 + 可执行命令） | 仓库卫生规则变更、发现新的产物/漂移类别 |
 
 ## 建议阅读顺序
 
@@ -84,8 +86,25 @@
 
 新踩工具/脚本坑位
   → docs/pitfalls/tooling-pitfalls.md（附真实案例）
+  → 条数由 AUTO_COUNTS 标记自动注入（scripts/doc-counts.json）；**禁止手写条数**
+
+新增反模式案例
+  → docs/methodology/cross-project-synthesis.md（附真实案例：出现次数 + 根因）
+  → 案例数由 AUTO_COUNTS 标记自动注入（scripts/doc-counts.json）；**禁止手写「N 类」**
+
+修改 AGENTS.md（项目宪法）
+  → 重建 CLAUDE.md 静态副本：`Copy-Item AGENTS.md CLAUDE.md`（Linux: `cp AGENTS.md CLAUDE.md`）
+  → verify-docs.py「宪法副本一致性」向量硬校验二者逐字节一致（副本存在时才校验；删除副本即自动跳过）
+
+新增/移除第三方（vendored）技能子树的悬空引用
+  → skills/README.md 的 VENDORED_DANGLING_REFS 登记表（该类子树被链接检查排除，只有登记表 + 两向门禁替你看守）
+
+登记/关闭审查豁免
+  → docs/governance/review-exemptions.md；写了「到期：vX.Y.Z」的条目由 verify-docs.py「豁免到期」向量硬校验
+  → 关闭时划删除线并写复查结论（划删除线才跳过检查）
 
 新增治理脚本（本模板自举门禁）
+  → docs/governance/repo-hygiene.md 第四节「漂移类别 → 门禁」对照表补行（新门禁必须进入对照表，否则无人知道它看守什么）
   → docs/governance/project-structure.md 目录树登记（verify-docs --strict 强制）
   → scripts/verify-all.py/.ps1 + Makefile docs target + ci.yml quality-gate 接入
   → templates/README.md「治理脚本速查」表 + cross-project-synthesis 索引表登记

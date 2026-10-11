@@ -10,7 +10,7 @@
 
 ## 一、反模式案例库（唯一权威内容）
 
-> 以下 10 类问题在 5 个项目中反复出现。**出现次数与根因是本文件独有的验证数据**，对策则已固化为 AGENTS.md 红线或验证脚本，链接引用。
+> 以下 <!-- AUTO_COUNTS:ANTIPATTERNS_START -->18<!-- AUTO_COUNTS:ANTIPATTERNS_END --> 类问题在 5 个项目中反复出现。**出现次数与根因是本文件独有的验证数据**，对策则已固化为 AGENTS.md 红线或验证脚本，链接引用。
 
 ### 1. 注册/同步遗漏
 
@@ -138,10 +138,58 @@
 **现象**：审查发现的问题以"已知/暂缓"豁免后不再被跟踪，随着代码演进风险放大却无人复查。
 **案例**：
 - ExcelAddin 函数库（2026-09）：`review-exemptions.md` 建立 P0 不可豁免 / P1 登记制 + **到期必查清单**；EngSmartSuite 的 `progress.md` 对 deferred/out-of-scope 显式登记（而非口头跳过）
+- **VibeCodingTemplate（2026-10-11 实证）：登记表写了"到期：v0.2.0 复查"，仓库已到 v0.2.4 仍无人复查——到期只是文档里的一句话，没有门禁读它**。复查后按建议修复（交互式 init 空输入曾静默回退占位符名小写，生成损坏的 CI 配置），并把"到期"变成硬检查
 **对策**：
 - 豁免必须**登记 + 设到期条件**（版本/日期/触发事件），到期未复查视为新问题；见 [review-exemptions.md](../governance/review-exemptions.md)（本模板已内置登记表）
+- **到期条件必须可机械校验**：`scripts/verify-docs.py` 的「豁免到期」向量比对"到期版本 vs 当前版本"，过期即 FAIL（划删除线=已关闭才跳过）。人工承诺 + 无门禁 = 一定会烂
+- 引用清单文件时**写段落名不写行号**：本表曾以 `.gitignore:73`/`:67` 定位，两次改动后行号全部失真（数字型引用必须可自动对账，否则迟早说谎）
+
+### 17. 门禁触发/覆盖盲区（门禁正确，却从未在改动上运行）
+
+**现象**：门禁逻辑本身没坏，但**触发条件或覆盖范围**把它挡在门外——改了被守护文件却不触发 CI；子树被有意排除出检查却无登记，盲区无人知晓。比 #13（门禁说谎）更隐蔽：门禁每次跑都是绿的，因为它根本没跑。
+**案例**：
+- EngSmartSuite（2026-10-09 R2/G-10）：`quality.yml` 的 `paths` 未含 `pyproject.toml` / `CHANGELOG.md` / `.release-please-manifest.json` / `AGENTS.md` / `templates/**` / `mkdocs.yml` / `docs/governance/**`，而这些恰是该 job 里版本链断言与目录树登记所守护的文件——**改模板数、改版本号都不跑门禁，门禁反复变红而改动者从未看到**
+- EngSmartSuite（同上）：`quality.yml` 只有 `pull_request` 触发，release-please 自动提交与维护者直推 main 完全不过门禁 → 补 `push: branches: [main]`
+- VibeCodingTemplate（2026-10-11 实证）：`ci.yml` 仅 `pull_request` + `workflow_dispatch` 触发（无 `push: main`）；`paths` 按文件名逐个列举，漏 `CLAUDE.md` / `tools/**` / `build/**`；同时 `verify-docs.py` 的 `_DOC_EXCLUDED_PREFIXES` 把 6 个第三方技能子树排除出链接检查，而子树内实际存在悬空引用且**全仓没有任何地方登记它**（读者只能自己撞上）
+**对策**：
+- **凡被某个 job 校验的文件，必须出现在该 job 的 `paths` 里**；根文档用 `*.md` 通配而非逐个列名（新增文档自动纳入）。不确定时，宁可在 main 上不加 `paths` 过滤——最后一道防线不设窄门
+- **`push: branches: [main]` 必须与 PR 同等门禁**：PR 事件覆盖不到 auto-commit 与直推；其 `paths` 与 PR 的 `paths`
+  逐条一致（用守卫测试强制，别靠人同步——两份清单总会分叉），既省掉重复运行又不留盲区
+- **主动缩小的检查范围必须有登记表 + 两向门禁**：新盲区未登记 → FAIL；登记条目已失效 → FAIL（防登记表陈旧）。参考实现见 `skills/README.md` 的 VENDORED_DANGLING_REFS 表与 `scripts/verify-docs.py` 的「悬空引用登记」向量
+- 定期问一句：**"这个门禁上次真正拦下问题是什么时候？"** 答不出来就说明它可能在盲区里
 
 ---
+
+### 18. 模板初始化摩擦与生成物身份错配（"模板不像自己的项目"）
+
+**现象**：模板仓库治理做得好，但**生成的项目**带着模板的影子与无关负担，外人第一次试用就卡住——三个典型症状：
+① 必填项错配（把只在可选模板文件里出现的占位符标成"初始化必填"）；② 生成物仍自称模板；③ 空门禁声称"通过"。
+
+**案例**（VibeCodingTemplate，2026-10-11 以外部使用者视角实测：init 一份再逐文件体检生成物）：
+- **必填项错配**：20 个"core 且无默认值"占位符里有 9 个（APP_PORT / DB_NAME / DB_PASSWORD / BUILD_IMAGE /
+  RUNTIME_IMAGE / ENTRY_CMD / IMAGE_NAME / FOUNDATION_PACKAGE 等）**只被 templates/** 与
+  .github/workflows/*.yml.template 引用**（GitHub 根本不执行后者）→ 非交互初始化被迫索要数据库密码，
+  交互初始化白问 9 个与项目无关的问题。批量核对"占位符 → 引用文件"后纠正为 content，必填从 20 降到 9（全是项目定义项）
+- **生成物身份错配**：pyproject.toml 只重置了版本号，包名仍是 vibe-coding-template、描述仍是"治理模板" →
+  生成项目 pip install -e . 装出与项目无关的包；doctor.py 打印模板名；README / README.en.md / CONTRIBUTING /
+  architecture.md 的模板专属文案与 TEMPLATE_ONLY 标记原样进入生成项目
+- **双实现分叉**（同轮发现）：同一份 values 输入下，Python 版初始版本 1.0.0、PowerShell 版 0.1.0
+  （ps1 硬编码兜底、忽略 manifest 默认值），而 ROADMAP / README 文档写的初始态是 v0.1.0
+- **空门禁说谎**：scripts/architecture.json 的 rules 为空时，verify-arch.py 输出"[OK] 架构边界验证通过"
+  ——实际一条规则都没查（正是本文件 #13 的行为，只是发生在模板自身）
+- **平台体验坑**：文档推荐的 --values '{"...":"..."}' 在 Windows PowerShell 5.1 下双引号被吞 → JSON 解析失败，
+  而 README 把这条当主推路径
+
+**对策**：
+- **模板必须"以生成物为准"验收**：把初始化后的项目当交付物跑一遍（生成 → 逐文件体检 → 修 → 加断言）。
+  模板仓库自身全绿 ≠ 生成项目可用
+- **占位符分类按"引用位置"判定，不按直觉**：只有 templates/** 引用的 → content（不阻塞初始化）；活动文件需要
+  但用户此刻拿不到的（如安全联系邮箱）→ 给**可执行的默认值**，而不是设为必填
+- **生成物身份必须重置**：包名/描述/文档标题/工具横幅一律随项目走（占位符或运行时读取），并把"生成项目
+  不得含模板自身标记/包名/初始版本"写成**自测断言**（本模板 test-template.ps1 已加：非模板包名 + 初始版本
+  0.1.0 + 无 TEMPLATE_ONLY 残留 + 无 BOM）
+- **空门禁只能输出 [SKIP] 未检查**，绝不能是"通过"；同时写进初始化收尾清单，让它有被填写的期限
+- 脚本化入口用**文件读取**而非命令行内联 JSON（--values-file），并在文档里点名 Windows 引号陷阱
 
 ## 二、过度设计反模式案例（costsuite）
 

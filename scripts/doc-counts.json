@@ -9,10 +9,24 @@
       "type": "json_keys",
       "path": "scripts/placeholders.json",
       "key_path": "placeholders"
+    },
+    "antipatterns": {
+      "_comment": "§一 每个反模式案例恰有一个「对策」块；§三 重构方法论用别的标记，故该模式即案例数（2026-10-11 加：原为手写「以下 10 类」，实际已 17 类）",
+      "type": "regex_count",
+      "pattern": "^\\*\\*对策\\*\\*",
+      "glob": "docs/methodology/cross-project-synthesis.md"
+    },
+    "pitfalls": {
+      "_comment": "坑位清单表格行（编号列，含 25b 之类带字母后缀的编号）；原 AGENTS.md 手写「#1-#29」，实际已 32 条",
+      "type": "regex_count",
+      "pattern": "^\\| \\d+b? \\| ",
+      "glob": "docs/pitfalls/tooling-pitfalls.md"
     }
   },
   "docs": [
     "docs/design/architecture.md",
-    "README.md"
+    "README.md",
+    "docs/methodology/cross-project-synthesis.md",
+    "docs/pitfalls/tooling-pitfalls.md"
   ]
 }

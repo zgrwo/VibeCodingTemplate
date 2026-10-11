@@ -1,6 +1,6 @@
 # 工具与脚本坑位清单（Windows / PowerShell / git）
 
-> 从 5 个子项目实际踩坑中提炼的跨项目工具级陷阱。修改 `scripts/`、运行终端命令、处理 git 操作前必读。
+> 从 5 个子项目实际踩坑中提炼的跨项目工具级陷阱，共 <!-- AUTO_COUNTS:PITFALLS_START -->33<!-- AUTO_COUNTS:PITFALLS_END --> 条。修改 `scripts/`、运行终端命令、处理 git 操作前必读。
 
 ## PowerShell 陷阱
 
@@ -62,6 +62,7 @@
 | 29 | **工具链声明与代码漂移**（仓库声明了 ruff-format hook（.pre-commit-config.yaml）与 Makefile format target，但 27 个 Python 文件从未按 ruff format 排版——`pre-commit run --all-files` 会产生大 diff，2026-08-15 发行前审查实证） | 工具链接入时先全仓对齐一次（`ruff format .`），再在 CI 或 pre-commit 兜底 `ruff format --check`；声明新格式化工具前先跑一次 `--check` 评估存量漂移，禁止"只声明不执行" |
 | 30 | **`.gitignore` 行尾 `#` 不是注释**（Git 只支持整行注释）：`site/   # mkdocs 产物` 会把 `# mkdocs 产物` 当作 pattern 的一部分 → 该行**静默失效**，目录照常被跟踪 | 注释独占一行；新增 ignore 后用 `git check-ignore -v <path>` 验证命中（模板自身 2026-09 实证：`.opencode-goal/` 等 3 行因行尾注释未生效） |
 | 31 | **`Path.write_text` 在 Windows 默认把 `\n` 转成 `\r\n`**：生成/改写文档（md/toml/json）后与 `.gitattributes` 的 `eol=lf` 契约冲突，本地 CRLF、CI LF 漂移（`git diff` 警告 "CRLF will be replaced by LF"） | 文本产物写入统一 `path.write_text(text, encoding="utf-8", newline="\n")`（Python 3.10+）；读改写场景避免默认换行翻译（模板 gen-doc-counts / init-project 2026-09 实证） |
+| 32 | **PowerShell 写生成物带 UTF-8 BOM → 严格解析器一律拒绝**：`[System.IO.File]::WriteAllText($p, $t, (New-Object System.Text.UTF8Encoding $true))` 会写 EF BB BF；`tomllib`（pyproject.toml）抛 `TOMLDecodeError`、`json.loads(str)`（manifest / placeholders.json）抛 `JSONDecodeError`（注意：`json.loads(bytes)` 反而正常——它走 utf-8-sig 检测，所以"本地试了一下没事"最容易骗人） | 生成物写入用 `UTF8Encoding $false`（无 BOM），与模板源文件一致；门禁侧做**字节级**断言（读前三字节判 BOM）而非依赖解析器版本行为。实证后果（模板 2026-10-11）：生成项目 pytest 退出码 4 → 覆盖率门禁必红；版本一致性门禁因 `except JSONDecodeError` 静默跳过 → 门禁"看起来在查" |
 
 ## 提交前自查
 

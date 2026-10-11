@@ -4,9 +4,11 @@
 
 [English](README.en.md) | **中文**
 
+<!-- TEMPLATE_ONLY_START -->
 > **本文档是「下游项目模板」**,含 `{{...}}` 占位符段落,由 `scripts/init-project.py` / `scripts/init-project.ps1` 在初始化新项目时自动替换
 > (完整清单见 `scripts/placeholders.json`)。模板仓库自身的架构与治理说明,见 [`docs/design/architecture.md`](docs/design/architecture.md)、
 > `README.en.md` 与本文件底部「治理体系说明」。
+<!-- TEMPLATE_ONLY_END -->
 
 <!-- 徽章区（初始化后按需启用：取消注释，并将 OWNER/REPO_NAME 替换为实际值）：
 [![CI](https://github.com/{{OWNER}}/{{REPO_NAME}}/actions/workflows/ci.yml/badge.svg)](https://github.com/{{OWNER}}/{{REPO_NAME}}/actions/workflows/ci.yml)
@@ -157,7 +159,11 @@
 
 ```bash
 # 自动方式（Linux/macOS/跨平台）：Python 版
-python scripts/init-project.py /path/to/<PROJECT_NAME> --git-init
+# 跨平台/CI 推荐：项目定义项写进 values.json（仅 9 项必填，其余有默认值/自动占位）
+python scripts/init-project.py /path/to/<PROJECT_NAME> --non-interactive --values-file values.json --git-init
+
+# Windows PowerShell 5.1 注意：--values '{...}' 里的双引号会被 PowerShell 吞掉导致 JSON 解析失败，
+# 请改用 --values-file，或使用 PowerShell 版 -Values @{ PROJECT_NAME = "MyApp" }
 ```
 
 ```bash
@@ -197,6 +203,8 @@ cp -r VibeCodingTemplate <PROJECT_NAME>  # robocopy /E /XD .git (Windows)
 ### 4. 初始化收尾（质量门禁）
 
 - [ ] 全量验证脚本可运行（{{FULL_VERIFY_CMD}}）
+- [ ] 填写 `scripts/architecture.json` 分层规则——**规则为空时 `verify-arch.py` 只输出 `[SKIP] 未检查`**，架构红线等于没有断言
+- [ ] 把 `pyproject.toml` 的 `[tool.coverage.run] source` 从 `["scripts"]`（治理脚本）改为你的源码目录
 - [ ] 徽章区启用：README.md 顶部取消注释，替换 `{{OWNER}}` / `{{REPO_NAME}}`
 - [ ] 首个 ADR（`docs/design/adr/0001-xxx.md`）记录初始架构决策
 - [ ] AGENTS.md「历史经验」填充项目已知高频模式

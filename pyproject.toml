@@ -54,7 +54,9 @@ indent-style = "space"
 source = ["scripts"]  # 模板仓库覆盖自身治理脚本；下游项目通常改为 ["src"]
 
 [tool.coverage.report]
-fail_under = 80  # 实测基线 85%（2026-09-25，268 tests），留 5 点余量
+# 阈值 80：较历史基线留约 6 点余量。**基线以 CI 覆盖率步骤的实际输出为准**，不在此处写死当前值
+# ——本注释曾写「85%（268 tests）」而实际已 86.6% / 305 用例，手写数字必然漂移。下方留日期锚点仅作历史参考：
+fail_under = 80  # 2026-10-11 实测 86.6%（测试数唯一信源：docs/design/architecture.md 的 AUTO_COUNTS:TESTS 标记）
 exclude_lines = [
     "pragma: no cover",
     "if __name__ == .__main__.:",

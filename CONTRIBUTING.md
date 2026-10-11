@@ -142,9 +142,13 @@ cd {{PROJECT_NAME}}
 - [ ] `python scripts/coverage.py` 覆盖率不低于 pyproject `[tool.coverage]` 阈值
 - [ ] `python -m ruff check scripts/ tests/ examples/` 零违规
 - [ ] 版本一致性：`.release-please-manifest.json` == `pyproject.toml` == CHANGELOG 最新段（verify-docs 门禁已覆盖）
-- [ ] 模板仓库自身：`test-template.ps1` 通过（含教学 token 存活断言）
+<!-- TEMPLATE_ONLY_START -->
+- [ ] 模板仓库自身：`test-template.ps1` 通过（含教学 token 存活 / 生成物无 BOM / 生成项目身份三项断言）
+<!-- TEMPLATE_ONLY_END -->
 - [ ] `git status` 干净，无未提交/未追踪文件
+<!-- TEMPLATE_ONLY_START -->
 - [ ] 模板模式下 CI（pytest/ruff 字面命令步骤）为绿色
+<!-- TEMPLATE_ONLY_END -->
 
 工作流：`.github/workflows/release.yml`（release-please-action）+ 配置 `.github/release-please/config.json` + 版本基线 `.release-please-manifest.json`。
 

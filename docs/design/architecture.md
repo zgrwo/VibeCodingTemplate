@@ -1,5 +1,6 @@
-# VibeCodingTemplate 架构设计
+# {{PROJECT_NAME}} 架构设计
 
+<!-- TEMPLATE_ONLY_START -->
 > 本文档记录模板仓库自身的设计决策。初始化新项目后替换为项目架构文档。
 
 ## 设计目标
@@ -19,7 +20,7 @@ AGENTS.md              项目宪法（四条核心准则、红线规则、防幻
 ├── scripts/           验证脚本（AST 审计 + 架构边界 + 覆盖率 + 初始化 + commit 校验）
 ├── benchmarks/        性能基准（非门禁，趋势观测；基准约定见其 README）
 ├── examples/          示例项目（Python/TypeScript/Go/Rust）
-└── tests/             验证脚本自测（<!-- AUTO_COUNTS:TESTS_START -->282<!-- AUTO_COUNTS:TESTS_END --> tests，见 tests/scripts/）
+└── tests/             验证脚本自测（<!-- AUTO_COUNTS:TESTS_START -->317<!-- AUTO_COUNTS:TESTS_END --> tests，见 tests/scripts/）
 ```
 
 ## 关键设计决策
@@ -56,6 +57,33 @@ CI 检测 `AGENTS.md` 中是否残留未替换的核心占位符 `PROJECT_NAME`�
 
 ### ADR-0003：Python 跨平台优先
 核心验证脚本 Python 实现，PowerShell 仅 Win 集成场景。
+<!-- TEMPLATE_ONLY_END -->
+
+---
+
+## 本项目架构（待填写）
+
+> 上一节是**模板仓库自身**的设计说明（初始化时已被裁剪，不会出现在生成项目里）。
+> 请在下面写出本项目的分层、模块职责与关键决策；写完可删除这段提示。
+
+### 分层
+
+```
+（例：UI → Services → Core → Foundation，单向依赖）
+```
+
+- ✅ 上层不包含业务逻辑；下层不引用上层依赖
+- ❌ 禁止跨层直接调用或反向依赖（用 [verify-arch.py](../../scripts/verify-arch.py) + `scripts/architecture.json` 规则固化）
+
+### 模块职责
+
+| 模块 | 职责 | 依赖 |
+|------|------|------|
+| （待填） | | |
+
+### 关键决策（ADR）
+
+> 一个决策一个文件：`docs/design/adr/NNNN-xxx.md`（模板见 [ADR 模板](adr-template.md)，格式与「何时必须写 ADR」判定见该文件）。
 init-project 保留双版本（Win 需 BOM/CRLF 处理）。
 
 ### ADR-0004：哨兵值优于异常

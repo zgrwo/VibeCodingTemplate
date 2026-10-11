@@ -190,8 +190,8 @@
 ## 历史经验（含 diff 分析）
 
 > 从 commit 历史 / 代码审查记录提炼，随项目演进**持续补充**；新增条目必须附真实案例（出现次数 + 根因），禁止臆造。
-> **反模式案例库（10 类）唯一权威**：[cross-project-synthesis.md](docs/methodology/cross-project-synthesis.md)；
-> **工具/模板坑位（#1-#29）唯一权威**：`docs/pitfalls/tooling-pitfalls.md`——注册遗漏、数字漂移、元占位符污染（#18）、grep 版本行为变化（#25/#25b）、py/ps1 双实现分叉（#26）、模板模式 CI 门禁盲区（#27）、工具链声明与代码漂移（#29）等高频模式见此，本文件不重复。
+> **反模式案例库唯一权威**：[cross-project-synthesis.md](docs/methodology/cross-project-synthesis.md)——本文件是路由器，**不承载计数**（原手写「10 类」，实际已 17 类；条目数由该文件 AUTO_COUNTS 标记自动注入）；
+> **工具/模板坑位唯一权威**：`docs/pitfalls/tooling-pitfalls.md`——注册遗漏、数字漂移、元占位符污染（#18）、grep 版本行为变化（#25/#25b）、py/ps1 双实现分叉（#26）、模板模式 CI 门禁盲区（#27）、工具链声明与代码漂移（#29）等高频模式见此，本文件不重复（原手写「#1-#29」，实际已 32 条，同样由该文件 AUTO_COUNTS 维护）。
 
 | 模式 | 教训 |
 |------|------|
