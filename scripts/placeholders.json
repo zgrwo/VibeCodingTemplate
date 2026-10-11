@@ -7,9 +7,10 @@
       "test": "分层：UI → Core → Foundation（Core 零依赖，可独立测试）"
     },
     "APP_PORT": {
-      "category": "core",
+      "category": "content",
       "prompt": "应用端口号（docker-compose 使用）",
-      "test": "8080"
+      "test": "8080",
+      "_note": "仅 templates/** 或 *.yml.template 引用（非活动文件）→ 不是初始化必填项（2026-10-11 由 core 纠正为 content）"
     },
     "AUTHOR": {
       "category": "core",
@@ -27,9 +28,10 @@
       "test": "python -m build"
     },
     "BUILD_IMAGE": {
-      "category": "core",
+      "category": "content",
       "prompt": "Docker 构建镜像（如 python:3.12-slim）",
-      "test": "golang:1.22-alpine"
+      "test": "golang:1.22-alpine",
+      "_note": "仅 templates/** 或 *.yml.template 引用（非活动文件）→ 不是初始化必填项（2026-10-11 由 core 纠正为 content）"
     },
     "CALLING_CONVENTION_NOTES": {
       "category": "content",
@@ -54,7 +56,9 @@
     "COC_CONTACT": {
       "category": "core",
       "prompt": "行为准则联系邮箱",
-      "test": "conduct@example.com"
+      "test": "conduct@example.com",
+      "default": "维护者邮箱（请替换本行为实际联系方式）",
+      "_note": "给默认值而非设为必填：初始化时用户通常还不知道安全联系邮箱（2026-10-11）"
     },
     "COMMIT_COUNT": {
       "category": "content",
@@ -93,19 +97,22 @@
       "test": "2026-01-01"
     },
     "DB_NAME": {
-      "category": "core",
+      "category": "content",
       "prompt": "数据库名（docker-compose 使用）",
-      "test": "app_db"
+      "test": "app_db",
+      "_note": "仅 templates/** 或 *.yml.template 引用（非活动文件）→ 不是初始化必填项（2026-10-11 由 core 纠正为 content）"
     },
     "DB_PASSWORD": {
-      "category": "core",
+      "category": "content",
       "prompt": "数据库密码（docker-compose 使用）",
-      "test": "test-password-placeholder"
+      "test": "test-password-placeholder",
+      "_note": "仅 templates/** 或 *.yml.template 引用（非活动文件）→ 不是初始化必填项（2026-10-11 由 core 纠正为 content）"
     },
     "DB_USER": {
-      "category": "core",
+      "category": "content",
       "prompt": "数据库用户（docker-compose 使用）",
-      "test": "app_user"
+      "test": "app_user",
+      "_note": "仅 templates/** 或 *.yml.template 引用（非活动文件）→ 不是初始化必填项（2026-10-11 由 core 纠正为 content）"
     },
     "DEFAULT_2": {
       "category": "content",
@@ -155,9 +162,10 @@
       "test": "输入为空"
     },
     "ENTRY_CMD": {
-      "category": "core",
+      "category": "content",
       "prompt": "容器入口命令（Dockerfile CMD，如 python -m my_project）",
-      "test": "python -m my_project"
+      "test": "python -m my_project",
+      "_note": "仅 templates/** 或 *.yml.template 引用（非活动文件）→ 不是初始化必填项（2026-10-11 由 core 纠正为 content）"
     },
     "ERROR_CONDITION_1": {
       "category": "content",
@@ -220,9 +228,10 @@
       "test": "mean = Σxᵢ / n"
     },
     "FOUNDATION_PACKAGE": {
-      "category": "core",
+      "category": "content",
       "prompt": "Monorepo 基础包路径（如 Acme.Shared）",
-      "test": "Acme.Shared"
+      "test": "Acme.Shared",
+      "_note": "仅 templates/** 或 *.yml.template 引用（非活动文件）→ 不是初始化必填项（2026-10-11 由 core 纠正为 content）"
     },
     "FULL_VERIFY_CMD": {
       "category": "core",
@@ -245,9 +254,10 @@
       "test": "Compute(value: double) -> double"
     },
     "IMAGE_NAME": {
-      "category": "core",
+      "category": "content",
       "prompt": "Docker 镜像名（docker.yml.template 使用，如 my-app）",
-      "test": "my-app"
+      "test": "my-app",
+      "_note": "仅 templates/** 或 *.yml.template 引用（非活动文件）→ 不是初始化必填项（2026-10-11 由 core 纠正为 content）"
     },
     "INPUT_1": {
       "category": "content",
@@ -448,9 +458,10 @@
       "test": "double"
     },
     "RUNTIME_IMAGE": {
-      "category": "core",
+      "category": "content",
       "prompt": "Docker 运行时镜像（如 gcr.io/distroless/python3）",
-      "test": "gcr.io/distroless/static-debian12"
+      "test": "gcr.io/distroless/static-debian12",
+      "_note": "仅 templates/** 或 *.yml.template 引用（非活动文件）→ 不是初始化必填项（2026-10-11 由 core 纠正为 content）"
     },
     "ROOT_NAMESPACE": {
       "category": "core",
@@ -473,7 +484,9 @@
     "SECURITY_CONTACT": {
       "category": "core",
       "prompt": "安全漏洞联系邮箱",
-      "test": "security@example.com"
+      "test": "security@example.com",
+      "default": "GitHub Security Advisories（请替换为实际联系方式）",
+      "_note": "给默认值而非设为必填：初始化时用户通常还不知道安全联系邮箱（2026-10-11）"
     },
     "SECURITY_NOTES": {
       "category": "content",
@@ -561,7 +574,8 @@
     "VERSION": {
       "category": "core",
       "prompt": "初始版本号",
-      "default": "1.0.0",
+      "default": "0.1.0",
+      "_note": "初始版本 = v0.1.0：与 ROADMAP 首个里程碑、README 初始化收尾清单（CHANGELOG 标记 v0.1.0）、CONTRIBUTING 的 pre-1.0 发版规则一致（2026-10-11 由 1.0.0 纠正，同时消除 py/ps1 版本来源分叉）",
       "test": "0.1.0"
     },
     "WHEN_TO_USE": {
