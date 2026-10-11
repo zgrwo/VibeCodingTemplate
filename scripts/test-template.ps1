@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # test-template.ps1 — 模板完整性自测（CI: template-self-test job 调用）
 #
 # 职责：
@@ -140,6 +140,24 @@ try {
         }
     }
     Write-Host "[OK] 生成项目身份断言通过（非模板包名 / 初始版本 0.1.0 / 无模板文案泄漏）" -ForegroundColor Green
+
+    # examples/ opt-in 断言（2026-10 默认不带参考示例）：目录必须不在，且引用已被同源裁剪
+    # （未裁剪时下面 steps 里的 verify-docs.py --strict 会因目录树声明 examples/ 而红）
+    if (Test-Path (Join-Path $Target "examples")) {
+        throw "生成项目仍带 examples/：默认应为 opt-in（--with-examples / -WithExamples）"
+    }
+    # 只查"目录树声明"（行内含 ── examples/）：散见于正文的 examples/ 文字说明不影响门禁，
+    # 而目录树声明会让 verify-docs.py --strict 报缺失目录（下面 steps 已覆盖该面）
+    foreach ($rel in @("docs/governance/project-structure.md", "AGENTS.md", "CLAUDE.md")) {
+        $fp = Join-Path $Target $rel
+        if (-not (Test-Path $fp)) { continue }
+        foreach ($line in (Get-Content $fp -Encoding UTF8)) {
+            if ($line -match '── examples/') {
+                throw "$rel 的目录树仍声明 examples/（裁剪未生效）"
+            }
+        }
+    }
+    Write-Host "[OK] examples/ opt-in 断言通过（目录未复制 + 目录树引用已裁剪）" -ForegroundColor Green
 
     $steps = @(
         @{ Name = "verify-docs.py --strict"; Cmd = { python scripts/verify-docs.py --strict } },

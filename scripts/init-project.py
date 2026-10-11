@@ -436,6 +436,53 @@ def _reset_pyproject_identity(target: Path, replacements: dict[str, str]) -> Non
         )
 
 
+def _prune_examples(target: Path) -> None:
+    """默认不带 examples/：删除示例目录，并同源裁剪引用它的结构声明与 CI paths。
+
+    不裁引用会让生成项目 verify-docs.py --strict 直接红（project-structure.md 的目录树
+    仍声明 examples/ → check_dirs 报"缺失目录"；AGENTS.md 与它按顶层目录集合比对）。
+    行级裁剪规则（模板仓库的树格式固定）：
+      - project-structure.md：命中 "── examples/" 的行 + 其后连续的 "│" 续行
+      - AGENTS.md / CLAUDE.md：命中 "── examples/" 的单行
+      - ci.yml：整行为 - "examples/**" 的条目
+    """
+    examples_dir = target / "examples"
+    if examples_dir.exists():
+        shutil.rmtree(examples_dir, ignore_errors=True)
+
+    def _strip_tree_block(path: Path) -> bool:
+        if not path.is_file():
+            return False
+        lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+        out: list[str] = []
+        i = 0
+        changed = False
+        while i < len(lines):
+            if "── examples/" in lines[i]:
+                changed = True
+                i += 1
+                while i < len(lines) and lines[i].lstrip().startswith("│"):
+                    i += 1
+                continue
+            out.append(lines[i])
+            i += 1
+        if changed:
+            path.write_text("".join(out), encoding="utf-8", newline="\n")
+        return changed
+
+    _strip_tree_block(target / "docs" / "governance" / "project-structure.md")
+    _strip_tree_block(target / "AGENTS.md")
+    _strip_tree_block(target / "CLAUDE.md")
+
+    ci_file = target / ".github" / "workflows" / "ci.yml"
+    if ci_file.is_file():
+        lines = ci_file.read_text(encoding="utf-8").splitlines(keepends=True)
+        kept = [ln for ln in lines if ln.strip() != '- "examples/**"']
+        if len(kept) != len(lines):
+            ci_file.write_text("".join(kept), encoding="utf-8", newline="\n")
+    print("==> examples/ 参考示例未复制（需要时用 --with-examples，或从模板仓库复制 examples/）")
+
+
 def _refresh_doc_counts(target: Path) -> None:
     """运行生成项目的 gen-doc-counts.py 刷新 AUTO_COUNTS（manifest 裁剪后计数已变）。
 
@@ -686,6 +733,13 @@ def main() -> int:
         help="覆盖已存在的非空目标目录（与 init-project.ps1 -Force 对齐）",
     )
     parser.add_argument(
+        "--with-examples",
+        action="store_true",
+        help="带上 examples/ 参考示例（多语言 Core/CrossVal/测试闭环演示）。"
+        "默认不带：新项目不需要 6 语言示例与 npm lockfile——需要时再加该开关，"
+        "或直接从模板仓库复制 examples/",
+    )
+    parser.add_argument(
         "--git-init", action="store_true", help="初始化 git 仓库并配置 commit-msg hook"
     )
     parser.add_argument(
@@ -788,6 +842,9 @@ def main() -> int:
 
     # 重置 CHANGELOG / 版本基线 / 版本号 / 占位符 manifest（与 ps1 对齐，
     # 避免新项目携带模板发布历史、版本漂移或死条目门禁 FAIL）
+    if not args.with_examples:
+        _prune_examples(target)
+
     _reset_changelog(target)
     _reset_release_manifest(target, replacements)
     _reset_pyproject_identity(target, replacements)

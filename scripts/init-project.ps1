@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # init-project.ps1 — 从 _template 初始化新项目
 #
 # 职责：
@@ -25,6 +25,7 @@ param(
     [hashtable]$Values = @{},
     [switch]$Force,
     [switch]$GitInit,
+    [switch]$WithExamples,
     [switch]$CreateCompatibilityLinks
 )
 
@@ -377,6 +378,51 @@ All notable changes to $projName.
 # pyproject.toml 无法被 tomllib 解析 → pytest 退出码 4、覆盖率门禁必红）。
 [System.IO.File]::WriteAllText((Join-Path $Target "CHANGELOG.md"), $changelogInit, (New-Object System.Text.UTF8Encoding $false))
 Write-Host "==> CHANGELOG.md 已重置为新项目初始态" -ForegroundColor Green
+
+# 5.5 裁剪 examples/（默认不带参考示例；-WithExamples 保留）
+# 与 init-project.py 的 _prune_examples 对等：删目录 + 同源裁剪引用（不裁会让生成项目
+# verify-docs.py --strict 直接红：project-structure.md 的目录树仍声明 examples/）。
+if (-not $WithExamples) {
+    $examplesDir = Join-Path $Target "examples"
+    if (Test-Path $examplesDir) { Remove-Item $examplesDir -Recurse -Force -ErrorAction SilentlyContinue }
+
+    $cr = [string][char]13
+    $lf = [string][char]10
+    function Remove-ExamplesTreeEntry {
+        param([string]$Path)
+        if (-not (Test-Path $Path)) { return }
+        $text = [System.IO.File]::ReadAllText($Path)
+        $nl = if ($text.Contains($cr + $lf)) { $cr + $lf } else { $lf }
+        $lines = $text -split "\r?\n"
+        $out = New-Object System.Collections.Generic.List[string]
+        $i = 0
+        $changed = $false
+        while ($i -lt $lines.Count) {
+            if ($lines[$i] -match '── examples/') {
+                $changed = $true
+                $i++
+                while ($i -lt $lines.Count -and $lines[$i].TrimStart().StartsWith("│")) { $i++ }
+                continue
+            }
+            $out.Add($lines[$i]); $i++
+        }
+        if ($changed) {
+            [System.IO.File]::WriteAllText($Path, ($out -join $nl), (New-Object System.Text.UTF8Encoding $false))
+        }
+    }
+    Remove-ExamplesTreeEntry (Join-Path $Target "docs/governance/project-structure.md")
+    Remove-ExamplesTreeEntry (Join-Path $Target "AGENTS.md")
+    Remove-ExamplesTreeEntry (Join-Path $Target "CLAUDE.md")
+
+    $ciFile = Join-Path $Target ".github/workflows/ci.yml"
+    if (Test-Path $ciFile) {
+        $ciText = [System.IO.File]::ReadAllText($ciFile)
+        $ciNl = if ($ciText.Contains($cr + $lf)) { $cr + $lf } else { $lf }
+        $ciKept = @(($ciText -split "\r?\n") | Where-Object { $_.Trim() -ne '- "examples/**"' })
+        [System.IO.File]::WriteAllText($ciFile, ($ciKept -join $ciNl), (New-Object System.Text.UTF8Encoding $false))
+    }
+    Write-Host "==> examples/ 参考示例未复制（需要时用 -WithExamples，或从模板仓库复制 examples/）" -ForegroundColor Green
+}
 
 # ----------------------------------------------------------------------------
 # 5.6 重置 .release-please-manifest.json 为新项目初始版本（模板自身的发布版本不属于新项目）
