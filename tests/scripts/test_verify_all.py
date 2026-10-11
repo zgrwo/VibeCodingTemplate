@@ -123,3 +123,71 @@ class TestMainCLI:
         flat = " ".join(" ".join(c) for c in calls)
         assert "pytest" not in flat
         assert "verify-docs.py" in flat
+
+
+class TestFullVerifyStepParity:
+    """全量验证入口三处实现的文档检查步骤集合必须一致（2026-10-11 新增）。
+
+    背景：文档检查步骤清单同时存在于 `verify-all.py` / `verify-all.ps1` / `Makefile` 的
+    `docs:` 目标（`.github/workflows/ci.yml` quality-gate 为第四处）。新增一个门禁脚本却只改一处
+    即产生「本地绿、CI 红」或反向的静默分叉（tooling-pitfalls #26 py/ps1 双实现分叉）。本测试用
+    三份独立产物互相比对 + 期望集合锚定（防三处同时为空导致的空心通过）。
+    """
+
+    EXPECTED = {
+        "verify-docs.py",
+        "verify-manual.py",
+        "falsy-audit.py",
+        "verify-registries.py",
+        "verify-arch.py",
+        "gen-doc-counts.py",
+        "test-quality-guard.py",
+    }
+
+    def _py_doc_scripts(self, monkeypatch) -> set[str]:
+        import io
+        from contextlib import redirect_stdout
+
+        calls: list[list[str]] = []
+        monkeypatch.setattr(va, "run_step", lambda name, cmd, cwd=None: calls.append(cmd) or True)
+        monkeypatch.setattr(va, "detect_build_system", lambda: (None, [], []))
+        monkeypatch.setattr("sys.argv", ["verify-all.py"])
+        with redirect_stdout(io.StringIO()):
+            code = va.main()
+        assert code == 0
+        return {Path(cmd[1]).name for cmd in calls if len(cmd) > 1 and cmd[1].endswith(".py")}
+
+    def _ps1_doc_scripts(self) -> set[str]:
+        import re
+
+        text = (SCRIPTS_DIR / "verify-all.ps1").read_text(encoding="utf-8")
+        return set(re.findall(r"scripts\\([\w.\-]+\.py)", text))
+
+    def _makefile_doc_scripts(self) -> set[str]:
+        import re
+
+        text = (SCRIPTS_DIR.parent / "Makefile").read_text(encoding="utf-8")
+        block = re.search(r"^docs:\n((?:\t.*\n)+)", text, re.MULTILINE)
+        assert block, "Makefile 缺少 docs: 目标（跨平台全量验证入口）"
+        return set(re.findall(r"scripts/([\w.\-]+\.py)", block.group(1)))
+
+    def test_expected_steps_present_in_python_entry(self, monkeypatch):
+        assert self._py_doc_scripts(monkeypatch) >= self.EXPECTED
+
+    def test_powershell_entry_matches_python_entry(self, monkeypatch):
+        py_scripts = self._py_doc_scripts(monkeypatch)
+        ps1_scripts = self._ps1_doc_scripts()
+        only_py = sorted(py_scripts - ps1_scripts)
+        only_ps1 = sorted(ps1_scripts - py_scripts)
+        assert py_scripts == ps1_scripts, (
+            f"verify-all.py 与 verify-all.ps1 步骤分叉：仅 py 有 {only_py}；仅 ps1 有 {only_ps1}"
+        )
+
+    def test_makefile_entry_matches_python_entry(self, monkeypatch):
+        py_scripts = self._py_doc_scripts(monkeypatch)
+        make_scripts = self._makefile_doc_scripts()
+        assert py_scripts == make_scripts, (
+            f"verify-all.py 与 Makefile docs: 目标分叉："
+            f"仅 py 有 {sorted(py_scripts - make_scripts)}；"
+            f"仅 Makefile 有 {sorted(make_scripts - py_scripts)}"
+        )

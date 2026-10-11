@@ -12,6 +12,7 @@ name: CI
 on:
   pull_request:
     paths:
+      # 目录级
       - "src/**"
       - "scripts/**"
       - "tests/**"
@@ -20,20 +21,47 @@ on:
       - "docs/**"
       - "examples/**"
       - "benchmarks/**"
+      - "tools/**"
+      - "build/**"
       - ".github/**"
-      - "AGENTS.md"
-      - "ROADMAP.md"
-      - "mkdocs.yml"
-      - "README.md"
-      - "README.en.md"
-      - "CONTRIBUTING.md"
-      - "CHANGELOG.md"
-      - "SECURITY.md"
-      - "CODE_OF_CONDUCT.md"
-      - ".release-please-manifest.json"  # 版本基线变更必须过 CI（2026-08 Max 审查补充）
+      # 根文档：*.md 覆盖全部根 markdown（README / AGENTS / CLAUDE / ROADMAP / CONTRIBUTING /
+      # CHANGELOG / SECURITY / CODE_OF_CONDUCT…），新增根文档自动纳入。
+      # 2026-10 复盘（参考两个成熟子项目）：门禁的 paths 曾按文件名逐个列举，漏项即
+      # 「改了被守护文件却不触发门禁」——曾出现改 AGENTS.md 的模板数、改 manifest 版本号
+      # 都不跑 quality 门禁，门禁反复变红而改动者从未看到。凡「被某个 job 校验的文件」必须
+      # 出现在本列表（含 CLAUDE.md：宪法副本一致性由 verify-docs 校验）。
+      - "*.md"
+      # 根级配置文件（版本基线 / 构建 / 风格 / 文档站）
       - "pyproject.toml"
+      - "mkdocs.yml"
       - "Makefile"
       - ".pre-commit-config.yaml"
+      - ".release-please-manifest.json"  # 版本基线变更必须过 CI（2026-08 Max 审查补充）
+  # main 直推同样过门禁：PR 事件覆盖不到 release-please 的自动提交与维护者直推，
+  # 版本链/文档树一旦漂移会无人拦截直到发版当天（2026-10 复盘，来源：工程分析套件 quality.yml）。
+  # paths 与 pull_request **逐条一致**：既避免无关变更在 main 上白跑一遍完整门禁，
+  # 也不留"改了被守护文件却不触发"的盲区——两份清单是同一契约的两个副本，
+  # 由 tests/scripts/test_ci_triggers.py 强制逐条相等（案例 17：门禁触发盲区）。
+  push:
+    branches: [main]
+    paths:                              # 与 pull_request.paths 逐条一致（守卫：test_ci_triggers.py）
+      - "src/**"
+      - "scripts/**"
+      - "tests/**"
+      - "templates/**"
+      - "skills/**"
+      - "docs/**"
+      - "examples/**"
+      - "benchmarks/**"
+      - "tools/**"
+      - "build/**"
+      - ".github/**"
+      - "*.md"
+      - "pyproject.toml"
+      - "mkdocs.yml"
+      - "Makefile"
+      - ".pre-commit-config.yaml"
+      - ".release-please-manifest.json"
   workflow_dispatch:
   # Merge Queue：配合 Settings → Branches → 开启 merge queue 使用
   # （merge_group 事件无 paths 过滤，全部 job 运行；未开启 merge queue 时本触发不生效）
