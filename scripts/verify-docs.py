@@ -13,6 +13,11 @@ verify-docs.py — 文档一致性验证
   6. 反引号路径检查：`skills/xxx.md` 等非 markdown 链接的失效引用
   7. 版本一致性门禁：.release-please-manifest.json == pyproject.toml == CHANGELOG 最新发布版本
      （存在 version.txt / 包 __init__.py 的 __version__ 时一并纳入对账，来源：ExcelAddin 函数库）
+  8. 宪法副本一致性：CLAUDE.md 与 AGENTS.md 逐字节一致（副本存在时才校验，来源：本仓实测漂移）
+  9. 悬空引用登记两向校验：第三方（vendored）技能子树内新悬空引用必须登记，登记表不得陈旧
+     （来源：工程分析套件 skills/README「已知差异」表）
+ 10. 豁免到期门禁：docs/governance/review-exemptions.md 中已到期条目必须复查（来源：本仓实测
+     P2 条目到期 v0.2.0 而当前 v0.2.4 仍未被拦截）
 
 规则：
   - 含 {{...}} 占位符的链接目标跳过（初始化替换前无法验证，打印提示）
@@ -363,7 +368,11 @@ def check_backtick_paths() -> list[str]:
                 continue  # AI 工具本地目录（不入库）
             if _is_pattern_like(target):
                 continue  # 占位符/模式串，替换前无法验证
-            probe = target.rstrip("/")
+            # 剥离 pytest node-id 后缀（如 tests/x.py::TestY::test_z）：引用具体用例是正常
+            # 文档写法，门禁只需校验文件路径本身（2026-10-11 实证误报）
+            probe = target.split("::", 1)[0].rstrip("/")
+            if not probe:
+                continue
             # 依次尝试仓库根与文档所在目录（技能/子目录文档常引用同目录相对路径）
             if not (ROOT / probe).exists() and not (path.parent / probe).exists():
                 problems.append(f"[反引号路径失效] {doc} -> `{raw}`（指向不存在的文件？）")
@@ -588,6 +597,235 @@ def _check_bare_input_calls() -> list[str]:
     return problems
 
 
+# ---------------------------------------------------------------------------
+# 向量 8：宪法副本一致性（AGENTS.md ↔ CLAUDE.md）
+# ---------------------------------------------------------------------------
+# Claude Code 只读 CLAUDE.md，需 AGENTS.md 的静态副本（AGENTS.md「AGENTS.md 生态兼容」）。
+# 副本靠人工 Copy-Item 维护、原先无任何门禁 → 实测漂移（2026-10-11：AGENTS.md 257 行 vs
+# CLAUDE.md 252 行，缺 ROADMAP.md / benchmarks/ / mkdocs.yml / review-checklist.md 四处登记，
+# 且 quality-gate 描述停留在旧版）。只比对副本存在的情形：下游项目不使用 Claude Code 时
+# 删除 CLAUDE.md 即自动跳过（不强制创建副本）。
+_RULE_COPY_PAIRS = (("AGENTS.md", "CLAUDE.md"),)
+
+
+def _check_rule_copies() -> list[str]:
+    """宪法副本必须与主文件内容一致（忽略换行符差异，防 autocrlf 误报）。"""
+    problems: list[str] = []
+    for src_name, copy_name in _RULE_COPY_PAIRS:
+        src = ROOT / src_name
+        copy = ROOT / copy_name
+        if not src.is_file() or not copy.is_file():
+            continue  # 副本未创建 → 该项目不使用 Claude Code，不强制
+        src_text = src.read_text(encoding="utf-8", errors="replace").replace("\r\n", "\n")
+        copy_text = copy.read_text(encoding="utf-8", errors="replace").replace("\r\n", "\n")
+        if src_text == copy_text:
+            continue
+        src_lines = src_text.splitlines()
+        copy_lines = copy_text.splitlines()
+        src_set, copy_set = set(src_lines), set(copy_lines)
+        detail = f"{src_name} {len(src_lines)} 行 vs {copy_name} {len(copy_lines)} 行"
+        only_src = [line for line in src_lines if line not in copy_set]
+        only_copy = [line for line in copy_lines if line not in src_set]
+        if only_src:
+            detail += f"；仅 {src_name} 有「{only_src[0].strip()[:50]}」"
+        if only_copy:
+            detail += f"；仅 {copy_name} 有「{only_copy[0].strip()[:50]}」"
+        problems.append(
+            f"[宪法副本漂移] {copy_name} 与 {src_name} 内容不一致（{detail}）"
+            f"——重建副本：Copy-Item {src_name} {copy_name}"
+        )
+    return problems
+
+
+# ---------------------------------------------------------------------------
+# 向量 9：第三方（vendored）技能子树悬空引用登记
+# ---------------------------------------------------------------------------
+# _DOC_EXCLUDED_PREFIXES 内的子树（Superpowers 原样分发）不做链接检查——其相对链接可能指向
+# 上游未 vendored 的兄弟技能。但「不检查」不等于「无需登记」：实测
+# skills/subagent-driven-development/SKILL.md 引用 ../requesting-code-review/code-reviewer.md，
+# 本地无此文件，读者只能自己撞上（来源：工程分析套件 skills/README「已知差异」表）。
+# 门禁两向校验：① 新出现的悬空引用未登记 → FAIL；② 登记表条目已不复存在 → FAIL（防陈旧）。
+# 覆盖范围（写实，不含糊）：markdown 链接 + 反引号仓库路径，且跳过围栏代码块内的文本；
+# mermaid 图与示例代码块中的引用不被扫描，需人工补登。
+_VENDORED_REF_REGISTRY_DOC = "skills/README.md"
+_VENDORED_REGISTRY_START = "<!-- VENDORED_DANGLING_REFS_START -->"
+_VENDORED_REGISTRY_END = "<!-- VENDORED_DANGLING_REFS_END -->"
+_MD_LINK_RE = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
+_BACKTICK_TOKEN_RE = re.compile(r"`([^`\s]+)`")
+
+
+def _iter_lines_outside_fences(text: str):
+    """逐行产出 (1-based 行号, 行文本)，跳过围栏代码块内的行（示例文本非引用）。"""
+    fence_char = ""
+    fence_len = 0
+    for lineno, line in enumerate(text.splitlines(), start=1):
+        stripped = line.lstrip()
+        if stripped[:1] in ("`", "~"):
+            ch = stripped[0]
+            run = len(stripped) - len(stripped.lstrip(ch))
+            if run >= 3:
+                if fence_len == 0:
+                    fence_char, fence_len = ch, run
+                elif ch == fence_char and run >= fence_len:
+                    fence_char, fence_len = "", 0
+                continue
+        if fence_len == 0:
+            yield lineno, line
+
+
+def _iter_vendored_docs() -> list[Path]:
+    """第三方技能子树内的全部 markdown 文档。"""
+    docs: list[Path] = []
+    for prefix in _DOC_EXCLUDED_PREFIXES:
+        base = ROOT / prefix
+        if base.is_dir():
+            docs.extend(sorted(base.rglob("*.md")))
+    return docs
+
+
+def _iter_relative_refs(line: str):
+    """产出该行中疑似「仓库内相对引用」的目标（markdown 链接 + 反引号路径）。"""
+    for m in _MD_LINK_RE.finditer(line):
+        target = m.group(1).split("#")[0].strip()
+        if not target or target.startswith(("http://", "https://", "mailto:", "/")):
+            continue
+        if "{{" in target:
+            continue
+        yield target
+    for m in _BACKTICK_TOKEN_RE.finditer(line):
+        target = m.group(1)
+        if not target.startswith(_KNOWN_ROOT_PREFIXES):
+            continue
+        if _is_pattern_like(target):
+            continue
+        yield target
+
+
+def _vendored_ref_exists(doc: Path, target: str) -> bool:
+    """相对引用能否解析——先按文档所在目录（上游写法），再按仓库根（本仓惯例）。"""
+    for candidate in (doc.parent / target, ROOT / target):
+        try:
+            if candidate.exists():
+                return True
+        except OSError:
+            continue  # 非法路径字符（Windows）→ 视为不存在
+    return False
+
+
+def scan_vendored_dangling_refs() -> dict[str, list[str]]:
+    """扫描第三方技能子树，返回 {悬空引用: ["文件:行号", ...]}。"""
+    found: dict[str, list[str]] = {}
+    for doc in _iter_vendored_docs():
+        rel_doc = doc.relative_to(ROOT).as_posix()
+        text = doc.read_text(encoding="utf-8", errors="replace")
+        for lineno, line in _iter_lines_outside_fences(text):
+            for target in _iter_relative_refs(line):
+                if not _vendored_ref_exists(doc, target):
+                    found.setdefault(target, []).append(f"{rel_doc}:{lineno}")
+    return found
+
+
+def _read_vendored_ref_registry() -> set[str]:
+    """读取 skills/README.md 登记表（HTML 标记圈定的表格，取每行首个反引号 token）。"""
+    doc = ROOT / _VENDORED_REF_REGISTRY_DOC
+    if not doc.is_file():
+        return set()
+    inside = False
+    registered: set[str] = set()
+    for line in doc.read_text(encoding="utf-8", errors="replace").splitlines():
+        if _VENDORED_REGISTRY_START in line:
+            inside = True
+            continue
+        if _VENDORED_REGISTRY_END in line:
+            break
+        if not inside:
+            continue
+        m = _BACKTICK_TOKEN_RE.search(line)
+        if m:
+            registered.add(m.group(1))
+    return registered
+
+
+def check_vendored_refs_registry() -> list[str]:
+    """两向校验悬空引用登记表：未登记的悬空引用 FAIL，已失效的登记条目 FAIL。"""
+    problems: list[str] = []
+    if not _iter_vendored_docs():
+        return problems  # 未引入第三方技能子树（下游常见）→ 不强制
+    dangling = scan_vendored_dangling_refs()
+    registered = _read_vendored_ref_registry()
+    for target, spots in sorted(dangling.items()):
+        if target not in registered:
+            problems.append(
+                f"[悬空引用未登记] {target}（{', '.join(spots)}）在本地不存在"
+                f"——请在 {_VENDORED_REF_REGISTRY_DOC} 的 VENDORED_DANGLING_REFS 登记表补一行"
+                "（上游原样分发不改写，登记即责任）"
+            )
+    for target in sorted(registered - set(dangling)):
+        problems.append(
+            f"[悬空引用登记陈旧] {_VENDORED_REF_REGISTRY_DOC} 登记的 {target} 已不再悬空"
+            "——请删除该行（登记表须与实测一致）"
+        )
+    return problems
+
+
+# ---------------------------------------------------------------------------
+# 向量 10：豁免登记到期（docs/governance/review-exemptions.md）
+# ---------------------------------------------------------------------------
+# 「登记即责任——豁免项进入下次审查必查清单」原为人工承诺。实测：P2 条目写明「到期：v0.2.0
+# 复查」，而仓库已到 v0.2.4 仍无人复查、无门禁拦截（2026-10-11）。本向量把「到期」变成硬检查：
+# 条目声明的到期版本 <= 当前版本 → FAIL，必须复查后关闭/修复，或改写到期版本并留下复查结论。
+_EXEMPTIONS_DOC = "docs/governance/review-exemptions.md"
+_EXPIRY_RE = re.compile(r"到期：\s*v?(\d+)\.(\d+)\.(\d+)")
+_VERSION_RE = re.compile(r'^version\s*=\s*["\']([^"\']+)["\']', re.MULTILINE)
+
+
+def _read_current_version() -> str:
+    """当前版本号：release-please manifest 优先，其次 pyproject.toml；均缺失返回空串。"""
+    manifest_path = ROOT / ".release-please-manifest.json"
+    if manifest_path.is_file():
+        try:
+            data = json.loads(manifest_path.read_text(encoding="utf-8"))
+            version = str(data.get(".", "")).strip()
+            if version:
+                return version
+        except (json.JSONDecodeError, OSError, AttributeError):
+            pass
+    pyproject_path = ROOT / "pyproject.toml"
+    if pyproject_path.is_file():
+        m = _VERSION_RE.search(pyproject_path.read_text(encoding="utf-8", errors="replace"))
+        if m:
+            return m.group(1).strip()
+    return ""
+
+
+def check_exemption_expiry() -> list[str]:
+    """豁免登记表中已到期的条目必须复查（划删除线 = 已关闭，跳过）。"""
+    doc = ROOT / _EXEMPTIONS_DOC
+    if not doc.is_file():
+        return []
+    current = _read_current_version()
+    m_cur = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", current)
+    if not m_cur:
+        return []  # 无版本锚点（未接入发版）→ 无「到期版本」可比，不强制
+    cur = tuple(int(x) for x in m_cur.groups())
+    problems: list[str] = []
+    text = doc.read_text(encoding="utf-8", errors="replace")
+    for lineno, line in _iter_lines_outside_fences(text):
+        if "~~" in line:
+            continue  # 已关闭条目（划删除线）
+        m = _EXPIRY_RE.search(line)
+        if not m:
+            continue
+        exp = tuple(int(x) for x in m.groups())
+        if exp <= cur:
+            exp_text = ".".join(str(x) for x in exp)
+            problems.append(
+                f"[豁免到期] {_EXEMPTIONS_DOC}:{lineno} 声明到期 v{exp_text}，当前 v{current}"
+                "——请复查后关闭条目（划删除线 + 复查结论）或改写到期版本并说明复查依据"
+            )
+    return problems
+
+
 def check_semantic_consistency() -> list[str]:
     """语义交叉检查（来源：ExcelAddin verify-docs.sh 8 向量中语言无关部分）。
 
@@ -704,6 +942,9 @@ def main() -> int:
         + check_agents_tree()
         + check_semantic_consistency()
         + check_version_consistency()
+        + _check_rule_copies()
+        + check_vendored_refs_registry()
+        + check_exemption_expiry()
         + check_subdir_undeclared(args.strict)
         + check_undeclared(args.strict)
     )

@@ -531,3 +531,204 @@ class TestExcludedDirsSSOT:
         with _ctx.suppress(SystemExit):
             _spec.loader.exec_module(_vr)
         assert set(BASE_EXCLUDED_DIRS) | {"build", "benchmarks", "tests"} == _vr.EXCLUDED_DIRS
+
+
+class TestRuleCopyConsistency:
+    """宪法副本一致性向量（2026-10-11 新增：CLAUDE.md 实测漂移 5 行且原先无门禁）。"""
+
+    def _setup(self, tmp_path, monkeypatch, agents_text, claude_text):
+        # 用 write_bytes 而非 write_text：Windows 文本模式会把 \n 翻译成 \r\n（且把既有
+        # \r\n 变成 \r\r\n），本组用例需要精确控制换行符
+        (tmp_path / "AGENTS.md").write_bytes(agents_text.encode("utf-8"))
+        if claude_text is not None:
+            (tmp_path / "CLAUDE.md").write_bytes(claude_text.encode("utf-8"))
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+
+    def test_identical_passes(self, tmp_path, monkeypatch):
+        text = """# 宪法
+
+## 元数据
+
+- 项目名：X
+"""
+        self._setup(tmp_path, monkeypatch, text, text)
+        assert vd._check_rule_copies() == []
+
+    def test_missing_copy_skips(self, tmp_path, monkeypatch):
+        """未使用 Claude Code（无 CLAUDE.md 副本）→ 不强制创建。"""
+        self._setup(tmp_path, monkeypatch, "# 宪法", None)
+        assert vd._check_rule_copies() == []
+
+    def test_drift_detected_with_line_counts(self, tmp_path, monkeypatch):
+        """副本缺行（实测形态：AGENTS.md 257 行 vs CLAUDE.md 252 行）→ 检出且报出行数。"""
+        agents = """# 宪法
+A
+B
+"""
+        self._setup(tmp_path, monkeypatch, agents, "# 宪法\nA\n")
+        problems = vd._check_rule_copies()
+        assert len(problems) == 1
+        assert "宪法副本漂移" in problems[0]
+        assert "AGENTS.md 3 行 vs CLAUDE.md 2 行" in problems[0]
+
+    def test_line_ending_difference_ignored(self, tmp_path, monkeypatch):
+        """CRLF vs LF 不算漂移（防 autocrlf 环境误报）。"""
+        self._setup(tmp_path, monkeypatch, "# 宪法\r\nA\r\n", "# 宪法\nA\n")
+        assert vd._check_rule_copies() == []
+
+
+class TestVendoredRefsRegistry:
+    """第三方技能子树悬空引用登记两向门禁（2026-10-11 新增）。
+
+    子树链接检查被 _DOC_EXCLUDED_PREFIXES 排除（上游原样分发），但「不检查」不等于
+    「无需登记」——登记表本身由本向量守护。
+    """
+
+    SKILL_REL = "skills/subagent-driven-development/SKILL.md"
+    DANGLING = "../requesting-code-review/code-reviewer.md"
+
+    def _setup(self, tmp_path, monkeypatch, skill_text, registry_rows):
+        skill_dir = tmp_path / "skills" / "subagent-driven-development"
+        skill_dir.mkdir(parents=True)
+        (skill_dir / "SKILL.md").write_text(skill_text, encoding="utf-8")
+        rows = "".join(f"{row}\n" for row in registry_rows)
+        (tmp_path / "skills" / "README.md").write_text(
+            "# skills\n\n"
+            f"{vd._VENDORED_REGISTRY_START}\n"
+            "| 悬空引用 | 出现位置 | 说明 |\n|---|---|---|\n"
+            f"{rows}"
+            f"{vd._VENDORED_REGISTRY_END}\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+
+    def test_unregistered_dangling_ref_detected(self, tmp_path, monkeypatch):
+        """新悬空引用未登记 → FAIL（含出现位置，便于补登）。"""
+        self._setup(
+            tmp_path, monkeypatch, "见 [r](../requesting-code-review/code-reviewer.md)。", []
+        )
+        problems = vd.check_vendored_refs_registry()
+        assert len(problems) == 1
+        assert "悬空引用未登记" in problems[0]
+        assert self.DANGLING in problems[0]
+        assert f"{self.SKILL_REL}:1" in problems[0]
+
+    def test_registered_dangling_ref_passes(self, tmp_path, monkeypatch):
+        self._setup(
+            tmp_path,
+            monkeypatch,
+            "见 [r](../requesting-code-review/code-reviewer.md)。",
+            ["| `" + self.DANGLING + "` | 正文 1 处 | 上游未引入 |"],
+        )
+        assert vd.check_vendored_refs_registry() == []
+
+    def test_stale_registry_entry_detected(self, tmp_path, monkeypatch):
+        """登记条目已不再悬空（上游补齐/本地引入）→ FAIL（防登记表陈旧）。"""
+        self._setup(
+            tmp_path,
+            monkeypatch,
+            "本文件无任何引用。",
+            ["| `" + self.DANGLING + "` | 正文 1 处 | 上游未引入 |"],
+        )
+        problems = vd.check_vendored_refs_registry()
+        assert len(problems) == 1
+        assert "登记陈旧" in problems[0]
+
+    def test_ref_resolved_relative_to_doc_dir(self, tmp_path, monkeypatch):
+        """同目录存在的相对引用（上游写法）不算悬空。"""
+        self._setup(tmp_path, monkeypatch, "见 [t](task-reviewer-prompt.md)。", [])
+        (
+            tmp_path / "skills" / "subagent-driven-development" / "task-reviewer-prompt.md"
+        ).write_text("", encoding="utf-8")
+        assert vd.check_vendored_refs_registry() == []
+
+    def test_fenced_code_block_skipped(self, tmp_path, monkeypatch):
+        """围栏代码块内的路径是示例文本（如 exact/path/to/test.py），不参与扫描。"""
+        fenced = "```markdown\n- Test: `tests/exact/path/to/test.py`\n```markdown"
+        self._setup(tmp_path, monkeypatch, fenced, [])
+        assert vd.scan_vendored_dangling_refs() == {}
+
+    def test_no_vendored_docs_skips(self, tmp_path, monkeypatch):
+        """未引入第三方技能子树（下游常见）→ 不强制。"""
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        assert vd.check_vendored_refs_registry() == []
+
+
+class TestExemptionExpiry:
+    """豁免到期门禁（2026-10-11 新增：P2 条目声明到期 v0.2.0 而当前 v0.2.4 未被拦截）。"""
+
+    def _setup(self, tmp_path, monkeypatch, doc_text, version="0.2.4"):
+        (tmp_path / ".release-please-manifest.json").write_text(
+            json.dumps({".": version}), encoding="utf-8"
+        )
+        gov = tmp_path / "docs" / "governance"
+        gov.mkdir(parents=True)
+        (gov / "review-exemptions.md").write_bytes(doc_text.encode("utf-8"))
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+
+    def test_expired_entry_detected(self, tmp_path, monkeypatch):
+        self._setup(tmp_path, monkeypatch, "- [P2] 某风险 — 到期：v0.2.0 复查（建议改法）")
+        problems = vd.check_exemption_expiry()
+        assert len(problems) == 1
+        assert "豁免到期" in problems[0]
+        assert "v0.2.0" in problems[0] and "v0.2.4" in problems[0]
+
+    def test_same_version_counts_as_expired(self, tmp_path, monkeypatch):
+        """到期版本 == 当前版本 → 同样算到期（边界：到期「当天」必须复查）。"""
+        self._setup(tmp_path, monkeypatch, "- [P2] 某风险 — 到期：v0.2.4 复查")
+        assert len(vd.check_exemption_expiry()) == 1
+
+    def test_future_expiry_passes(self, tmp_path, monkeypatch):
+        self._setup(tmp_path, monkeypatch, "- [P3] 某风险 — 到期：v9.0.0 复查")
+        assert vd.check_exemption_expiry() == []
+
+    def test_closed_entry_with_strikethrough_skipped(self, tmp_path, monkeypatch):
+        self._setup(
+            tmp_path,
+            monkeypatch,
+            "- ~~[P2] 已修复 — 到期：v0.2.0 复查~~ → **已修复**（2026-10-11）",
+        )
+        assert vd.check_exemption_expiry() == []
+
+    def test_entry_without_version_expiry_skipped(self, tmp_path, monkeypatch):
+        """非版本到期（「下次依赖升级复查」「每季度复核」）不参与版本比较。"""
+        doc = """- [P3] 某风险 — 到期：下次依赖升级复查
+- [P3] 另一风险 — 到期：每季度复核
+"""
+        self._setup(tmp_path, monkeypatch, doc)
+        assert vd.check_exemption_expiry() == []
+
+    def test_missing_doc_skips(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        assert vd.check_exemption_expiry() == []
+
+    def test_no_version_anchor_skips(self, tmp_path, monkeypatch):
+        """无 manifest / pyproject（未接入发版）→ 无到期版本可比，不强制。"""
+        gov = tmp_path / "docs" / "governance"
+        gov.mkdir(parents=True)
+        (gov / "review-exemptions.md").write_text(
+            "- [P2] 某风险 — 到期：v0.2.0 复查", encoding="utf-8"
+        )
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        assert vd.check_exemption_expiry() == []
+
+
+class TestPytestNodeIdInBacktickPaths:
+    """反引号路径支持 pytest node-id 后缀（2026-10-11 实证误报修复）。"""
+
+    def test_node_id_suffix_passes_for_existing_file(self, tmp_path, monkeypatch):
+        (tmp_path / "tests").mkdir()
+        (tmp_path / "tests" / "test_a.py").write_text("", encoding="utf-8")
+        (tmp_path / "doc.md").write_text(
+            "见 `tests/test_a.py::TestX::test_y` 用例。", encoding="utf-8"
+        )
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        monkeypatch.setattr(vd, "DOC_FILES", ["doc.md"])
+        assert vd.check_backtick_paths() == []
+
+    def test_node_id_on_missing_file_still_fails(self, tmp_path, monkeypatch):
+        (tmp_path / "doc.md").write_text("见 `tests/nope.py::test_y` 用例。", encoding="utf-8")
+        monkeypatch.setattr(vd, "ROOT", tmp_path)
+        monkeypatch.setattr(vd, "DOC_FILES", ["doc.md"])
+        problems = vd.check_backtick_paths()
+        assert any("反引号路径失效" in p and "nope.py" in p for p in problems)
