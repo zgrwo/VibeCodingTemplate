@@ -76,6 +76,9 @@ CLEANUP_DIRS = {
 # 这些 {{...}} 字面量是测试输入而非待替换占位符，替换会破坏生成项目的测试套件。
 SKIP_PLACEHOLDER_DIRS = {"tests"}
 
+# 交互模式下无默认值的 core 占位符最多重提示次数（超过则 fail-fast，防无 TTY/EOF 时死循环）
+_MAX_CORE_PROMPT_ATTEMPTS = 3
+
 # auto 规则计算
 _AUTO_RULES = {
     "today": lambda: _dt.date.today().isoformat(),
@@ -144,13 +147,25 @@ def get_placeholder_value(
         if interactive:
             prompt = entry.get("prompt", name)
             default = entry.get("default")
-            fallback = default if default else name.lower()
-            hint = f"  {prompt}（Enter 用默认: {fallback}）: "
-            user_input = input(hint).strip()
-            if user_input:
-                return user_input
             if default:
-                return default
+                return input(f"  {prompt}（Enter 用默认: {default}）: ").strip() or default
+            # 无默认值的 core 占位符：空输入曾回退占位符名小写（BUILD_CMD → build_cmd），
+            # 静默生成损坏的项目/CI 配置。改为重提示，超过 _MAX_CORE_PROMPT_ATTEMPTS 次仍未
+            # 填写则 fail-fast（与非交互路径同语义，防静默传播；P2 豁免到期复查，2026-10-11 修复）。
+            for _attempt in range(_MAX_CORE_PROMPT_ATTEMPTS):
+                try:
+                    answer = input(f"  {prompt}（必填，无默认值）: ").strip()
+                except EOFError:
+                    answer = ""
+                if answer:
+                    return answer
+                print(
+                    "  [WARN] 空输入会生成损坏的项目/CI 配置（如 BUILD_CMD → build_cmd），请填写。"
+                )
+            raise SystemExit(
+                f"[FATAL] core 占位符 {name} 未填写：请通过 --values 提供"
+                f'（如 --values \'{{"{name}": "..."}}\'）'
+            )
 
     # 4. default（非交互 core 有默认值 / 交互 Enter 有默认值）
     if "default" in entry:
@@ -369,17 +384,26 @@ def _reset_release_manifest(target: Path, replacements: dict[str, str]) -> None:
     print(f"==> .release-please-manifest.json 已重置为版本 {version}")
 
 
-def _reset_pyproject_version(target: Path, replacements: dict[str, str]) -> None:
-    """将复制进新项目的根 pyproject.toml 版本号重置为 VERSION 值（P4 审查修复）。
+def _slugify_package_name(name: str) -> str:
+    """项目名 → 合法包名（PEP 508）：小写、非字母数字转连字符、折叠连续连字符。"""
+    slug = re.sub(r"[^a-z0-9]+", "-", name.strip().lower())
+    return slug.strip("-") or "my-project"
 
-    根 pyproject.toml 是模板仓库自身开发配置（无占位符，init 不替换），直接复制会让
-    新项目版本与 .release-please-manifest.json（已重置为 VERSION）漂移，
-    触发 verify-docs.py 版本一致性门禁。
+
+def _reset_pyproject_identity(target: Path, replacements: dict[str, str]) -> None:
+    """重置复制进新项目的根 pyproject.toml：版本号 + [project] 身份（name/description）。
+
+    根 pyproject.toml 是模板仓库自身开发配置（无占位符，init 不替换），直接复制会让新项目：
+      - 版本与 .release-please-manifest.json（已重置为 VERSION）漂移（P4 修复）；
+      - **包元数据仍是模板自己**（name = "vibe-coding-template"、description 讲的是治理模板），
+        生成的项目执行 pip install -e . 会装出一个与项目无关的包名（2026-10-11 去伪修复）。
     """
     path = target / "pyproject.toml"
     if not path.exists():
         return
     version = replacements.get("VERSION") or "0.1.0"
+    project_name = replacements.get("PROJECT_NAME") or ""
+    description = replacements.get("ONE_LINE_DESCRIPTION") or ""
     text = path.read_text(encoding="utf-8")
     new_text = re.sub(
         r'^version\s*=\s*["\']([^"\']+)["\']',
@@ -388,9 +412,28 @@ def _reset_pyproject_version(target: Path, replacements: dict[str, str]) -> None
         count=1,
         flags=re.MULTILINE,
     )
+    if project_name:
+        new_text = re.sub(
+            r'^name\s*=\s*["\'][^"\']*["\']',
+            f'name = "{_slugify_package_name(project_name)}"',
+            new_text,
+            count=1,
+            flags=re.MULTILINE,
+        )
+    if description:
+        new_text = re.sub(
+            r'^description\s*=\s*["\'][^"\']*["\']',
+            "description = " + json.dumps(description, ensure_ascii=False),
+            new_text,
+            count=1,
+            flags=re.MULTILINE,
+        )
     if new_text != text:
         path.write_text(new_text, encoding="utf-8", newline="\n")
-        print(f"==> pyproject.toml 版本号已重置为 {version}")
+        print(
+            f"==> pyproject.toml 已重置：版本 {version}"
+            + (f"；包名 {_slugify_package_name(project_name)}" if project_name else "")
+        )
 
 
 def _refresh_doc_counts(target: Path) -> None:
@@ -620,7 +663,15 @@ def main() -> int:
     parser.add_argument(
         "--values",
         default="",
-        help='占位符值 JSON，如 \'{"PROJECT_NAME": "MyApp", "VERSION": "1.0.0"}\'',
+        help='占位符值 JSON，如 \'{"PROJECT_NAME": "MyApp", "VERSION": "1.0.0"}\''
+        "（注意：Windows PowerShell 5.1 会吞掉参数内的双引号导致 JSON 失效，"
+        "该平台请改用 --values-file 或 init-project.ps1 的 -Values 哈希表）",
+    )
+    parser.add_argument(
+        "--values-file",
+        default="",
+        help='从 JSON 文件读取占位符值（"-" 表示读 stdin）。'
+        "脚本化/CI 首选：不受 shell 引号转义影响（Windows 与 POSIX 行为一致）",
     )
     parser.add_argument(
         "--non-interactive",
@@ -692,13 +743,28 @@ def main() -> int:
     # 加载占位符 manifest
     manifest = load_manifest()
 
-    # 解析 --values（键归一化：兼容 {{X}} 与 X 两种写法，键本身不进入替换扫描）
+    # 解析 --values / --values-file（键归一化：兼容 {{X}} 与 X 两种写法，键本身不进入替换扫描）
     values: dict[str, str] = {}
-    if args.values:
+    raw_json = args.values
+    if args.values_file:
+        if args.values_file == "-":
+            raw_json = sys.stdin.read()
+        else:
+            values_path = Path(args.values_file)
+            if not values_path.is_file():
+                print(f"[ERROR] --values-file 文件不存在: {values_path}")
+                return 1
+            raw_json = values_path.read_text(encoding="utf-8")
+    if raw_json:
         try:
-            values = _normalize_values(json.loads(args.values))
-        except json.JSONDecodeError as e:
-            print(f"[ERROR] --values JSON 解析失败: {e}")
+            values = _normalize_values(json.loads(raw_json))
+        except (json.JSONDecodeError, AttributeError) as e:
+            print(f"[ERROR] 占位符值 JSON 解析失败: {e}")
+            print(
+                "        若是 Windows PowerShell，双引号会在传给原生命令时被吞掉——\n"
+                "        改用 --values-file values.json（或 PowerShell 版 -Values @{...}）；\n"
+                "        也可用 --values-file - 从 stdin 读取。"
+            )
             return 1
 
     # 收集所有占位符并生成替换值
@@ -724,7 +790,7 @@ def main() -> int:
     # 避免新项目携带模板发布历史、版本漂移或死条目门禁 FAIL）
     _reset_changelog(target)
     _reset_release_manifest(target, replacements)
-    _reset_pyproject_version(target, replacements)
+    _reset_pyproject_identity(target, replacements)
     _prune_placeholder_manifest(target)
     _refresh_doc_counts(target)
 

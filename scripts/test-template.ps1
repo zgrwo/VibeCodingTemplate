@@ -1,4 +1,4 @@
-﻿# ============================================================================
+# ============================================================================
 # test-template.ps1 — 模板完整性自测（CI: template-self-test job 调用）
 #
 # 职责：
@@ -101,6 +101,46 @@ if ($LASTEXITCODE -ne 0) {
 # ----------------------------------------------------------------------------
 Push-Location $Target
 try {
+    # 生成物无 BOM 断言（2026-10-11 修复的回归守卫）：
+    # PowerShell 的 UTF8Encoding $true 会写 UTF-8 BOM，而严格解析器一律拒绝——
+    # tomllib(pyproject.toml) → TOMLDecodeError、json.loads(str)(manifest/placeholders.json) → JSONDecodeError
+    # （实测后果：生成项目 pytest 退出码 4、覆盖率门禁必红；版本一致性门禁则静默失效）。
+    # 模板源文件均无 BOM，生成物必须一致。
+    foreach ($rel in @("pyproject.toml", ".release-please-manifest.json", "scripts/placeholders.json", "CHANGELOG.md")) {
+        $fp = Join-Path $Target $rel
+        if (-not (Test-Path $fp)) { throw "生成物缺失：$rel" }
+        $bytes = [System.IO.File]::ReadAllBytes($fp)
+        if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+            throw "生成物 $rel 带 UTF-8 BOM：严格解析器（tomllib / json.loads(str)）会拒绝（见 docs/pitfalls/tooling-pitfalls.md）"
+        }
+    }
+    Write-Host "[OK] 生成物无 BOM 断言通过（pyproject/manifest/placeholders/CHANGELOG）" -ForegroundColor Green
+
+    # 生成项目身份断言（2026-10-11 去伪修复的回归守卫）：生成的项目必须是"它自己"，不是模板
+    $pyText = Get-Content (Join-Path $Target "pyproject.toml") -Raw -Encoding UTF8
+    if ($pyText -match 'name\s*=\s*"vibe-coding-template"') {
+        throw "生成项目 pyproject.toml 仍是模板自身包名（vibe-coding-template）：身份重置未生效"
+    }
+    $manifestVersion = (Get-Content (Join-Path $Target ".release-please-manifest.json") -Raw -Encoding UTF8 | ConvertFrom-Json).'.'
+    if ($manifestVersion -ne "0.1.0") {
+        throw "生成项目初始版本应为 0.1.0（与 ROADMAP 首个里程碑 / README 收尾清单一致），实际 $manifestVersion"
+    }
+    if ($pyText -notmatch ('version\s*=\s*"' + [regex]::Escape($manifestVersion) + '"')) {
+        throw "生成项目 pyproject.toml 版本与 manifest（$manifestVersion）不一致（版本 SSOT 漂移）"
+    }
+    foreach ($rel in @("README.md", "README.en.md", "docs/design/architecture.md", "docs/governance/pre-release-review-prompt.md")) {
+        $fp = Join-Path $Target $rel
+        if (-not (Test-Path $fp)) { continue }
+        $text = Get-Content $fp -Raw -Encoding UTF8
+        if ($text -match "TEMPLATE_ONLY") {
+            throw "$rel 残留 TEMPLATE_ONLY 标记（template-only 段落未被裁剪，会泄漏进生成项目）"
+        }
+        if ($text -match "本文档是「下游项目模板」") {
+            throw "$rel 残留模板专属文案（本文档是「下游项目模板」）"
+        }
+    }
+    Write-Host "[OK] 生成项目身份断言通过（非模板包名 / 初始版本 0.1.0 / 无模板文案泄漏）" -ForegroundColor Green
+
     $steps = @(
         @{ Name = "verify-docs.py --strict"; Cmd = { python scripts/verify-docs.py --strict } },
         @{ Name = "verify-manual.py";        Cmd = { python scripts/verify-manual.py } },

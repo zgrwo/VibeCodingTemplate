@@ -1,4 +1,4 @@
-﻿# ============================================================================
+# ============================================================================
 # init-project.ps1 — 从 _template 初始化新项目
 #
 # 职责：
@@ -30,6 +30,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 $template = Split-Path -Parent $PSScriptRoot   # template 根目录（scripts/ 的上一级）
+
+# 交互模式下无默认值的 core 占位符最多重提示次数（超过则 fail-fast，防无 TTY 时死循环；
+# 与 init-project.py 的 _MAX_CORE_PROMPT_ATTEMPTS 对齐——双实现漂移守护）
+$MaxCorePromptAttempts = 3
 
 # 占位符清单（唯一真相源：scripts/placeholders.json，见 placeholder-utils.ps1）
 . (Join-Path $PSScriptRoot "placeholder-utils.ps1")
@@ -269,10 +273,25 @@ if ($found.Count -eq 0) {
                 if (-not $default -and [Console]::IsInputRedirected) {
                     throw "非交互模式下 core 占位符 {{$name}} 无默认值：请通过 -Values 提供（如 -Values @{ $name = '...' }）"
                 }
-                $fallback = if ($default) { $default } else { $name.ToLowerInvariant() }
-                $prompt   = if ($meta.prompt) { $meta.prompt } else { "请输入 $name" }
-                $answer = Read-Host "    $prompt（Enter 用默认: $fallback）"
-                if ([string]::IsNullOrWhiteSpace($answer)) { $answer = $fallback }
+                $prompt = if ($meta.prompt) { $meta.prompt } else { "请输入 $name" }
+                if ($default) {
+                    $answer = Read-Host "    $prompt（Enter 用默认: $default）"
+                    if ([string]::IsNullOrWhiteSpace($answer)) { $answer = $default }
+                } else {
+                    # 无默认值的 core 占位符：空输入曾回退占位符名小写（{{BUILD_CMD}} → build_cmd），
+                    # 静默生成损坏的项目/CI 配置。改为重提示，超过 $MaxCorePromptAttempts 次仍未填写
+                    # 则 fail-fast（与非交互路径同语义，防静默传播；P2 豁免到期复查，2026-10-11 修复）。
+                    $answer = ""
+                    for ($attempt = 1; $attempt -le $MaxCorePromptAttempts; $attempt++) {
+                        $answer = Read-Host "    $prompt（必填，无默认值）"
+                        if (-not [string]::IsNullOrWhiteSpace($answer)) { break }
+                        Write-Host "    [WARN] 空输入会生成损坏的项目/CI 配置（如 BUILD_CMD → build_cmd），请填写。" -ForegroundColor Yellow
+                        $answer = ""
+                    }
+                    if ([string]::IsNullOrWhiteSpace($answer)) {
+                        throw "core 占位符 {{$name}} 未填写：请通过 -Values 提供（如 -Values @{ $name = '...' }）"
+                    }
+                }
                 $Values["{{$name}}"] = $answer
                 break
             }
@@ -353,7 +372,10 @@ All notable changes to $projName.
 
 > 新项目初始状态：首个功能落地后在此登记变更。
 "@
-[System.IO.File]::WriteAllText((Join-Path $Target "CHANGELOG.md"), $changelogInit, (New-Object System.Text.UTF8Encoding $true))
+# 无 BOM：生成物被严格解析器读取（tomllib / json.loads(str) / Node JSON.parse）会拒绝 BOM。
+# 模板源文件均无 BOM，此处保持一致（2026-10-11 修复：此前 $true 写出 BOM，导致生成项目
+# pyproject.toml 无法被 tomllib 解析 → pytest 退出码 4、覆盖率门禁必红）。
+[System.IO.File]::WriteAllText((Join-Path $Target "CHANGELOG.md"), $changelogInit, (New-Object System.Text.UTF8Encoding $false))
 Write-Host "==> CHANGELOG.md 已重置为新项目初始态" -ForegroundColor Green
 
 # ----------------------------------------------------------------------------
@@ -365,13 +387,20 @@ Write-Host "==> CHANGELOG.md 已重置为新项目初始态" -ForegroundColor Gr
 # 三处收尾各自按文件存在性独立守卫（镜像 init-project.py：任一文件缺失不影响其余，
 # 2026-08 Max 审查 P2 修复——此前全部包在 manifest 存在性内，manifest 缺失会连带跳过版本/裁剪）。
 $versionKey = "{{" + "VERSION" + "}}"
-$version = if ($Values.ContainsKey($versionKey)) { [string]$Values[$versionKey] } else { "0.1.0" }
+# 版本来源优先级与 init-project.py 一致：-Values > manifest 的 VERSION.default > 兜底 0.1.0。
+# 2026-10-11 修复 py/ps1 分叉：ps1 此前硬编码 0.1.0 而忽略 manifest 默认值，同一输入下
+# Python 版产出 1.0.0、PowerShell 版产出 0.1.0（tooling-pitfalls #26 双实现分叉）。
+$versionMeta = if ($manifest) { $manifest[$versionKey] } else { (Get-PlaceholderManifest)[$versionKey] }
+$version = if ($Values.ContainsKey($versionKey)) { [string]$Values[$versionKey] }
+elseif ($versionMeta -and $versionMeta.default) { [string]$versionMeta.default }
+else { "0.1.0" }
 
 # 5.6.0 重置 .release-please-manifest.json 为新项目初始版本
 $manifestPath = Join-Path $Target ".release-please-manifest.json"
 if (Test-Path $manifestPath) {
     $manifestJson = @{ "." = $version } | ConvertTo-Json
-    [System.IO.File]::WriteAllText($manifestPath, $manifestJson, (New-Object System.Text.UTF8Encoding $true))
+    # 无 BOM（同上）：BOM 会让 json.loads(str) 抛错 → verify-docs 版本一致性门禁静默失效
+    [System.IO.File]::WriteAllText($manifestPath, $manifestJson, (New-Object System.Text.UTF8Encoding $false))
     Write-Host "==> .release-please-manifest.json 已重置为版本 $version" -ForegroundColor Green
 }
 
@@ -383,8 +412,39 @@ if (Test-Path $pyProjectPath) {
     $versionRe = [regex]'(?m)^version\s*=\s*["'']+[^"'']+["'']+'
     $newPyText = $versionRe.Replace($pyText, { param($m) "version = `"$version`"" }, 1)
     if ($newPyText -ne $pyText) {
-        [System.IO.File]::WriteAllText($pyProjectPath, $newPyText, (New-Object System.Text.UTF8Encoding $true))
+        # 无 BOM（同上）：BOM 会让 tomllib 拒绝解析 → 生成项目 pytest/coverage 直接失败
+        [System.IO.File]::WriteAllText($pyProjectPath, $newPyText, (New-Object System.Text.UTF8Encoding $false))
         Write-Host "==> pyproject.toml 版本号已重置为 $version" -ForegroundColor Green
+    }
+}
+
+# 5.6.1b 重置 [project] 身份：name / description（2026-10-11 去伪修复）
+# 此前只改版本号，生成项目的 pyproject 仍带模板自身包名（name = "vibe-coding-template"）
+# 与"治理模板"描述 → 执行 pip install -e . 会装出与项目无关的包；本块与
+# init-project.py 的 _reset_pyproject_identity 对等（双实现行为一致）。
+$pyProjectPath = Join-Path $Target "pyproject.toml"
+if (Test-Path $pyProjectPath) {
+    $projectNameKey = "{{" + "PROJECT_NAME" + "}}"
+    $descKey = "{{" + "ONE_LINE_DESCRIPTION" + "}}"
+    $projectName = if ($Values.ContainsKey($projectNameKey)) { [string]$Values[$projectNameKey] } else { "" }
+    $description = if ($Values.ContainsKey($descKey)) { [string]$Values[$descKey] } else { "" }
+    $slug = (($projectName -replace '[^a-zA-Z0-9]+', '-').Trim('-')).ToLowerInvariant()
+
+    $pyIdentityText = Get-Content $pyProjectPath -Encoding UTF8 -Raw
+    $newIdentityText = $pyIdentityText
+    if ($slug) {
+        $nameRe = [regex]'(?m)^name\s*=\s*["'']+[^"'']+["'']+'
+        $newIdentityText = $nameRe.Replace($newIdentityText, { param($m) 'name = "' + $slug + '"' }, 1)
+    }
+    if ($description) {
+        # ConvertTo-Json 负责引号与转义（非 ASCII 转 \uXXXX，TOML 基本字符串合法）
+        $descJson = $description | ConvertTo-Json -Compress
+        $descRe = [regex]'(?m)^description\s*=\s*["''].*$'
+        $newIdentityText = $descRe.Replace($newIdentityText, { param($m) 'description = ' + $descJson }, 1)
+    }
+    if ($newIdentityText -ne $pyIdentityText) {
+        [System.IO.File]::WriteAllText($pyProjectPath, $newIdentityText, (New-Object System.Text.UTF8Encoding $false))
+        Write-Host "==> pyproject.toml 身份已重置：包名 $slug" -ForegroundColor Green
     }
 }
 
@@ -410,7 +470,8 @@ if (Test-Path $phPath) {
         }
         if ($kept.Count -ne $phData.placeholders.PSObject.Properties.Count) {
             $pruned = @{ schema_version = $phData.schema_version; placeholders = $kept }
-            [System.IO.File]::WriteAllText($phPath, ($pruned | ConvertTo-Json -Depth 5), (New-Object System.Text.UTF8Encoding $true))
+            # 无 BOM（同上）：BOM 会让 json.loads(str) 抛错 → doctor / 再初始化等下游读取失败
+    [System.IO.File]::WriteAllText($phPath, ($pruned | ConvertTo-Json -Depth 5), (New-Object System.Text.UTF8Encoding $false))
             Write-Host "==> scripts/placeholders.json 已裁剪（仅保留替换后仍被引用的条目）" -ForegroundColor Green
         }
     }

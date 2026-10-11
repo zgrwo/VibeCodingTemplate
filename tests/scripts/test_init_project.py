@@ -89,11 +89,28 @@ class TestGetPlaceholderValue:
         with pytest.raises(SystemExit):
             ip.get_placeholder_value("CORE_NODEF", self.MANIFEST, {}, False)
 
-    def test_core_no_default_interactive_enter_falls_back(self, monkeypatch):
-        """交互模式 Enter 空值且无默认值 → 回退占位符名小写（与 ps1 对齐）。"""
+    def test_core_no_default_interactive_empty_reprompts_then_fails(self, monkeypatch):
+        """交互模式反复空输入且无默认值 → 重提示到上限后 fail-fast（P2 豁免到期修复）。
+
+        回归守卫：旧行为是回退占位符名小写（CORE_NODEF → core_nodef），会静默生成
+        损坏的项目/CI 配置（BUILD_CMD → build_cmd），故该回退必须永远不再出现。
+        """
         monkeypatch.setattr("builtins.input", lambda *a, **k: "")
+        with pytest.raises(SystemExit):
+            ip.get_placeholder_value("CORE_NODEF", self.MANIFEST, {}, True)
+
+    def test_core_no_default_interactive_reprompts_until_answer(self, monkeypatch):
+        """交互模式先空输入、再给出真值 → 采用真值（重提示生效，不落入小写回退）。"""
+        answers = iter(["", "  real-cmd  ", ""])
+        monkeypatch.setattr("builtins.input", lambda *a, **k: next(answers))
         got = ip.get_placeholder_value("CORE_NODEF", self.MANIFEST, {}, True)
-        assert got == "core_nodef"
+        assert got == "real-cmd"
+
+    def test_core_default_interactive_enter_uses_default(self, monkeypatch):
+        """交互模式有默认值时 Enter → 用默认值（原有语义不变，防改坏）。"""
+        monkeypatch.setattr("builtins.input", lambda *a, **k: "")
+        got = ip.get_placeholder_value("CORE_A", self.MANIFEST, {}, True)
+        assert got == "dflt"
 
 
 class TestCopyTemplate:
@@ -225,21 +242,61 @@ class TestResetReleaseManifest:
         assert json.loads(f.read_text(encoding="utf-8")) == {".": "0.1.0"}
 
 
-class TestResetPyprojectVersion:
-    """复制进新项目的根 pyproject.toml 版本号重置（P4 修复：防与 manifest 漂移）。"""
+class TestResetPyprojectIdentity:
+    """复制进新项目的根 pyproject.toml：版本 + [project] 身份重置。
+
+    版本（P4 修复）：防与 .release-please-manifest.json 漂移。
+    身份（2026-10-11 去伪修复）：此前只改版本，生成项目仍带模板自身包名与描述——
+    实测 pip install -e . 装出的是 "vibe-coding-template"。
+    """
+
+    TEMPLATE_PYPROJECT = (
+        "[project]\n"
+        'name = "vibe-coding-template"\n'
+        'version = "0.2.4"\n'
+        'description = "AI coding governance template"\n'
+        'requires-python = ">=3.10"\n'
+    )
 
     def test_resets_version(self, tmp_path):
-        (tmp_path / "pyproject.toml").write_text(
-            '[project]\nname = "x"\nversion = "0.1.2"\n', encoding="utf-8"
-        )
-        ip._reset_pyproject_version(tmp_path, {"VERSION": "0.1.0"})
+        (tmp_path / "pyproject.toml").write_text(self.TEMPLATE_PYPROJECT, encoding="utf-8")
+        ip._reset_pyproject_identity(tmp_path, {"VERSION": "0.1.0"})
         text = (tmp_path / "pyproject.toml").read_text(encoding="utf-8")
         assert 'version = "0.1.0"' in text
-        assert 'version = "0.1.2"' not in text
+        assert 'version = "0.2.4"' not in text
+
+    def test_resets_name_and_description(self, tmp_path):
+        (tmp_path / "pyproject.toml").write_text(self.TEMPLATE_PYPROJECT, encoding="utf-8")
+        ip._reset_pyproject_identity(
+            tmp_path,
+            {
+                "VERSION": "0.1.0",
+                "PROJECT_NAME": "Acme Toolkit",
+                "ONE_LINE_DESCRIPTION": "Acme 工程计算库",
+            },
+        )
+        text = (tmp_path / "pyproject.toml").read_text(encoding="utf-8")
+        assert 'name = "acme-toolkit"' in text  # 空格 → 连字符，符合 PEP 508
+        assert "vibe-coding-template" not in text
+        assert 'description = "Acme 工程计算库"' in text
+        assert "governance template" not in text
+
+    def test_missing_identity_values_keeps_template_name(self, tmp_path):
+        """未提供 PROJECT_NAME/描述（老调用方）→ 只重置版本，不把 name 改空。"""
+        (tmp_path / "pyproject.toml").write_text(self.TEMPLATE_PYPROJECT, encoding="utf-8")
+        ip._reset_pyproject_identity(tmp_path, {"VERSION": "0.1.0"})
+        text = (tmp_path / "pyproject.toml").read_text(encoding="utf-8")
+        assert 'name = "vibe-coding-template"' in text
 
     def test_missing_file_noop(self, tmp_path):
-        ip._reset_pyproject_version(tmp_path, {"VERSION": "0.1.0"})
+        ip._reset_pyproject_identity(tmp_path, {"VERSION": "0.1.0"})
         assert not (tmp_path / "pyproject.toml").exists()
+
+    def test_slugify_pep508(self):
+        assert ip._slugify_package_name("Acme Toolkit") == "acme-toolkit"
+        assert ip._slugify_package_name("AcmeToolkit") == "acmetoolkit"
+        assert ip._slugify_package_name("Acme  工具 库") == "acme"
+        assert ip._slugify_package_name("---") == "my-project"
 
 
 class TestPrunePlaceholderManifest:
