@@ -20,7 +20,7 @@ AGENTS.md              项目宪法（四条核心准则、红线规则、防幻
 ├── scripts/           验证脚本（AST 审计 + 架构边界 + 覆盖率 + 初始化 + commit 校验）
 ├── benchmarks/        性能基准（非门禁，趋势观测；基准约定见其 README）
 ├── examples/          示例项目（Python/TypeScript/Go/Rust）
-└── tests/             验证脚本自测（<!-- AUTO_COUNTS:TESTS_START -->317<!-- AUTO_COUNTS:TESTS_END --> tests，见 tests/scripts/）
+└── tests/             验证脚本自测（<!-- AUTO_COUNTS:TESTS_START -->320<!-- AUTO_COUNTS:TESTS_END --> tests，见 tests/scripts/）
 ```
 
 ## 关键设计决策

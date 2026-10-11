@@ -92,6 +92,11 @@
   → docs/methodology/cross-project-synthesis.md（附真实案例：出现次数 + 根因）
   → 案例数由 AUTO_COUNTS 标记自动注入（scripts/doc-counts.json）；**禁止手写「N 类」**
 
+新增/调整 init-project 开关（如 --with-examples / --values-file）
+  → README.md「从本模板初始化新项目」段（用法与新开关）
+  → scripts/test-template.ps1 补对应断言（生成项目侧的可验证结论，而非仅文档描述）
+  → 双实现同步：init-project.py 与 init-project.ps1 必须行为一致（tooling-pitfalls #26）
+
 修改 AGENTS.md（项目宪法）
   → 重建 CLAUDE.md 静态副本：`Copy-Item AGENTS.md CLAUDE.md`（Linux: `cp AGENTS.md CLAUDE.md`）
   → verify-docs.py「宪法副本一致性」向量硬校验二者逐字节一致（副本存在时才校验；删除副本即自动跳过）

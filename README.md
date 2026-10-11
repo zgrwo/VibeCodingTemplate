@@ -164,6 +164,10 @@ python scripts/init-project.py /path/to/<PROJECT_NAME> --non-interactive --value
 
 # Windows PowerShell 5.1 注意：--values '{...}' 里的双引号会被 PowerShell 吞掉导致 JSON 解析失败，
 # 请改用 --values-file，或使用 PowerShell 版 -Values @{ PROJECT_NAME = "MyApp" }
+
+# 参考示例 examples/（多语言 Core/CrossVal/测试演示）默认不复制——单语言项目通常不需要
+# 6 语言示例与 npm lockfile；需要时加 --with-examples（PowerShell: -WithExamples），
+# 或初始化后直接从模板仓库复制 examples/
 ```
 
 ```bash

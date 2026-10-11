@@ -299,6 +299,66 @@ class TestResetPyprojectIdentity:
         assert ip._slugify_package_name("---") == "my-project"
 
 
+class TestPruneExamples:
+    """默认不带 examples/：目录删除 + 三处引用同源裁剪（2026-10 opt-in）。
+
+    裁剪不是"顺手清理"而是必需：目录已删而目录树仍声明它，生成项目 verify-docs.py --strict
+    会直接判"缺失目录"。
+    """
+
+    def _make_target(self, tmp_path):
+        (tmp_path / "examples" / "scripts").mkdir(parents=True)
+        (tmp_path / "examples" / "scripts" / "StatsCrossVal.py").write_text("x", encoding="utf-8")
+        (tmp_path / "docs" / "governance").mkdir(parents=True)
+        (tmp_path / "docs" / "governance" / "project-structure.md").write_text(
+            "tree:\n├── scripts/    # 脚本\n├── examples/   # 示例项目\n│   ├── src/\n"
+            "│   └── tests/\n├── tools/      # 工具\n",
+            encoding="utf-8",
+        )
+        for name in ("AGENTS.md", "CLAUDE.md"):
+            (tmp_path / name).write_text(
+                "├── examples/   # 示例项目\n├── tools/\n", encoding="utf-8"
+            )
+        (tmp_path / ".github" / "workflows").mkdir(parents=True)
+        (tmp_path / ".github" / "workflows" / "ci.yml").write_text(
+            'paths:\n  - "examples/**"\n  - "src/**"\n', encoding="utf-8"
+        )
+        return tmp_path
+
+    def test_removes_dir_and_tree_and_ci_entry(self, tmp_path):
+        target = self._make_target(tmp_path)
+        ip._prune_examples(target)
+        assert not (target / "examples").exists()
+        tree = (target / "docs" / "governance" / "project-structure.md").read_text(encoding="utf-8")
+        assert "examples/" not in tree
+        assert "scripts/" in tree and "tools/" in tree  # 相邻条目不受影响
+        for name in ("AGENTS.md", "CLAUDE.md"):
+            text = (target / name).read_text(encoding="utf-8")
+            assert "examples" not in text and "tools/" in text
+        ci = (target / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        assert "examples/**" not in ci and "src/**" in ci
+
+    def test_prose_mention_kept(self, tmp_path):
+        """正文里的 examples/ 叙述（非目录树条目）必须保留——防误伤说明性文字。"""
+        target = self._make_target(tmp_path)
+        doc = target / "docs" / "governance" / "project-structure.md"
+        doc.write_text(
+            "说明：verify-manual.py 自动发现 scripts/crossval 与 examples/scripts/crossval\n"
+            "├── examples/  # 示例\n│   └── tests/\n",
+            encoding="utf-8",
+        )
+        ip._prune_examples(target)
+        text = doc.read_text(encoding="utf-8")
+        assert "examples/scripts/crossval" in text
+        assert "├── examples/" not in text
+
+    def test_idempotent_and_missing_files_noop(self, tmp_path):
+        """重复调用安全；目标文件缺失不抛异常（幂等 + 容错）。"""
+        ip._prune_examples(tmp_path)
+        ip._prune_examples(tmp_path)
+        assert not (tmp_path / "examples").exists()
+
+
 class TestPrunePlaceholderManifest:
     """生成项目 placeholders.json 裁剪：防死条目门禁 FAIL（审查修复）。"""
 
