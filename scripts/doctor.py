@@ -23,6 +23,7 @@ doctor.py — 环境就绪性诊断（Environment Doctor）
 import argparse
 import contextlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -48,6 +49,23 @@ def _run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess
         return subprocess.run(cmd, capture_output=True, text=True, timeout=10, cwd=cwd or ROOT)
     except (FileNotFoundError, subprocess.TimeoutExpired) as e:
         return subprocess.CompletedProcess(cmd, 127, "", str(e))
+
+
+def _project_title() -> str:
+    """项目名从 pyproject.toml 的 [project] name 读取（单一信源）。
+
+    此前硬编码 "VibeCodingTemplate"，生成项目里 doctor 会喊出模板的名字（2026-10-11 去伪修复）。
+    """
+    pyproject = ROOT / "pyproject.toml"
+    if pyproject.is_file():
+        m = re.search(
+            r'^name\s*=\s*["\']([^"\']+)["\']',
+            pyproject.read_text(encoding="utf-8", errors="replace"),
+            re.MULTILINE,
+        )
+        if m:
+            return m.group(1).strip()
+    return "当前项目"
 
 
 def check_python() -> tuple[bool, str]:
@@ -115,7 +133,7 @@ def main(argv: list[str] | None = None) -> int:
         checks.append((f"文件 {f}", check_file(f)))
     checks.append(("placeholders.json", check_placeholders()))
 
-    print("VibeCodingTemplate 环境检查")
+    print(f"{_project_title()} 环境检查")
     print("=" * 50)
     passed = failed = 0
     for _label, (ok, msg) in checks:
